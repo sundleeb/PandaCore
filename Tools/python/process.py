@@ -196,4 +196,24 @@ processes =  {
 'ZprimeToA0hToA0chichihbb_2HDM_MZp-2500_MA0-300_13TeV-madgraph':('twohdm_med-2500','MC',1),
 'ZprimeToA0hToA0chichihbb_2HDM_MZp-800_MA0-300_13TeV-madgraph':('twohdm_med-800','MC',1),
 
+'ZprimeToTTJet_M-500_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-500','MC',1),
+'ZprimeToTTJet_M-750_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-750','MC',1),
+'ZprimeToTTJet_M-1000_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-1000','MC',1),
+'ZprimeToTTJet_M-1250_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-1250','MC',1),
+'ZprimeToTTJet_M-1500_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-1500','MC',1),
+'ZprimeToTTJet_M-2000_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-2000','MC',1),
+'ZprimeToTTJet_M-2500_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-2500','MC',1),
+'ZprimeToTTJet_M-3000_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-3000','MC',1),
+'ZprimeToTTJet_M-3500_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-3500','MC',1),
+'ZprimeToTTJet_M-4000_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-4000','MC',1),
+
+'ZprimeToWW_narrow_M-800_13TeV-madgraph':('ZpWW_med-800','MC',1),
+'ZprimeToWW_narrow_M-1000_13TeV-madgraph':('ZpWW_med-1000','MC',1),
+'ZprimeToWW_narrow_M-1200_13TeV-madgraph':('ZpWW_med-1200','MC',1),
+'ZprimeToWW_narrow_M-1400_13TeV-madgraph':('ZpWW_med-1400','MC',1),
+'ZprimeToWW_narrow_M-1600_13TeV-madgraph':('ZpWW_med-1600','MC',1),
+'ZprimeToWW_narrow_M-1800_13TeV-madgraph':('ZpWW_med-1800','MC',1),
+'ZprimeToWW_narrow_M-2000_13TeV-madgraph':('ZpWW_med-2000','MC',1),
+'ZprimeToWW_narrow_M-2500_13TeV-madgraph':('ZpWW_med-2500','MC',1),
+
             }
