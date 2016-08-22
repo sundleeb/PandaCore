@@ -2,10 +2,10 @@
 
 from Misc import *
 
-class Libary():
+class Library():
   def __init__(self,name,pkg,d):
     self.name = name
-    self.lib = lib
+    self.pkg = pkg
     self.d = d
 
 objects = {

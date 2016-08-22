@@ -1,0 +1,9 @@
+*.pyc
+*LinkDefDict.cc
+*.d
+*.pcm
+*.swp
+*.so
+*__init__.py
+*nfs*
+*.jdl
