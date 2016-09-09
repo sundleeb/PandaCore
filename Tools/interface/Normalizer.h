@@ -6,6 +6,7 @@
 #include "TBranch.h"
 #include "TString.h"
 #include "TH1F.h"
+#include "Common.h"
 
 class Normalizer
 {

@@ -29,12 +29,18 @@ objects = {
                             'NeroSkimmer':['NeroSkimmer'],
                             'SFSkimmer':['SFSkimmer'],
                           }),
+  'SCRAMJetAnalyzer' : Library(name='Analyzer',pkg='SCRAMJet',
+                        d={
+                            'Analyzer':['Analyzer'],
+                          }),
 }
 
-from ROOT import gROOT, gSystem
+from ROOT import gROOT, gSystem, gInterpreter
 import ROOT as root
+from os import getenv
 
 def Load(lib,obj):
+  gInterpreter.AddIncludePath("%s/src/fastjet/include/"%(getenv('CMSSW_BASE'))) # why isn't this set by CMSSW...?
   includepath=None
   subpackage = objects[lib]
   for header in subpackage.d:
@@ -44,12 +50,16 @@ def Load(lib,obj):
   if includepath==None:
     PError('PandaCore.Tools.Load','Could not load %s from %s'%(obj,lib))
     return
-  PInfo('PandaCore.Tools.Load','Including %s'%includepath)
-  gROOT.LoadMacro(includepath)
   libpath = "lib%s%s.so"%(subpackage.pkg,subpackage.name)
   PInfo('PandaCore.Tools.Load','Loading %s'%libpath)
   gSystem.Load(libpath)
+  if 'SCRAMJet' in lib:
+    for objpath in ['libSCRAMJetObjects.so','libfastjet.so','libfastjetcontribfragile.so','libfastjetplugins.so','libfastjettools.so']:
+      PInfo('PandaCore.Tools.Load','Loading %s'%objpath)
+      gSystem.Load(objpath)
   if 'Nero' in obj:
     neropath = 'libNeroProducerCore.so'
-    PInfo('MitPanda.Tools.Load','Loading %s'%neropath)
+    PInfo('PandaCore.Tools.Load','Loading %s'%neropath)
     gSystem.Load(neropath)
+  PInfo('PandaCore.Tools.Load','Including %s'%includepath)
+  gROOT.LoadMacro(includepath)
