@@ -1,98 +1,74 @@
-from ROOT import gPad,TH2D,TH1D,TFile,TChain,TTree,gROOT
+from ROOT import gPad,TH2D,TH1D,TFile,TChain,TTree,gROOT,TCanvas
 from array import array as arr
 from numpy import log2,sqrt,array,empty
-import numpy as np
-from sys import exit
 
-class Covariator(object):
-  def __init__(self,tree):
-    self.t = tree
-  def covSuperFast(self,AVar,BVar,cut=""):
-    print AVar,BVar
-    self.t.Draw("%s:%s>>htmp"%(AVar,BVar),cut,"colz")
-    htmp = gPad.GetPrimitive('htmp')
-    return htmp.GetCovariance()
-  def covFast(self,AVar,BVar,cut=""):
-    print AVar,BVar
-    self.t.Draw("%s>>htmp"%(AVar),cut)
-    htmp = gPad.GetPrimitive('htmp')
-    N = htmp.GetEntries()
-    xmean = htmp.GetMean()
-    htmp.Delete()
-    self.t.Draw("%s>>htmp"%(BVar),cut)
-    htmp = gPad.GetPrimitive('htmp')
-    ymean = htmp.GetMean()
-    htmp.Delete()
-    self.t.Draw("(%s-%f)*(%s-%f)>>htmp"%(AVar,xmean,BVar,ymean),cut)
-    htmp = gPad.GetPrimitive('htmp')
-    sigma = (htmp.GetMean()*N)/(N-1.)
-    return sigma
-  def cov(self,AVar,BVar,cut=""):
-    print "Error - not implemented yet"
-    return None
+hcounter=0
 
-class Correlator(object):
-  def __init__(self,tree):
-    self.t = tree
-  def pearsonSuperFast(self,AVar,BVar,cut="",aBins=None,bBins=None):
-    print AVar,BVar
-    if aBins!=None and bBins!=None:
-      self.t.Draw("%s:%s>>htmp(%i,%f,%f,%i,%f,%f)"%(AVar,BVar,bBins[0],bBins[1],bBins[2],aBins[0],aBins[1],aBins[2]),cut,"colz")
-    else:
-      self.t.Draw("%s:%s>>htmp"%(AVar,BVar),cut,"colz")
-    htmp = gPad.GetPrimitive('htmp')
-    print htmp.Integral()
-    return htmp.GetCorrelationFactor()
-  def pearsonFast(self,AVar,BVar,cut=""):
-    print AVar,BVar
-    self.t.Draw("%s*%s>>htmp"%(AVar,BVar),cut)
-    htmp = gPad.GetPrimitive('htmp')
-    N = htmp.GetEntries()
-    xy = htmp.GetMean()*N
-    htmp.Delete()
-    self.t.Draw("%s*%s>>htmp"%(AVar,AVar),cut)
-    htmp = gPad.GetPrimitive('htmp')
-    xx = htmp.GetMean()*N
-    htmp.Delete()
-    self.t.Draw("%s*%s>>htmp"%(BVar,BVar),cut)
-    htmp = gPad.GetPrimitive('htmp')
-    yy = htmp.GetMean()*N
-    htmp.Delete()
-    self.t.Draw("%s>>htmp"%(AVar),cut)
-    htmp = gPad.GetPrimitive('htmp')
-    xmean = htmp.GetMean()
-    htmp.Delete()
-    self.t.Draw("%s>>htmp"%(BVar),cut)
-    htmp = gPad.GetPrimitive('htmp')
-    ymean = htmp.GetMean()
-    htmp.Delete()
-    p = (xy - N*xmean*ymean) / (sqrt(xx - N*xmean*xmean) * sqrt(yy - N*ymean*ymean))
-    print p
-    return p
-  def pearson(self,AVar,BVar):
-    nEntries = self.t.GetEntries()
-    xy=0
-    xx=0
-    yy=0
-    xmean=0
-    ymean=0
-    print AVar,BVar,nEntries
-    for iE in xrange(nEntries):
-      if not iE%100000:
-        print iE
-      self.t.GetEntry(iE)
-      x=getattr(self.t,AVar)
-      y=getattr(self.t,BVar)
-      xy += x*y
-      xx += x*x
-      yy += y*y
-      xmean += x
-      ymean = y
-    xmean /= nEntries
-    ymean /= nentries
-    p = (xy - nEntries*xmean*ymean) / (sqrt(xx - nEntries*xmean*xmean) * sqrt(yy - nEntries*ymean*ymean))
-    print p
-    return p
+def getCov(t,AVar,BVar,cut='',aBins=None,bBins=None):
+  global hcounter
+  if aBins!=None and bBins!=None:
+    t.Draw("%s:%s>>htmp(%i,%f,%f,%i,%f,%f)"%(AVar,BVar,bBins[0],bBins[1],bBins[2],aBins[0],aBins[1],aBins[2]),cut,"colz")
+  else:
+    t.Draw("%s:%s>>htmp"%(AVar,BVar),cut,"colz")
+  htmp = gPad.GetPrimitive('htmp')
+  hcounter += 1
+  return htmp.GetCovariance()
+
+def getPearson(t,AVar,BVar,cut='',aBins=None,bBins=None):
+  global hcounter
+  if aBins!=None and bBins!=None:
+    t.Draw("%s:%s>>htmp(%i,%f,%f,%i,%f,%f)"%(AVar,BVar,bBins[0],bBins[1],bBins[2],aBins[0],aBins[1],aBins[2]),cut,"colz")
+  else:
+    t.Draw("%s:%s>>htmp"%(AVar,BVar),cut,"colz")
+  htmp = gPad.GetPrimitive('htmp')
+  hcounter += 1
+  return htmp.GetCorrelationFactor()
+
+class SquarePlotter(object):
+  def __init__(self,fsigpath,fbgpath,treename):
+    self.fsig = TFile(fsigpath); self.tsig = self.fsig.Get(treename)
+    self.fbg = TFile(fbgpath); self.tbg = self.fbg.Get(treename)
+    gPad.cd()
+  def makeCovPlots(self,xs,sigcut='',bgcut=''):
+    # format of xs is [ [var,title,(optional nbins, binlo, binhi)] ]
+    nX = len(xs)
+    h2 = TH2D('hcov','hcov',nX,0,nX,nX,0,nX)
+    # label X and Y in opposite order
+    for iB in xrange(1,nX+1):
+      h2.GetXaxis().SetBinLabel(iB,xs[iB-1][1])
+      h2.GetYaxis().SetBinLabel(nX-iB+1,xs[iB-1][1])
+    h2bg = h2.Clone('hcovbg')
+    for iX in xrange(nX):
+      for iY in xrange(iX,nX):
+        x = xs[iX]; y = xs[iY];
+        xbins = None if len(x)<3 else x[2]
+        ybins = None if len(y)<3 else y[2]
+        covsig = getCov(self.tsig,x[0],y[0],sigcut,xbins,ybins)
+        h2.SetBinContent(iX+1,nX-iY,covsig)
+        covbg = getCov(self.tbg,x[0],y[0],bgcut,xbins,ybins)
+        h2bg.SetBinContent(iX+1,nX-iY,covbg)
+    return h2,h2bg
+  def makeCorrPlots(self,xs,sigcut='',bgcut=''):
+    # format of xs is [ [var,title,(optional nbins, binlo, binhi)] ]
+    nX = len(xs)
+    h2 = TH2D('hcorr','hcorr',nX,0,nX,nX,0,nX)
+    # label X and Y in opposite order
+    for iB in xrange(1,nX+1):
+      h2.GetXaxis().SetBinLabel(iB,xs[iB-1][1])
+      h2.GetYaxis().SetBinLabel(nX-iB+1,xs[iB-1][1])
+    h2bg = h2.Clone('hcorrbg')
+    for iX in xrange(nX):
+      for iY in xrange(iX,nX):
+        x = xs[iX]; y = xs[iY];
+        xbins = None if len(x)<3 else x[2]
+        ybins = None if len(y)<3 else y[2]
+        corrsig = getPearson(self.tsig,x[0],y[0],sigcut,xbins,ybins)
+        h2.SetBinContent(iX+1,nX-iY,corrsig)
+        corrbg = getPearson(self.tbg,x[0],y[0],bgcut,xbins,ybins)
+        h2bg.SetBinContent(iX+1,nX-iY,corrbg)
+    return h2,h2bg
+
+## everything below this needs to be rewritten because it is shitty shitty code
 
 class MutualInformer(object):
   def __init__(self,tree):

@@ -9,6 +9,10 @@ class Library():
     self.d = d
 
 objects = {
+  'Learning' : Library(name='Learning',pkg='PandaCore',
+                        d={
+                            'TMVATrainer':['TMVATrainer'],
+                          }),
   'Tools' : Library(name='Tools', pkg='PandaCore',
                         d={
                             'DuplicateRemover':['DuplicateRemover'],
