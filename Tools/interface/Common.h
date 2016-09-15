@@ -1,6 +1,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TString.h"
+#include "TStopwatch.h"
 #include <vector>
 
 #ifndef COMMONUTILITIES_H
@@ -15,9 +16,12 @@
  * getVal: find scalefactor, etc from 1d or 2d histogram
  * bound: bound a value between min and max
  * ProgressReporter: class to report progress of a loop 
+ * TimeReporter : class to report time taken for events
  * Binner: class to discretely bin a continuous value
  * EventObj: hashable class that contains run,lumi,event
  * */
+
+//////////////////////////////////////////////////////////////////////////////////
 
 inline void activateBranch(TTree *t, const char *bname, void *address) {                                  
   t->SetBranchStatus(bname,1);                                                                   
@@ -25,19 +29,19 @@ inline void activateBranch(TTree *t, const char *bname, void *address) {
 }                      
 
 inline void PInfo(const char *module, const char *msg) {
-  printf("INFO [%s]: %s\n",module,msg);
+          printf("INFO    [%-40s]: %s\n",module,msg);
 }
 
 inline void PDebug(const char *module, const char *msg) {
-  fprintf(stderr,"DEBUG [%s]: %s\n",module,msg);
+  fprintf(stderr,"DEBUG   [%-40s]: %s\n",module,msg);
 }
 
 inline void PWarning(const char *module, const char *msg) {
-  fprintf(stderr,"WARNING [%s]: %s\n",module,msg);
+  fprintf(stderr,"WARNING [%-40s]: %s\n",module,msg);
 }
 
 inline void PError(const char *module, const char *msg) {
-  fprintf(stderr,"ERROR [%s]: %s\n",module,msg);
+  fprintf(stderr,"ERROR   [%-40s]: %s\n",module,msg);
 }
 
 inline double DeltaR2(double eta1, double phi1, double eta2, double phi2) {
@@ -59,10 +63,12 @@ inline double bound(double val, double low, double high) {
   return TMath::Max(low,TMath::Min(high,val));
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+
 class ProgressReporter {
   public:
     ProgressReporter(const char *n, unsigned int *iE, unsigned int *nE, unsigned int nR=100) {
-      name = n;
+      name = n; name+="::Progress";
       idx = iE;
       N = nE;
       frequency = nR;
@@ -81,6 +87,52 @@ class ProgressReporter {
     TString name;
     float threshold=0;
 };
+
+//////////////////////////////////////////////////////////////////////////////////
+
+class TimeReporter {
+  public:
+    TimeReporter(const char *n, bool on_) {
+      on=on_;
+      name = n; name += "::Time";
+      sw = new TStopwatch();
+      subsw = new TStopwatch();
+    }
+    ~TimeReporter() { delete sw; }
+    void Start() {
+      if (on) {
+        sw->Start(true);
+        subsw->Start(true);
+      }
+      currentEvent=0;
+      currentSubEvent=1;
+    }
+    void TriggerEvent(const char *s,bool reset=true) {
+      if (!on)
+        return;
+      currentSubEvent=1;
+      PDebug(name,TString::Format("%2i   : %.3f (%s)",currentEvent,sw->RealTime()*1000,s).Data());
+      sw->Start();
+      subsw->Start();
+      if (reset)
+        currentEvent+=1;
+    }      
+    void TriggerSubEvent(const char *s) {
+      if (!on)
+        return;
+      PDebug(name,TString::Format("%2i.%-2i: %.3f (%s)",currentEvent,currentSubEvent,subsw->RealTime()*1000,s).Data());
+      currentSubEvent+=1;
+      subsw->Start();
+    }
+  private:
+    TString name;
+    bool on;
+    TStopwatch *sw, *subsw;
+    int currentEvent=0;
+    int currentSubEvent=1;
+};
+
+//////////////////////////////////////////////////////////////////////////////////
 
 class Binner {
   public:
@@ -103,6 +155,8 @@ class Binner {
     unsigned int nB=0;
 }; 
 
+//////////////////////////////////////////////////////////////////////////////////
+
 struct EventObj {
   int run, lumi;
   ULong64_t evt;
@@ -120,5 +174,7 @@ namespace std{
     }
   };
 }
+
+//////////////////////////////////////////////////////////////////////////////////
 
 #endif

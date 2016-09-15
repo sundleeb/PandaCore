@@ -58,7 +58,7 @@ def Load(lib,obj):
   PInfo('PandaCore.Tools.Load','Loading %s'%libpath)
   gSystem.Load(libpath)
   if 'SCRAMJet' in lib:
-    for objpath in ['libSCRAMJetObjects.so','libfastjet.so','libfastjetcontribfragile.so','libfastjetplugins.so','libfastjettools.so']:
+    for objpath in ['libSCRAMJetSDAlgorithm.so','libSCRAMJetObjects.so','libfastjet.so','libfastjetcontribfragile.so','libfastjetplugins.so','libfastjettools.so']:
       PInfo('PandaCore.Tools.Load','Loading %s'%objpath)
       gSystem.Load(objpath)
   if 'Nero' in obj:
