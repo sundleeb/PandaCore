@@ -13,6 +13,7 @@
 #include  <vector>
 #include "TStyle.h"
 #include "algorithm"
+#include "PandaCore/Tools/interface/Common.h"
 
 enum ProcessType {
   kData=0,
@@ -110,24 +111,26 @@ protected:
                         kViolet,
                         kAzure,
                         kSpring+8};
-  int GraphColors[18] = {1,
-                        2,
-                        4,
-                        6,
-                        7,
-                        8,
-                        9,
+  int GraphColors[18] = {
+                        1, //black
+                        2,  //red
+                        4,  //purple
+                        kAzure+3,  
+                        kGreen+2,
+                        kBlue-3,
+                        6,  //magenta
+                        kRed-7,
                         kMagenta+1,
+                        kViolet,
                         kCyan+1,
                         kOrange+8,
                         kTeal+10,
-                        kViolet,
+                        kOrange+10,
                         kAzure,
-                        kSpring+8,
-                        kYellow+3,
                         kRed+3,
                         kMagenta+3,
-                        kCyan+3};
+                        kCyan+3
+  };
 
   TCanvas *c=0;
   bool canvasIsOwned=false;

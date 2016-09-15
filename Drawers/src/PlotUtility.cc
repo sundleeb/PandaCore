@@ -86,7 +86,8 @@ void PlotUtility::Reset() {
 }
 
 void PlotUtility::DrawAll(TString outDir) {
-  InitLegend();
+  if (!legend)
+    InitLegend();
   TFile *fOut = new TFile(outDir+"hists.root","UPDATE");
   TFile *fBuffer = new TFile(TString::Format("/tmp/buffer_%i.root",gSystem->GetPid()).Data(),"RECREATE");
   fBuffer->cd();
