@@ -12,6 +12,7 @@ objects = {
   'Learning' : Library(name='Learning',pkg='PandaCore',
                         d={
                             'TMVATrainer':['TMVATrainer'],
+                            'TMVABranchAdder':['TMVABranchAdder'],
                           }),
   'Tools' : Library(name='Tools', pkg='PandaCore',
                         d={

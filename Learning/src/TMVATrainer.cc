@@ -7,7 +7,7 @@ TMVATrainer::TMVATrainer(TString name, TString workdir_):
   TMVA::gConfig().GetIONames().fWeightFileDir = workdir.Data();
   outfile = new TFile(workdir+"/tmva.root","RECREATE");
   factory = new TMVA::Factory(name.Data(), outfile,
-      "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;G,D:AnalysisType=Classification");
+      "!V:!Silent:Color:DrawProgressBar:Transformations=I:AnalysisType=Classification");
       //"!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
 }
 

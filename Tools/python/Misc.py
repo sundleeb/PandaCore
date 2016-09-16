@@ -4,16 +4,16 @@ from re import sub
 from sys import stdout,stderr
 
 def PInfo(module,msg):
-  stdout.write('INFO [%s]: %s\n'%(module,msg))
+  stdout.write('INFO    [%-40s]: %s\n'%(module,msg))
 
 def PWarning(module,msg):
-  stdout.write('WARNING [%s]: %s\n'%(module,msg))
+  stdout.write('WARNING [%-40s]: %s\n'%(module,msg))
 
 def PDebug(module,msg):
-  stderr.write('DEBUG [%s]: %s\n'%(module,msg))
+  stderr.write('DEBUG   [%-40s]: %s\n'%(module,msg))
 
 def PError(module,msg):
-  stderr.write('ERROR [%s]: %s\n'%(module,msg))
+  stderr.write('ERROR   [%-40s]: %s\n'%(module,msg))
 
 def setBins(dist,bins):
   for b in bins:

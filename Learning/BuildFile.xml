@@ -2,6 +2,7 @@
 <use   name="roottmva"/>
 <use   name="roofit"/>
 <use   root=""/>
+<use   name="PandaCore/Tools"/>
 <export>
   <lib   name="1"/>
 </export>
