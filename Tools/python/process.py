@@ -216,6 +216,14 @@ processes =  {
 'ZprimeToWW_narrow_M-2000_13TeV-madgraph':('ZpWW_med-2000','MC',1),
 'ZprimeToWW_narrow_M-2500_13TeV-madgraph':('ZpWW_med-2500','MC',1),
 
+'ZprimeToA0hToA0chichihbb_2HDM_MZp-1000_MA0-300_13TeV-madgraph':('ZpA0h_med-1000','MC',1),
+'ZprimeToA0hToA0chichihbb_2HDM_MZp-1400_MA0-300_13TeV-madgraph':('ZpA0h_med-1400','MC',1),
+'ZprimeToA0hToA0chichihbb_2HDM_MZp-1700_MA0-300_13TeV-madgraph':('ZpA0h_med-1700','MC',1),
+'ZprimeToA0hToA0chichihbb_2HDM_MZp-2000_MA0-300_13TeV-madgraph':('ZpA0h_med-2000','MC',1),
+'ZprimeToA0hToA0chichihbb_2HDM_MZp-2500_MA0-300_13TeV-madgraph':('ZpA0h_med-2500','MC',1),
+'ZprimeToA0hToA0chichihbb_2HDM_MZp-800_MA0-300_13TeV-madgraph':('ZpA0h_med-800','MC',1),
+
+
 'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZHbb_mH125','MC',1),
 
             }
