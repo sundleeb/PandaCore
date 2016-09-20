@@ -19,7 +19,10 @@ public:
     TBranch *b = t->Branch(outWeightName.Data(),&outWeight,TString::Format("%s/F",outWeightName.Data()));
     t->SetBranchAddress(inWeightName.Data(),&inWeight);
     unsigned int nEntries = t->GetEntries();
-    for (unsigned int iE=0; iE!=nEntries; ++iE) {
+    unsigned int iE=0;
+    ProgressReporter pr("PandaCoreNormalizer::NormalizeTree",&iE,&nEntries,10);
+    for (iE=0; iE!=nEntries; ++iE) {
+      pr.Report();
       t->GetEntry(iE);
       outWeight = xsec*inWeight/totalEvts;
       b->Fill();
