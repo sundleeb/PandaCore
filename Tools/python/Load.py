@@ -18,7 +18,8 @@ objects = {
                         d={
                             'DuplicateRemover':['DuplicateRemover'],
                             'Normalizer':['Normalizer'],
-                            'BranchAdder':['BranchAdder']
+                            'Cutter':['Cutter'],
+                            'BranchAdder':['BranchAdder'],
                           }),
   'Drawers' : Library(name='Drawers',pkg='PandaCore',
                       d={

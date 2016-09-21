@@ -14,20 +14,35 @@ HistogramDrawer::~HistogramDrawer() {
     delete centralFile;
 }
 
-void HistogramDrawer::AddHistogram(TH1F *h, TString label, ProcessType pt, int cc) {
+void HistogramDrawer::AddAdditional(TObject *o, TString opt, TString aname) {
+  ObjWrapper w;
+  w.o = o;
+  w.opt = opt;
+  w.label = aname;
+}
+
+void HistogramDrawer::AddHistogram(TH1F *h, TString label, ProcessType pt, int cc, TString opt) {
   if (h!=NULL) {
     h->SetStats(0);
     h->SetTitle("");
-    internalHistos.push_back(h);
-    labels.push_back(label);
+
+    HistWrapper w;
+    w.h = h;
+    w.label = label;
     if (pt==nProcesses) 
-      ptypes.push_back((ProcessType)(ptypes.size()+2));
+      w.pt = (ProcessType)(internalHists.size()+2);
     else
-      ptypes.push_back(pt);
+      w.pt = pt;
     if (cc<0) 
-      customColors.push_back(PlotColors[ptypes.back()]);
+      w.cc = PlotColors[w.pt];
     else
-      customColors.push_back(cc);
+      w.cc = cc;
+    if (opt=="")
+      w.opt = drawOption;
+    else
+      w.opt = opt;
+
+    internalHists.push_back(w);
   }
 }
 
@@ -52,11 +67,9 @@ void HistogramDrawer::SetInputFile(TString fname) {
 }
 
 void HistogramDrawer::Reset() {
-  internalHistos.clear();
-  ptypes.clear();
-  labels.clear();
-  customColors.clear();
-  additionals.clear();
+  internalHists.clear();
+  internalAdds.clear();
+  plotLabels.clear();
   if (legend!=NULL)
     legend->Clear();
   if (c!=NULL)
@@ -69,12 +82,12 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
 
 //  c->Clear();
 
-  unsigned int nH = internalHistos.size();
+  unsigned int nH = internalHists.size();
   if (nH==0) {
     CanvasDrawer::Draw(outDir,baseName);
     return;
   }
-  int nBins = internalHistos[0]->GetNbinsX();
+  int nBins = internalHists[0].h->GetNbinsX();
   c->cd();
   TPad *pad1=0, *pad2=0;
   float stackIntegral=0;
@@ -85,7 +98,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   TH1F *hZero=0;
   TH1F *hSum=0;
   TH1F *hRatioError = 0;
-  std::vector<TH1F*> hOthers;
+  std::vector<HistWrapper> hOthers;
 
   c->SetLogy(doLogy&&(!doRatio));
   
@@ -93,31 +106,30 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     hs = new THStack("h","");
   
   for (unsigned int iH=0; iH!=nH; ++iH) {
-    ProcessType pt = ptypes[iH];
-    TH1F *h=internalHistos[iH];
-    //h->SetLineColor(PlotColors[pt]);
+    HistWrapper w = internalHists[iH];
+    TH1F *h = w.h;
+    ProcessType pt = w.pt;
     if (doStack && pt>kSignal3) {
       h->SetLineColor(1);
     } else {
-      h->SetLineColor(customColors[iH]);
+      h->SetLineColor(w.cc);
       h->SetLineWidth(3);
-      // h->SetLineColor(PlotColors[pt]);
     }
     TString legOption = "L";
+    if (w.opt.Contains("elp"))
+      legOption = "ELP";
     if (pt!=kData && (pt==kData || pt>kSignal3 || doStackSignal)) {
       if (doStack) {
         // if it's stackable
-        h->SetFillColor(customColors[iH]);
-     //   h->SetFillColor(PlotColors[pt]);
+        h->SetFillColor(w.cc);
         hs->Add(h);
         legOption = "F";
         stackIntegral += h->Integral();
       } else {
         if (doSetNormFactor) 
           h->Scale(1./h->Integral());
-
       }
-      hOthers.push_back(h);
+      hOthers.push_back(w);
     } else if (pt==kData) {
       // if it's data
       legOption = "ELP";
@@ -135,25 +147,23 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hSignal[pt-1] = h;
       hSignal[pt-1]->SetLineWidth(5);
       hSignal[pt-1]->SetFillStyle(0);
-//      hSignal[pt-1]->SetFillColor(hSignal[pt-1]->GetLineColor());
-//      hSignal[pt-1]->SetFillStyle(3004);
       if (doSetNormFactor)
         hSignal[pt-1]->Scale(1./hSignal[pt-1]->Integral());
     } 
-    if (legend) 
-      legend->AddEntry(h,labels[iH],legOption);
+    if (legend && w.label!="") 
+      legend->AddEntry(h,w.label,legOption);
   }
 
 
   // scale stacked histograms and calculate stacked error bands
   if (doStack) {
     if (doSetNormFactor) {
-      for (TH1F *hh : hOthers) 
-        hh->Scale(1./stackIntegral);
+      for (HistWrapper ww : hOthers) 
+        ww.h->Scale(1./stackIntegral);
     }
     if (doDrawMCErrors) {
       std::vector<float> vals,errs;
-      hSum = (TH1F*)hOthers[0]->Clone("hsum"); 
+      hSum = (TH1F*) (hOthers[0].h->Clone("hsum"));
       hSum->SetFillColorAlpha(kBlack,0.99);
       hSum->SetLineWidth(0);
       hSum->SetFillStyle(3004);
@@ -163,7 +173,8 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
         errs.push_back(0);
       }
       
-      for (TH1F *hh : hOthers) {
+      for (HistWrapper w : hOthers) {
+        TH1F *hh = w.h;
         for (int iB=0; iB!=nBins; ++iB) {
           vals[iB] += hh->GetBinContent(iB+1);
           errs[iB] += std::pow(hh->GetBinError(iB+1),2);
@@ -182,13 +193,9 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   if (doStack) {
     if (doLogy) {
       double sumMin=0;
-      for (TH1F *hh : hOthers) {
+      for (HistWrapper w : hOthers) {
         double tmp_min=9999;
-        // for (int iB=1; iB!=hh->GetNbinsX()+1; ++iB) {
-        //   if (hh->GetBinContent(iB)>0)
-        //     tmp_min = std::min(tmp_min,hh->GetBinContent(iB));
-        // }
-        tmp_min = hh->GetMinimum();
+        tmp_min = w.h->GetMinimum();
         if (tmp_min<9999)
           sumMin += tmp_min;
       }
@@ -196,7 +203,8 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     }
     maxY = hs->GetMaximum();        
   } else {
-    for (TH1F *hh : hOthers) {
+    for (HistWrapper w : hOthers) {
+      TH1F *hh = w.h;
       maxY = std::max(maxY,hh->GetMaximum());
       if (doLogy)
         minY = std::min(minY,hh->GetMinimum());
@@ -232,21 +240,20 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     if (doLogy)
       pad1->SetLogy();
     pad1->SetBottomMargin(0);
-//        pad1->SetLeftMargin(.15);
     pad1->Draw();
     pad1->cd();
   }
-  TString xlabel = internalHistos[0]->GetXaxis()->GetTitle();
-  TString ylabel = internalHistos[0]->GetYaxis()->GetTitle();
-  for (auto h : internalHistos) {
-    h->GetXaxis()->SetTitle("");
+  TString xlabel = internalHists[0].h->GetXaxis()->GetTitle();
+  TString ylabel = internalHists[0].h->GetYaxis()->GetTitle();
+  for (HistWrapper w : internalHists) {
+    w.h->GetXaxis()->SetTitle("");
   }
 
   // figure out what to do with the first histogram
   TH1F *firstHist=0;
   if (!doStack) {
     if (hOthers.size()>0) 
-      firstHist = hOthers[0];
+      firstHist = hOthers[0].h;
     else if (hData)
       firstHist = hData;
     else {
@@ -263,6 +270,8 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     firstHist->SetMaximum(maxY);
     if (firstHist==hData)
       firstHist->Draw("elp");
+    else if (firstHist==hOthers[0].h)
+      firstHist->Draw(hOthers[0].opt);
     else
       firstHist->Draw(drawOption);
     if (!doRatio) {
@@ -289,10 +298,11 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     if (doDrawMCErrors)
       hSum->Draw("e2 same");
   } else {
-    for (TH1F *hh : hOthers) {
+    for (HistWrapper w : hOthers) {
+      TH1F *hh = w.h;
       if (hh==firstHist)
         continue;
-      hh->Draw(drawOption+" same");
+      hh->Draw(w.opt+" same");
     }
   }
   for (unsigned int iS=0; iS!=4; ++iS) {
@@ -300,23 +310,27 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hSignal[iS]->Draw(drawOption+" same"); 
     }
   }
-  unsigned int nAdd = additionals.size();
+
+  unsigned int nAdd = internalAdds.size();
   for (unsigned int iA=0; iA!=nAdd; ++iA) {
-    auto o = additionals[iA];
-    TString className(o.first->ClassName());    
+    ObjWrapper w = internalAdds[iA];
+    TObject *o = w.o;
+    TString opt = w.opt;
+    TString className(o->ClassName());    
     if (className.Contains("TH1"))
-      o.first->Draw(o.second+" same");
+      o->Draw(opt+" same");
     else if (className.Contains("TGraph"))
-      o.first->Draw(o.second+" same");
+      o->Draw(opt+" same");
     else if (className.Contains("TF1"))
-      o.first->Draw(o.second+" same");
+      o->Draw(opt+" same");
     else {
       printf("Don't know what to do with %s\n",className.Data());
       continue;
     }
-    TString aname = anames[iA];
-    if (aname.Length()>0) {
-      legend->AddEntry(o.first,aname,"l");
+
+    TString label = w.label;
+    if (label.Length()>0) {
+      legend->AddEntry(o,label,"l");
     }
   }
 
@@ -351,8 +365,10 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     yErrors = new double[nBins];
     for (int iB=1; iB!=nBins+1; ++iB) {
       float mcVal=0;
-      for (TH1F *hh : hOthers)
+      for (HistWrapper w : hOthers) {
+        TH1F *hh = w.h;
         mcVal += hh->GetBinContent(iB);
+      }
       float dataVal = hData->GetBinContent(iB);
       float err = hData->GetBinError(iB);
       float mcErr = 0;
@@ -369,14 +385,11 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
         val=0;
         errVal=0;
       } else {
-        //val = (dataVal-mcVal)/dataVal;
-        //errVal = err/dataVal;
         val = dataVal/mcVal;
         errVal = err/mcVal;
         mcErrVal = mcErr/mcVal;
       }
       if (val==0.) val=-999; // don't plot missing data points
-      //maxVal = std::max(maxVal,std::abs(val));
       xVals[iB-1] = hRatio->GetBinCenter(iB);
       yVals[iB-1] = val;
       xErrors[iB-1] = 0;
@@ -386,7 +399,6 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       maxVal = std::max(maxVal,std::abs(1-val-errVal));
       hRatio->SetBinContent(iB,val);
       hRatio->SetBinError(iB,0.0001);
-//      printf("hratio %i %f %f\n",iB,val,errVal);
       if (doDrawMCErrors) {
         hRatioError->SetBinContent(iB,1);
         hRatioError->SetBinError(iB,mcErrVal);
@@ -401,12 +413,9 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     hRatio->Draw("elp");
     hRatio->SetMinimum(-1.2*maxVal+1);
     hRatio->SetMaximum(maxVal*1.2+1);
-    //hRatio->SetMinimum(-1.2*maxVal);
-    //hRatio->SetMaximum(maxVal*1.2);
     hRatio->SetLineColor(1);
     hRatio->SetMarkerStyle(20);
     hRatio->GetXaxis()->SetTitle(xlabel);
-    //hRatio->GetYaxis()->SetTitle("(Data-MC)/Data");
     hRatio->GetYaxis()->SetTitle("Data/Exp");
     hRatio->GetYaxis()->SetNdivisions(5);
     hRatio->GetYaxis()->SetTitleSize(15);

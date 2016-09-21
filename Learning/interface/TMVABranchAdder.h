@@ -23,7 +23,15 @@ public:
       float *val;
   };
 
-  TMVABranchAdder() { reader = new TMVA::Reader("!Silent"); } 
+  TMVABranchAdder(bool bookExtraVars=true):
+    spectator(0)
+  { 
+    reader = new TMVA::Reader("!Silent"); 
+    if (bookExtraVars) {
+      reader->AddSpectator("eventNumber",&spectator);
+      reader->AddSpectator("runNumber",&spectator);
+    }
+  } 
   ~TMVABranchAdder() { 
     delete reader; 
     for (auto *x : variables)

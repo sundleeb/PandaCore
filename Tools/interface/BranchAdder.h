@@ -22,7 +22,10 @@ public:
     tformula.SetQuickLoad(true);
 
     unsigned int nEntries = t->GetEntries();
-    for (unsigned int iE=0; iE!=nEntries; ++iE) {
+    unsigned int iE=0;
+    ProgressReporter pr("PandaCore::BranchAdder",&iE,&nEntries,10);
+    for (iE=0; iE!=nEntries; ++iE) {
+      pr.Report();
       t->GetEntry(iE);
       newBranchVal = tformula.EvalInstance();
       b->Fill();
@@ -49,7 +52,10 @@ public:
     tformula.SetQuickLoad(true);
 
     unsigned int nEntries = t->GetEntries();
-    for (unsigned int iE=0; iE!=nEntries; ++iE) {
+    unsigned int iE=0;
+    ProgressReporter pr("PandaCore::BranchAdder",&iE,&nEntries,10);
+    for (iE=0; iE!=nEntries; ++iE) {
+      pr.Report();
       t->GetEntry(iE);
       double xval = tformula.EvalInstance();
       newBranchVal = h->GetBinContent(h->FindBin(xval));

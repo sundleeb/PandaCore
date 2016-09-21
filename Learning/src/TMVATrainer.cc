@@ -5,10 +5,12 @@ TMVATrainer::TMVATrainer(TString name, TString workdir_):
   workdir(workdir_)
 {
   TMVA::gConfig().GetIONames().fWeightFileDir = workdir.Data();
-  outfile = new TFile(workdir+"/tmva.root","RECREATE");
+  outfile = new TFile(workdir+"/tmva_"+name+".root","RECREATE");
   factory = new TMVA::Factory(name.Data(), outfile,
       "!V:!Silent:Color:DrawProgressBar:Transformations=I:AnalysisType=Classification");
       //"!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
+  factory->AddSpectator("eventNumber",'l');
+  factory->AddSpectator("runNumber",'I');
 }
 
 TMVATrainer::~TMVATrainer() {
@@ -48,7 +50,7 @@ void TMVATrainer::SetFiles(TString sigpath, TString bgpath) {
 
 void TMVATrainer::BookBDT(TString opt) {
   if (opt=="") {
-    opt = "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
+    opt = "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
   }
 
   factory->BookMethod(TMVA::Types::kBDT,"BDT",opt);
