@@ -12,7 +12,7 @@ class ROCTool {
     ROCTool() {}
     ~ROCTool();
 
-    void InitCanvas();
+    void InitCanvas(double x1=-1, double y1=-1, double x2=-1, double y2=-1);
     void SetFile(TFile *f);
     void SetFile(TString fpath);
     void SetHists(TH1F *hs, TH1F *hb) { sigHist = hs; bgHist = hb; }

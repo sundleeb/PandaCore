@@ -66,10 +66,11 @@ void HistogramDrawer::SetInputFile(TString fname) {
   centralFile = TFile::Open(fname);
 }
 
-void HistogramDrawer::Reset() {
+void HistogramDrawer::Reset(bool clearPlotLabels) {
   internalHists.clear();
   internalAdds.clear();
-  plotLabels.clear();
+  if (clearPlotLabels)
+    plotLabels.clear();
   if (legend!=NULL)
     legend->Clear();
   if (c!=NULL)

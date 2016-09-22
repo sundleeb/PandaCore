@@ -118,7 +118,7 @@ public:
   void SetPlotLabel(const char *s)  { plotLabel = s;  }
   void SetSignalScale(double d) { signalScale = d; }
   void CloneTrees(bool b) { cloneTrees = b; }
-  void Reset();
+  void Reset(bool clearPlotLabels=true);
 
   void DrawAll(TString outDir);
   void Draw(TString outDir, TString baseName) { return; } // not implemented

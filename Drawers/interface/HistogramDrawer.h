@@ -18,7 +18,7 @@ class HistogramDrawer : public CanvasDrawer {
   void SetInputFile(TString fname);
   void SetInputFile(TFile *f);
   void SetAbsMin(double f) { absMin = f; }
-  void Reset();
+  void Reset(bool clearPlotLabels=true);
 
   virtual void Draw(TString outDir, TString baseName) override;
 

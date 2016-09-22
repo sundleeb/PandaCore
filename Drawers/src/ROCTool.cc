@@ -5,13 +5,15 @@ ROCTool::~ROCTool() {
   delete c; c=0; 
 }
 
-void ROCTool::InitCanvas() {
+void ROCTool::InitCanvas(double x1, double y1, double x2, double y2) {
   c = new GraphDrawer();
   c->SetTDRStyle();
   c->AddCMSLabel();
   if (doLogy)
     c->Logy();
-  if (doLogy)
+  if (x1>0)
+    c->InitLegend(x1,y1,x2,y2);
+  else if (doLogy)
     c->InitLegend(0.6,.15,.94,.5);
   else
     c->InitLegend(.15,.4,.43,.83);

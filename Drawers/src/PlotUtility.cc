@@ -81,8 +81,8 @@ void PlotUtility::ClearProcess(ProcessType pt) {
   order.clear(); // could probs implement this better
 }
 
-void PlotUtility::Reset() {
-  HistogramDrawer::Reset();
+void PlotUtility::Reset(bool clearPlotLabels) {
+  HistogramDrawer::Reset(clearPlotLabels);
 }
 
 void PlotUtility::DrawAll(TString outDir) {
@@ -278,7 +278,7 @@ void PlotUtility::DrawAll(TString outDir) {
         tmpName += "_logy";
       HistogramDrawer::Draw(outDir,tmpName);
     } 
-    Reset();
+    Reset(false);
     for (auto h : ownedHistos) 
       delete h;
   } // distribution loop

@@ -72,6 +72,8 @@ public:
   void ClearCanvas() { c->Clear(); }
   void cd() { c->cd(); }
 
+  bool HasLegend() { return legend!=0; }
+
 protected:
   class Label {
     public:
