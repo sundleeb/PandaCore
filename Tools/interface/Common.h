@@ -1,4 +1,5 @@
 #include "TH1F.h"
+#include "TTree.h"
 #include "TH2F.h"
 #include "TString.h"
 #include "TStopwatch.h"
