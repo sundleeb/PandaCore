@@ -39,6 +39,10 @@ objects = {
                         d={
                             'Analyzer':['Analyzer'],
                           }),
+  'PandaAnalysisFlat' : Library(name='Flat',pkg='PandaAnalysis',
+                        d={
+                            'PandaAnalyzer':['PandaAnalyzer'],
+                          }),
 }
 
 from ROOT import gROOT, gSystem, gInterpreter
