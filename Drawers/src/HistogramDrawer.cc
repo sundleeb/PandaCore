@@ -325,7 +325,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     else if (className.Contains("TF1"))
       o->Draw(opt+" same");
     else {
-      printf("Don't know what to do with %s\n",className.Data());
+      PWarning("HistogramDrawer::Draw",TString::Format("Don't know what to do with %s",className.Data()));
       continue;
     }
 
@@ -378,7 +378,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       float val,errVal,mcErrVal;
       if (dataVal==0.||mcVal==0.) {
         if (dataVal>0) 
-          fprintf(stderr,"WARNING, BIN %i HAS DATA=%.1f, but EXP=%.3f\n",iB,dataVal,mcVal);
+          PWarning("HistogramDrawer::Draw",TString::Format("bin %i has DATA=%.1f, but EXP=%.3f",iB,dataVal,mcVal));
         if (mcVal==0) 
           mcErrVal=0;
         else

@@ -48,11 +48,28 @@ void TMVATrainer::SetFiles(TString sigpath, TString bgpath) {
   factory->PrepareTrainingAndTestTree(sigcut.Data(),bgcut.Data(),"nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V");
 }
 
+void TMVATrainer::BookBDT(BDTType t) {
+  switch (t) {
+    case kAda:
+      BookBDT("!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=10");
+      break;
+    case kGradWide:
+      BookBDT("!H:!V:NTrees=850:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:nCuts=20:MaxDepth=5");
+      break;
+    case kGradDeep:
+      BookBDT("!H:!V:NTrees=30:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:nCuts=20:MaxDepth=10");
+      break;
+    default:
+      BookBDT();
+  }
+}
+
 void TMVATrainer::BookBDT(TString opt) {
   if (opt=="") {
-    opt = "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
+    opt = "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=10";
   }
 
+  PInfo("TMVATrainer::BookBDT",TString::Format("using options %s",opt.Data()));
   factory->BookMethod(TMVA::Types::kBDT,"BDT",opt);
 }
 

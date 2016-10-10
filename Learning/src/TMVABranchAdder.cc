@@ -23,6 +23,14 @@ void TMVABranchAdder::BookMVA(TString branchname, TString fpath) {
   bnames.push_back(branchname);
 }
 
+inline bool isClean(double x) {
+  return x==x;
+}
+
+inline double clean(double x, double d=-1) {
+  return (isClean(x) ? x : d);
+}
+
 void TMVABranchAdder::RunFile(TString fpath) {
   TFile *fin = TFile::Open(fpath,"UPDATE");
   TTree *tin = (TTree*)fin->FindObjectAny(treename);
@@ -45,6 +53,10 @@ void TMVABranchAdder::RunFile(TString fpath) {
     tf->SetQuickLoad(true);
     treeformulae.push_back(tf);
   }
+  TTreeFormula *fpresel=0;
+  if (presel!="") {
+    fpresel = new TTreeFormula("presel",presel.Data(),tin);
+  }
 
   unsigned int nFormulae = formulae.size();
   unsigned int nEntries = tin->GetEntries();
@@ -56,13 +68,26 @@ void TMVABranchAdder::RunFile(TString fpath) {
   for (iE=0; iE!=nEntries; ++iE) {
     pr.Report();
     tin->GetEntry(iE);
+    bool keep=true;
+    if (fpresel && !(fpresel->EvalInstance())) {
+        keep=false;
+    }
     for (unsigned int iF=0; iF!=nFormulae; ++iF) {
-      *(formulae[iF]->val) = treeformulae[iF]->EvalInstance();
+      double val = treeformulae[iF]->EvalInstance();
+      if (isClean(val)) {
+        *(formulae[iF]->val) = val;
+      } else {
+        keep=false;
+        *(formulae[iF]->val) = -999;
+      }
     }
 
     for (unsigned int iM=0; iM!=nMVA; ++iM) {
       TString bname = bnames[iM];
-      responses[iM] = reader->EvaluateMVA(bname);
+      if (keep)
+        responses[iM] = reader->EvaluateMVA(bname);
+      else
+        responses[iM] = defaultValue;
       newbranches[iM]->Fill();
     }
   }

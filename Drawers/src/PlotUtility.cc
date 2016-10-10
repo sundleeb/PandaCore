@@ -131,7 +131,7 @@ void PlotUtility::DrawAll(TString outDir) {
     TCut pCut(cut);
     pCut += p->additionalCut;
     if (cloneTrees) {
-      printf("Cloning %s\n",p->name.Data());
+      PInfo("PlotUtility::DrawAll",TString::Format("Cloning %s",p->name.Data()));
       p->clonedTree = (TTree*)p->chain->CopyTree(pCut.GetTitle());
     } else {
       p->clonedTree = 0;
@@ -141,7 +141,7 @@ void PlotUtility::DrawAll(TString outDir) {
 
   for (Distribution *d: distributions) {
     if (d->name!="1")
-      printf("Plotting %s\n",d->name.Data());
+      PInfo("PlotUtility::DrawAll",TString::Format("Plotting %s",d->name.Data()));
     
     float bgTotal=0;
     float sigTotal=0;
@@ -240,7 +240,7 @@ void PlotUtility::DrawAll(TString outDir) {
       if (d->minY<999)
         h->SetMinimum(d->minY);
       if (h==NULL) {
-         fprintf(stderr,"bad variable\n");
+         PError("PlotUtility::DrawAll","bad variable");
          exit(1);
       }
       h->GetXaxis()->SetTitle(d->xLabel);
@@ -255,7 +255,7 @@ void PlotUtility::DrawAll(TString outDir) {
       ownedHistos.push_back(h);
 
       if (d->name=="1") {
-          printf("%-10s %15f %15.0f\n",p->name.Data(),h->Integral(),h->GetEntries());
+          PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-10s %15f %15.0f",p->name.Data(),h->Integral(),h->GetEntries()));
           if (iP<=kSignal3 && iP!=kData)
             sigTotal += h->Integral();
           else

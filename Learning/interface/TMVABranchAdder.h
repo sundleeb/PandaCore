@@ -47,6 +47,8 @@ public:
   void RunFile(TString fpath);
 
   TString treename="";
+  TString presel="";
+  float defaultValue=-2;
 private:
   TMVA::Reader *reader=0;
   std::vector<xvar*> variables;

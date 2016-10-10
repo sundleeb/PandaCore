@@ -9,16 +9,23 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
 #include "vector"
+#include "PandaCore/Tools/interface/Common.h"
 
 class TMVATrainer
 {
 public:
+  enum BDTType {
+    kAda,
+    kGradWide,
+    kGradDeep
+  };
   TMVATrainer(TString name, TString workdir_); 
   ~TMVATrainer();
 
   void AddVariable(TString v, char t, TString title="");
   void AddSpectator(TString v, char t, TString title="");
   void SetFiles(TString sigpath, TString bgpath);
+  void BookBDT(BDTType t);
   void BookBDT(TString opt="");
   void TrainAll();
 
