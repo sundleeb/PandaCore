@@ -19,6 +19,7 @@ void HistogramDrawer::AddAdditional(TObject *o, TString opt, TString aname) {
   w.o = o;
   w.opt = opt;
   w.label = aname;
+  internalAdds.push_back(w);
 }
 
 void HistogramDrawer::AddHistogram(TH1F *h, TString label, ProcessType pt, int cc, TString opt) {

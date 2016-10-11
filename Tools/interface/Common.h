@@ -4,6 +4,7 @@
 #include "TString.h"
 #include "TStopwatch.h"
 #include <vector>
+#include "Functions.h"
 
 #ifndef COMMONUTILITIES_H
 #define COMMONUTILITIES_H
@@ -13,7 +14,6 @@
  * Things defined in this header:
  * activateBranch:  activates a branch in a TTree for reading
  * Info,Warning,Error: fprintf messages
- * DeltaR2: calculates delta r squared
  * getVal: find scalefactor, etc from 1d or 2d histogram
  * bound: bound a value between min and max
  * ProgressReporter: class to report progress of a loop 
@@ -43,13 +43,6 @@ inline void PWarning(const char *module, const char *msg) {
 
 inline void PError(const char *module, const char *msg) {
   fprintf(stderr,"ERROR   [%-40s]: %s\n",module,msg);
-}
-
-inline double DeltaR2(double eta1, double phi1, double eta2, double phi2) {
-  float dEta2 = (eta1-eta2); dEta2 *= dEta2;
-  float dPhi = TMath::Abs(phi1-phi2);
-  if (dPhi>PI) dPhi = 2*PI-dPhi;
-  return dEta2 + dPhi*dPhi;
 }
 
 inline double getVal(TH1D*h,double val) {

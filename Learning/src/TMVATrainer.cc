@@ -54,7 +54,7 @@ void TMVATrainer::BookBDT(BDTType t) {
       BookBDT("!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=5:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=10");
       break;
     case kGradWide:
-      BookBDT("!H:!V:NTrees=850:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:nCuts=20:MaxDepth=5");
+      BookBDT("!H:!V:NTrees=300:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.30:nCuts=20:MaxDepth=5");
       break;
     case kGradDeep:
       BookBDT("!H:!V:NTrees=30:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:nCuts=20:MaxDepth=10");

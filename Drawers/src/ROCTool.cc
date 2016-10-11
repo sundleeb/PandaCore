@@ -8,6 +8,7 @@ ROCTool::~ROCTool() {
 void ROCTool::InitCanvas(double x1, double y1, double x2, double y2) {
   c = new GraphDrawer();
   c->SetTDRStyle();
+  c->SetGrid();
   c->AddCMSLabel();
   if (doLogy)
     c->Logy();

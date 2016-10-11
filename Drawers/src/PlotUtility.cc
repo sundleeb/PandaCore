@@ -82,6 +82,9 @@ void PlotUtility::ClearProcess(ProcessType pt) {
 }
 
 void PlotUtility::Reset(bool clearPlotLabels) {
+  // overriding because there was something I wanted
+  // to implement here, but I have forgotten what
+  // that is
   HistogramDrawer::Reset(clearPlotLabels);
 }
 
@@ -255,10 +258,10 @@ void PlotUtility::DrawAll(TString outDir) {
       ownedHistos.push_back(h);
 
       if (d->name=="1") {
-          PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-10s %15f %15.0f",p->name.Data(),h->Integral(),h->GetEntries()));
+          PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-15s %15f %15.0f",p->name.Data(),h->Integral(),h->GetEntries()));
           if (iP<=kSignal3 && iP!=kData)
             sigTotal += h->Integral();
-          else
+          else if (iP!=kData)
             bgTotal += h->Integral();
       } else {
             fOut->WriteTObject(h,TString::Format("h_%s_%s",sanitize(d->filename).Data(),p->name.Data()),"Overwrite");
@@ -277,6 +280,8 @@ void PlotUtility::DrawAll(TString outDir) {
       if (doLogy)
         tmpName += "_logy";
       HistogramDrawer::Draw(outDir,tmpName);
+    } else {
+      PInfo("PlotUtility::DrawAll::Dump",TString::Format("S/B=%.3f; S/sqrt(B)=%.3f",sigTotal/bgTotal,sigTotal/sqrt(bgTotal)));
     } 
     Reset(false);
     for (auto h : ownedHistos) 

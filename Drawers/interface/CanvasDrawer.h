@@ -71,6 +71,7 @@ public:
   void AddLumiLabel(bool fb=true, double customLumi=-1);
   void ClearCanvas() { c->Clear(); }
   void cd() { c->cd(); }
+  void SetGrid() { c->SetGrid(); }
 
   bool HasLegend() { return legend!=0; }
 
