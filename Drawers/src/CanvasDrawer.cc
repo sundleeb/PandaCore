@@ -169,11 +169,13 @@ void CanvasDrawer::SetRatioStyle() {
 
 }
 
-void CanvasDrawer::AddCMSLabel() {
+void CanvasDrawer::AddCMSLabel(double x, double y) {
   float textsize = doRatio ? 0.06 : 0.05;
   if (whichstyle==2) textsize = 0.06;
-  AddPlotLabel("CMS",.18,.85,false,62,textsize);
-  AddPlotLabel("Preliminary",.28,.85,false,52,textsize); 
+  AddPlotLabel("CMS",x,y,false,62,textsize);
+  AddPlotLabel("Preliminary",x+.1,y,false,52,textsize); 
+  //AddPlotLabel("CMS",.18,.85,false,62,textsize);
+  //AddPlotLabel("Preliminary",.28,.85,false,52,textsize); 
 }
 
 void CanvasDrawer::AddLumiLabel(bool fb, double customLumi) {

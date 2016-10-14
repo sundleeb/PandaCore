@@ -67,7 +67,7 @@ public:
 
   void SetTDRStyle();
   void SetRatioStyle();
-  void AddCMSLabel();
+  void AddCMSLabel(double x=0.18, double y=0.85);
   void AddLumiLabel(bool fb=true, double customLumi=-1);
   void ClearCanvas() { c->Clear(); }
   void cd() { c->cd(); }

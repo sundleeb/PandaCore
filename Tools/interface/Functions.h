@@ -10,7 +10,7 @@
 
 inline double SignedDeltaPhi(double phi1, double phi2) {
   double dPhi = phi1-phi2;
-  if (dPhi<PI)
+  if (dPhi<-PI)
     dPhi = 2*PI+dPhi;
   else if (dPhi>PI)
     dPhi = -2*PI+dPhi;

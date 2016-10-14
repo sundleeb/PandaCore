@@ -41,4 +41,4 @@ def tNOT(w):
   return '!( '+w+' )'
 
 def removeCut(basecut,var):
-  return sub('[0-9\.]*[=<>]*%s'%var,'1==1',sub('%s[=<>]+[0-9\.]+'%var,'1==1',basecut))
+  return sub('[0-9\.]*[=<>]*%s'%(var.replace('(','\(').replace(')','\)')),'1==1',sub('%s[=<>]+[0-9\.]+'%(var.replace('(','\(').replace(')','\)')),'1==1',basecut))

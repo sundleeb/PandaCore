@@ -42,6 +42,7 @@ objects = {
   'PandaAnalysisFlat' : Library(name='Flat',pkg='PandaAnalysis',
                         d={
                             'PandaAnalyzer':['PandaAnalyzer'],
+                            'LimitTreeBuilder':['LimitTreeBuilder'],
                           }),
 }
 
