@@ -1,6 +1,8 @@
 from ROOT import gPad,TH2D,TH1D,TFile,TChain,TTree,gROOT,TCanvas
+import ROOT as root
 from array import array as arr
 from numpy import log2,sqrt,array,empty
+from PandaCore.Tools.Misc import *
 
 hcounter=0
 
@@ -17,10 +19,12 @@ def getCov(t,AVar,BVar,cut='',aBins=None,bBins=None):
 def getPearson(t,AVar,BVar,cut='',aBins=None,bBins=None):
   global hcounter
   if aBins!=None and bBins!=None:
-    t.Draw("%s:%s>>htmp(%i,%f,%f,%i,%f,%f)"%(AVar,BVar,bBins[0],bBins[1],bBins[2],aBins[0],aBins[1],aBins[2]),cut,"colz")
+    htmp = TH2D('h%i'%hcounter,'h%i'%hcounter,aBins[0],aBins[1],aBins[2],bBins[0],bBins[1],bBins[2])
+    t.Draw("%s:%s>>h%i(%i,%f,%f,%i,%f,%f)"%(AVar,BVar,hcounter,bBins[0],bBins[1],bBins[2],aBins[0],aBins[1],aBins[2]),cut,"colz")
+    htmp = getattr(root,'h%i'%hcounter)
   else:
-    t.Draw("%s:%s>>htmp"%(AVar,BVar),cut,"colz")
-  htmp = gPad.GetPrimitive('htmp')
+    t.Draw("%s:%s>>h%i"%(AVar,BVar,hcounter),cut,"colz")
+    htmp = getattr(root,'h%i'%hcounter)
   hcounter += 1
   return htmp.GetCorrelationFactor()
 
@@ -52,6 +56,7 @@ class SquarePlotter(object):
     # format of xs is [ [var,title,(optional nbins, binlo, binhi)] ]
     nX = len(xs)
     h2 = TH2D('hcorr','hcorr',nX,0,nX,nX,0,nX)
+    h2.GetZaxis().SetTitle('Correlation')
     # label X and Y in opposite order
     for iB in xrange(1,nX+1):
       h2.GetXaxis().SetBinLabel(iB,xs[iB-1][1])
@@ -60,11 +65,16 @@ class SquarePlotter(object):
     for iX in xrange(nX):
       for iY in xrange(iX,nX):
         x = xs[iX]; y = xs[iY];
-        xbins = None if len(x)<3 else x[2]
-        ybins = None if len(y)<3 else y[2]
-        corrsig = getPearson(self.tsig,x[0],y[0],sigcut,xbins,ybins)
+        if not(x==y):
+          xbins = None if len(x)<3 else x[2]
+          ybins = None if len(y)<3 else y[2]
+          PInfo("SquarePlotter.makeCorrPlots","%s vs %s"%(x[0],y[0]))
+          corrsig = getPearson(self.tsig,x[0],y[0],sigcut,xbins,ybins)
+          corrbg = getPearson(self.tbg,x[0],y[0],bgcut,xbins,ybins)
+        else:
+          corrsig=1
+          corrbg=1
         h2.SetBinContent(iX+1,nX-iY,corrsig)
-        corrbg = getPearson(self.tbg,x[0],y[0],bgcut,xbins,ybins)
         h2bg.SetBinContent(iX+1,nX-iY,corrbg)
     return h2,h2bg
 

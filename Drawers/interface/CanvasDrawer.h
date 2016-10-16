@@ -34,6 +34,8 @@ enum ProcessType {
   kExtra4,   
   kExtra5,   
   kExtra6,   
+  kExtra7,   
+  kExtra8,   
   nProcesses
 };
 
@@ -66,12 +68,13 @@ public:
   void SetEvtMod(int i) { eventmod=i; }
 
   void SetTDRStyle();
+  void SetAutoRange(bool b) { doAutoRange=b; }
   void SetRatioStyle();
   void AddCMSLabel(double x=0.18, double y=0.85);
   void AddLumiLabel(bool fb=true, double customLumi=-1);
   void ClearCanvas() { c->Clear(); }
   void cd() { c->cd(); }
-  void SetGrid() { c->SetGrid(); }
+  void SetGrid() { gStyle->SetGridColor(16); c->SetGrid(); }
 
   bool HasLegend() { return legend!=0; }
 
@@ -142,6 +145,7 @@ protected:
   bool doLogy=false;
   bool doDrawMCErrors=false; // option to draw MC errors
   bool doSetNormFactor=false; // option to scale mc to match data (if doStack) else SetNormFactor() everything
+  bool doAutoRange=true;
   bool doRatio=false;
   bool fixRatio=false;
   double ratioMax=2;

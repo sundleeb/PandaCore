@@ -22,7 +22,7 @@ void HistogramDrawer::AddAdditional(TObject *o, TString opt, TString aname) {
   internalAdds.push_back(w);
 }
 
-void HistogramDrawer::AddHistogram(TH1F *h, TString label, ProcessType pt, int cc, TString opt) {
+void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int cc, TString opt) {
   if (h!=NULL) {
     h->SetStats(0);
     h->SetTitle("");
@@ -54,7 +54,7 @@ void HistogramDrawer::AddHistogram(TString hname, TString label, ProcessType pt,
   else 
     tmpFile = centralFile;
 
-  TH1F *h = (TH1F*)tmpFile->Get(hname);
+  TH1D *h = (TH1D*)tmpFile->Get(hname);
   AddHistogram(h,label,pt);
 }
 
@@ -94,12 +94,12 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   TPad *pad1=0, *pad2=0;
   float stackIntegral=0;
   THStack *hs=0;
-  TH1F *hData=0;
-  TH1F *hSignal[4] = {0,0,0,0};
-  TH1F *hRatio=0;
-  TH1F *hZero=0;
-  TH1F *hSum=0;
-  TH1F *hRatioError = 0;
+  TH1D *hData=0;
+  TH1D *hSignal[4] = {0,0,0,0};
+  TH1D *hRatio=0;
+  TH1D *hZero=0;
+  TH1D *hSum=0;
+  TH1D *hRatioError = 0;
   std::vector<HistWrapper> hOthers;
 
   c->SetLogy(doLogy&&(!doRatio));
@@ -109,7 +109,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   
   for (unsigned int iH=0; iH!=nH; ++iH) {
     HistWrapper w = internalHists[iH];
-    TH1F *h = w.h;
+    TH1D *h = w.h;
     ProcessType pt = w.pt;
     if (doStack && pt>kSignal3) {
       h->SetLineColor(1);
@@ -165,7 +165,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     }
     if (doDrawMCErrors) {
       std::vector<float> vals,errs;
-      hSum = (TH1F*) (hOthers[0].h->Clone("hsum"));
+      hSum = (TH1D*) (hOthers[0].h->Clone("hsum"));
       hSum->SetFillColorAlpha(kBlack,0.99);
       hSum->SetLineWidth(0);
       hSum->SetFillStyle(3004);
@@ -176,7 +176,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       }
       
       for (HistWrapper w : hOthers) {
-        TH1F *hh = w.h;
+        TH1D *hh = w.h;
         for (int iB=0; iB!=nBins; ++iB) {
           vals[iB] += hh->GetBinContent(iB+1);
           errs[iB] += std::pow(hh->GetBinError(iB+1),2);
@@ -206,7 +206,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     maxY = hs->GetMaximum();        
   } else {
     for (HistWrapper w : hOthers) {
-      TH1F *hh = w.h;
+      TH1D *hh = w.h;
       maxY = std::max(maxY,hh->GetMaximum());
       if (doLogy)
         minY = std::min(minY,hh->GetMinimum());
@@ -252,7 +252,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   }
 
   // figure out what to do with the first histogram
-  TH1F *firstHist=0;
+  TH1D *firstHist=0;
   if (!doStack) {
     if (hOthers.size()>0) 
       firstHist = hOthers[0].h;
@@ -268,8 +268,10 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     }
   }
   if (firstHist) {
-    firstHist->SetMinimum(minY);
-    firstHist->SetMaximum(maxY);
+    if (doAutoRange) {
+      firstHist->SetMinimum(minY);
+      firstHist->SetMaximum(maxY);
+    }
     if (firstHist==hData)
       firstHist->Draw("elp");
     else if (firstHist==hOthers[0].h)
@@ -287,8 +289,10 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
 
   // plot everything else
   if (doStack) {
-    hs->SetMinimum(minY); 
-    hs->SetMaximum(maxY);
+    if (doAutoRange) {
+      hs->SetMinimum(minY); 
+      hs->SetMaximum(maxY);
+    }
     hs->Draw(drawOption);
     if (!doRatio) {
       hs->GetXaxis()->SetTitle(xlabel);
@@ -301,7 +305,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hSum->Draw("e2 same");
   } else {
     for (HistWrapper w : hOthers) {
-      TH1F *hh = w.h;
+      TH1D *hh = w.h;
       if (hh==firstHist)
         continue;
       hh->Draw(w.opt+" same");
@@ -319,7 +323,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     TObject *o = w.o;
     TString opt = w.opt;
     TString className(o->ClassName());    
-    if (className.Contains("TH1"))
+    if (className.Contains("TH1") || className.Contains("TProfile"))
       o->Draw(opt+" same");
     else if (className.Contains("TGraph"))
       o->Draw(opt+" same");
@@ -353,10 +357,10 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     pad2->SetBottomMargin(0.3);
     pad2->Draw();
     pad2->cd();
-    hRatio = (TH1F*)hData->Clone("ratio");
+    hRatio = (TH1D*)hData->Clone("ratio");
     if (doDrawMCErrors)
-      hRatioError = (TH1F*)hSum->Clone("sumratio");
-    hZero = (TH1F*)hData->Clone("zero"); 
+      hRatioError = (TH1D*)hSum->Clone("sumratio");
+    hZero = (TH1D*)hData->Clone("zero"); 
     for (int iB=0; iB!=nBins; ++iB) 
       hZero->SetBinContent(iB+1,1);
     
@@ -368,7 +372,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     for (int iB=1; iB!=nBins+1; ++iB) {
       float mcVal=0;
       for (HistWrapper w : hOthers) {
-        TH1F *hh = w.h;
+        TH1D *hh = w.h;
         mcVal += hh->GetBinContent(iB);
       }
       float dataVal = hData->GetBinContent(iB);

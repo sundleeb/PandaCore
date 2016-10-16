@@ -1,6 +1,6 @@
 #include "../interface/PlotUtility.h"
 #include "THStack.h"
-#include "TH1F.h"
+#include "TH1D.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TFile.h"
@@ -94,8 +94,8 @@ void PlotUtility::DrawAll(TString outDir) {
   TFile *fOut = new TFile(outDir+"hists.root","UPDATE");
   TFile *fBuffer = new TFile(TString::Format("/tmp/buffer_%i.root",gSystem->GetPid()).Data(),"RECREATE");
   fBuffer->cd();
-  TH1F *h=0;
-  std::vector<TH1F> histograms;
+  TH1D *h=0;
+  std::vector<TH1D> histograms;
   if (order.size()==0) {
     for (unsigned int iP=0; iP!=nProcesses; ++iP) 
       order.push_back(iP);
@@ -160,25 +160,25 @@ void PlotUtility::DrawAll(TString outDir) {
     tmpName.ReplaceAll("(","");
     tmpName.ReplaceAll(".","_");
 
-    std::vector<TH1F*> ownedHistos; // for garbage collection
-    std::vector<TH1F*> hSystUp, hSystDown;
+    std::vector<TH1D*> ownedHistos; // for garbage collection
+    std::vector<TH1D*> hSystUp, hSystDown;
     for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-      TH1F *hsyst; TString hname;
+      TH1D *hsyst; TString hname;
       
       hname = TString::Format("h_%s_Up",systNames[iS].Data());
       if (d->binEdges==0) {
-        hsyst = new TH1F(hname.Data(),hname.Data(),d->nBins,d->min,d->max);
+        hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->min,d->max);
       } else {
-        hsyst = new TH1F(hname.Data(),hname.Data(),d->nBins,d->binEdges);
+        hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->binEdges);
       }
       hsyst->SetLineColor(systColors[iS]); hsyst->SetLineWidth(2);
       hSystUp.push_back(hsyst); ownedHistos.push_back(hsyst);
 
       hname = TString::Format("h_%s_Down",systNames[iS].Data());
       if (d->binEdges==0) {
-        hsyst = new TH1F(hname.Data(),hname.Data(),d->nBins,d->min,d->max);
+        hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->min,d->max);
       } else {
-        hsyst = new TH1F(hname.Data(),hname.Data(),d->nBins,d->binEdges);
+        hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->binEdges);
       }
       hsyst->SetLineColor(systColors[iS]); hsyst->SetLineWidth(2);
       hSystDown.push_back(hsyst); ownedHistos.push_back(hsyst);
@@ -207,10 +207,10 @@ void PlotUtility::DrawAll(TString outDir) {
         pWeight *= (p->additionalCut + thisCut);
       }
       if (d->binEdges==0) {
-        h = new TH1F(TString::Format("h_%s",p->name.Data()),TString::Format("h_%s",p->name.Data()),d->nBins,d->min,d->max);
+        h = new TH1D(TString::Format("h_%s",p->name.Data()),TString::Format("h_%s",p->name.Data()),d->nBins,d->min,d->max);
         drawTree->Draw(TString::Format("%s>>h_%s",d->name.Data(),p->name.Data()),pWeight);
       } else {
-        h = new TH1F(TString::Format("h_%s",p->name.Data()), TString::Format("h_%s",p->name.Data()), d->nBins,d->binEdges);
+        h = new TH1D(TString::Format("h_%s",p->name.Data()), TString::Format("h_%s",p->name.Data()), d->nBins,d->binEdges);
         drawTree->Draw(TString::Format("%s>>h_%s",d->name.Data(),p->name.Data()),pWeight);
         // should divide by bin width
         for (int iB=1; iB!=d->nBins+1; ++iB) {

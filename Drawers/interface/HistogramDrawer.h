@@ -2,7 +2,7 @@
 #define PANDACORE_TOOLS_HDRAWER
 
 #include "CanvasDrawer.h"
-#include "TH1F.h"
+#include "TH1D.h"
 #include "TObject.h"
 #include "TFile.h"
 #include <utility>
@@ -12,7 +12,7 @@ class HistogramDrawer : public CanvasDrawer {
     HistogramDrawer(double x=-1, double y=-1);
     ~HistogramDrawer();
 
-  void AddHistogram(TH1F *h, TString label, ProcessType pt=nProcesses, int cc = -1, TString opt="");
+  void AddHistogram(TH1D *h, TString label, ProcessType pt=nProcesses, int cc = -1, TString opt="");
   void AddHistogram(TString hname, TString label, ProcessType pt=nProcesses, TString fname="");
   void AddAdditional(TObject *o, TString opt="", TString aname="");
   void SetInputFile(TString fname);
@@ -27,7 +27,7 @@ class HistogramDrawer : public CanvasDrawer {
       public:
         HistWrapper() {}
         ~HistWrapper() {}
-        TH1F *h;
+        TH1D *h;
         TString label;
         ProcessType pt;
         int cc;
