@@ -51,6 +51,10 @@ import ROOT as root
 from os import getenv
 
 def Load(lib,obj):
+  root_include_path = getenv('ROOT_INCLUDE_PATH')
+  for p in root_include_path.split(":"):
+    gInterpreter.AddIncludePath(p)
+  gInterpreter.AddIncludePath('/cvmfs/cms.cern.ch/slc6_amd64_gcc530/external/fastjet-contrib/1.020/include/')
   gInterpreter.AddIncludePath("%s/src/fastjet/include/"%(getenv('CMSSW_BASE'))) # why isn't this set by CMSSW...?
   includepath=None
   subpackage = objects[lib]
