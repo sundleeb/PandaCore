@@ -146,8 +146,9 @@ void PlotUtility::DrawAll(TString outDir) {
     if (d->name!="1")
       PInfo("PlotUtility::DrawAll",TString::Format("Plotting %s",d->name.Data()));
     
-    float bgTotal=0;
-    float sigTotal=0;
+    double bgTotal=0, bgErr=0;
+    double sigTotal=0, sigErr=0;
+    double dataTotal=0, dataErr=0;
 
     
     TString tmpName(d->filename);
@@ -258,11 +259,18 @@ void PlotUtility::DrawAll(TString outDir) {
       ownedHistos.push_back(h);
 
       if (d->name=="1") {
-          PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-15s %15f %15.0f",p->name.Data(),h->Integral(),h->GetEntries()));
-          if (iP<=kSignal3 && iP!=kData)
-            sigTotal += h->Integral();
-          else if (iP!=kData)
-            bgTotal += h->Integral();
+          double err_;
+          if (iP<=kSignal3 && iP!=kData) {
+            sigTotal += h->IntegralAndError(1,h->GetNbinsX(),err_);
+            sigErr += pow(err_,2);
+          } else if (iP!=kData) {
+            bgTotal += h->IntegralAndError(1,h->GetNbinsX(),err_);
+            bgErr += pow(err_,2);
+          } else if (iP==kData) {
+            dataTotal = h->IntegralAndError(1,h->GetNbinsX(),err_);
+            dataErr = pow(err_,2);
+          }
+          PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f",p->name.Data(),h->Integral(),err_));
       } else {
             fOut->WriteTObject(h,TString::Format("h_%s_%s",sanitize(d->filename).Data(),p->name.Data()),"Overwrite");
       }
@@ -281,6 +289,8 @@ void PlotUtility::DrawAll(TString outDir) {
         tmpName += "_logy";
       HistogramDrawer::Draw(outDir,tmpName);
     } else {
+      PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f","Data",dataTotal,sqrt(dataErr)));
+      PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f","MC",bgTotal,sqrt(bgErr)));
       PInfo("PlotUtility::DrawAll::Dump",TString::Format("S/B=%.3f; S/sqrt(B)=%.3f",sigTotal/bgTotal,sigTotal/sqrt(bgTotal)));
     } 
     Reset(false);

@@ -63,20 +63,25 @@ TGraph *ROCTool::CalcROC1Cut() {
   float sigIntegral = sigHist->Integral(1,nB);
   float bgIntegral = bgHist->Integral(1,nB);
 
-//  printf("%s\n",sigHist->GetName());
+  bool foundHalf=false;
   for (unsigned int iB=1; iB!=nB+1; ++iB) {
     if (normal) {
       float eff = sigHist->Integral(iB,nB)/sigIntegral;
       float rej = bgHist->Integral(iB,nB)/bgIntegral;
-//      float rej = (iB==1) ? 1 : 1-bgHist->Integral(1,iB-1)/bgIntegral;
       effs[iB-1] = eff; rejs[iB-1] = rej;
+      if (!foundHalf && eff<0.5) {
+        PInfo("ROCTool::CalcROC",TString::Format("eff=%.2f, rej=%.2f, at x=%.2f",eff,rej,sigHist->GetBinCenter(iB)));
+        foundHalf=true;
+      }
     } else {
       float eff = sigHist->Integral(1,iB)/sigIntegral;
       float rej = bgHist->Integral(1,iB)/bgIntegral;
-//      float rej = (iB==nB) ? 1 : 1-bgHist->Integral(iB+1,nB)/bgIntegral;
       effs[iB] = eff; rejs[iB] = rej;
+      if (!foundHalf && eff>0.5) {
+        PInfo("ROCTool::CalcROC",TString::Format("eff=%.2f, rej=%.2f, at x=%.2f",eff,rej,sigHist->GetBinCenter(iB)));
+        foundHalf=true;
+      }
     } 
-//    printf("%f %f %f\n",sigHist->GetBinCenter(iB),effs[iB-1],rejs[iB-1]);
   }
   if (normal)
   { effs[nB]=0; rejs[nB]=0; }
