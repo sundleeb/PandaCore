@@ -4,6 +4,7 @@
 #include "TH1F.h"
 #include "TFile.h"
 #include "TGraph.h"
+#include "TMarker.h"
 #include "TMultiGraph.h"
 #include "GraphDrawer.h"
 
@@ -22,6 +23,7 @@ class ROCTool {
     TGraph *CalcROC(TString hspath, TString hbpath, const char *title=0, unsigned int color=1, int style=1, int nCuts=1);
     TGraph *CalcROC1Cut();
     TGraph *CalcROC2Cut();
+    TMarker *CalcWP(TTree *ts, TTree *tb, int color, TString sigcut, TString sigweight, TString bgcut, TString bgweight, TString cut, TString title);
 
     void DrawAll(TString outDir, TString basePath);
     void Logy(bool b=true) { doLogy=b; }

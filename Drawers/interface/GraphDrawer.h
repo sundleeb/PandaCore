@@ -2,6 +2,7 @@
 #define PANDACORE_TOOLS_GDRAWER
 
 #include "CanvasDrawer.h"
+#include "TMarker.h"
 #include "TGraph.h"
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
@@ -15,6 +16,7 @@ template <typename T> class BaseGraphDrawer : public CanvasDrawer {
 
   void AddGraph(T *g, const char *label,unsigned int color,int style=1, const char *drawOption="L");
   void AddGraph(TString gname, const char *label,unsigned int color,int style=1, const char *drawOption="L");
+  void AddMarker(TMarker *m, const char *label);
   void SetInputFile(TString fname);
   void SetInputFile(TFile *f);
   void SetLineWidth(int l0) { lineWidth = l0; }
@@ -32,6 +34,9 @@ template <typename T> class BaseGraphDrawer : public CanvasDrawer {
     std::vector<int> colors;
     std::vector<int> styles;
     std::vector<const char*> drawOptions;
+
+    std::vector<TMarker*> markers;
+    std::vector<const char*> marker_labels;
 };
 
 template <typename T> BaseGraphDrawer<T>::BaseGraphDrawer(double x, double y):
@@ -44,6 +49,16 @@ template <typename T> BaseGraphDrawer<T>::~BaseGraphDrawer() {
     delete centralFile;
   for (auto *label : labels)
     delete label;
+  for (auto *marker_label : marker_labels)
+    delete marker_label;
+}
+
+template <typename T>
+void BaseGraphDrawer<T>::AddMarker(TMarker *m, const char *label) {
+  markers.push_back(m);
+  char *labelCpy = new char[100];
+  strcpy(labelCpy,label);
+  marker_labels.push_back(labelCpy);
 }
 
 template <typename T> 
@@ -116,6 +131,15 @@ void BaseGraphDrawer<T>::Draw(TString outDir, TString baseName) {
       legend->AddEntry(graph,labels[iG],legOption);
     }
 
+  }
+
+  unsigned int nMarkers = markers.size();
+  for (unsigned int iM=0; iM!=nMarkers; ++iM) {
+    TMarker *m = markers[iM];
+    m->Draw("p same");
+    if (legend) {
+      legend->AddEntry(m,marker_labels[iM],"p");
+    }
   }
 
   CanvasDrawer::Draw(outDir,baseName);

@@ -1,6 +1,8 @@
 #include "../interface/ROCTool.h"
 #include <algorithm>
 
+#define DEBUG 0
+
 ROCTool::~ROCTool() {
   delete c; c=0; 
 }
@@ -33,6 +35,50 @@ void ROCTool::SetFile(TString fpath) {
   centralFile = TFile::Open(fpath);
   fileIsOwned=true;
 }
+
+TMarker *ROCTool::CalcWP(TTree *ts, TTree *tb, int color, TString sigcut, TString sigweight, TString bgcut, TString bgweight, TString cut, TString title) {
+  TH1F *hst = new TH1F("hst","hst",2,-2,2);
+  TH1F *hsn = (TH1F*)hst->Clone("hsn");
+  TH1F *hbt = (TH1F*)hst->Clone("hbt");
+  TH1F *hbn = (TH1F*)hst->Clone("hbn");
+
+  if (DEBUG) {
+    PDebug("","sigcut:    "+sigcut);
+    PDebug("","sigweight: "+sigweight);
+    PDebug("","bgcut:     "+bgcut);
+    PDebug("","bgweight:  "+bgweight);
+    PDebug("","cut:       "+cut);
+  }
+  
+  ts->Draw("1>>hst","("+sigweight+")*("+sigcut+")");
+  double sigtot = hst->Integral();
+
+  tb->Draw("1>>hbt","("+bgweight+")*("+bgcut+")");
+  double bgtot = hbt->Integral();
+
+  ts->Draw("1>>hsn","("+sigweight+")*(("+sigcut+")&&("+cut+"))");
+  double signum = hsn->Integral();
+
+  tb->Draw("1>>hbn","("+bgweight+")*(("+bgcut+")&&("+cut+"))");
+  double bgnum = hbn->Integral();
+
+  double eff = signum/sigtot; double fake = bgnum/bgtot;
+  PInfo("ROCTool::CalcWP",TString::Format("eff=%.2f, fake=%.2f",eff,fake));
+
+  TMarker *m = new TMarker(eff,fake,1);
+  m->SetMarkerColor(color);
+  m->SetMarkerSize(2);
+  m->SetMarkerStyle(29);
+
+  if (c) {
+    c->AddMarker(m,title);
+  }
+
+  delete hst; delete hsn; delete hbt; delete hbn;
+
+  return m;
+}
+
 
 TGraph *ROCTool::CalcROC(TH1F *hs, TH1F *hb, const char *title, unsigned int color, int style, int nCuts) {
   if (hs && hb)
