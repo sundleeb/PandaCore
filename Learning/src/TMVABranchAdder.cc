@@ -27,10 +27,6 @@ inline bool isClean(double x) {
   return x==x;
 }
 
-inline double clean(double x, double d=-1) {
-  return (isClean(x) ? x : d);
-}
-
 void TMVABranchAdder::RunFile(TString fpath) {
   TFile *fin = TFile::Open(fpath,"UPDATE");
   TTree *tin = (TTree*)fin->FindObjectAny(treename);
@@ -56,6 +52,7 @@ void TMVABranchAdder::RunFile(TString fpath) {
   TTreeFormula *fpresel=0;
   if (presel!="") {
     fpresel = new TTreeFormula("presel",presel.Data(),tin);
+    fpresel->SetQuickLoad(true);
   }
 
   unsigned int nFormulae = formulae.size();

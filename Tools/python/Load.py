@@ -44,6 +44,10 @@ objects = {
                             'PandaAnalyzer':['PandaAnalyzer'],
                             'LimitTreeBuilder':['LimitTreeBuilder'],
                           }),
+  'Statistics'        : Library(name='Statistics',pkg='PandaCore',
+                          d={
+                              'RooExpErf':['RooExpErf'],
+                          }),
 }
 
 from ROOT import gROOT, gSystem, gInterpreter

@@ -49,6 +49,7 @@ public:
   void SetCanvas(TCanvas *c0);
 
   void Stack(bool b)  {doStack = b;}
+  void DrawEmpty(bool b)  {drawEmpty = b;}
   void StackSignal(bool b)  {doStackSignal = b; if (b) doStack=true;}
   void Logy(bool b=true)	{ doLogy = b; maxScale = (b) ? 100 : 1.5; }
   void SetNormFactor(bool b)  { doSetNormFactor = b;  }
@@ -113,7 +114,7 @@ protected:
                         kCyan+1,
                         kGreen+1,
                         kOrange+8,
-                        kTeal+10,
+                        kBlue+2,
                         kViolet,
                         kAzure,
                         kSpring+8};
@@ -160,5 +161,6 @@ protected:
   int eventmod=0;
   int whichstyle=0;
   double maxScale=1.5;
+  bool drawEmpty=false; // for stacks, do not fill in the histograms
 };
 #endif

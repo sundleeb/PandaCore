@@ -101,7 +101,6 @@ processes =  {
 
 'TTbarDMJets_pseudoscalar_Mchi-1_Mphi-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('TTbarDM','MC',1),
 
-'GluGlu_HToInvisible_M125_13TeV_powheg_pythia8':('ggFHinv','MC',100),
 
 'MET+Run2015D-16Dec2015-v1+AOD':('MET2015D','Data',1),
 'MET+Run2015D-PromptReco-v3+AOD':('MET2015Dv3','Data',1),
@@ -183,7 +182,9 @@ processes =  {
 'monotop-nr-50ns_med-1100':('monotop-nr-50ns_med-1100','MC',1),
 'monotop-nr-v3-50ns_med-1100_dm-10':('monotop-nr-v3-50ns_med-1100_dm-10','MC',1),
 
-'VBF_HToInvisible_M125_13TeV_powheg_pythia8':('vbf-m125','MC',1),
+'GluGlu_HToInvisible_M125_13TeV_powheg_pythia8':('ggFHinv','MC',48.6),
+'Glu_HToInvisible_M125_13TeV_powheg_pythia8':('ggf-m125','MC',48.6),
+'VBF_HToInvisible_M125_13TeV_powheg_pythia8':('vbf-m125','MC',3.78),
 'VBF_HToInvisible_M1000_13TeV_powheg_pythia8':('vbf-m1000','MC',1),
 'VBF_HToInvisible_M110_13TeV_powheg_pythia8':('vbf-m110','MC',1),
 'VBF_HToInvisible_M150_13TeV_powheg_pythia8':('vbf-m150','MC',1),

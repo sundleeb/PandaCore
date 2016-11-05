@@ -123,7 +123,12 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     if (pt!=kData && (pt==kData || pt>kSignal3 || doStackSignal)) {
       if (doStack) {
         // if it's stackable
-        h->SetFillColor(w.cc);
+        if (drawEmpty) {
+          h->SetFillColor(0);
+          h->SetFillStyle(0);
+        } else {
+          h->SetFillColor(w.cc);
+        }
         hs->Add(h);
         legOption = "F";
         stackIntegral += h->Integral();
@@ -156,14 +161,13 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       legend->AddEntry(h,w.label,legOption);
   }
 
-
   // scale stacked histograms and calculate stacked error bands
   if (doStack) {
     if (doSetNormFactor) {
       for (HistWrapper ww : hOthers) 
         ww.h->Scale(1./stackIntegral);
     }
-    if (doDrawMCErrors) {
+    if (doDrawMCErrors||doRatio) {
       std::vector<float> vals,errs;
       hSum = (TH1D*) (hOthers[0].h->Clone("hsum"));
       hSum->SetFillColorAlpha(kBlack,0.99);
@@ -188,6 +192,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
         hSum->SetBinError(iB+1,std::sqrt(errs[iB]));
       }
     }
+
   }
 
   // figure out min and max 
@@ -335,7 +340,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     }
 
     TString label = w.label;
-    if (label.Length()>0) {
+    if (label.Length()>0 && legend) {
       legend->AddEntry(o,label,"l");
     }
   }

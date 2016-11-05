@@ -24,6 +24,10 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
+inline double clean(double x, double d=-1) {
+  return (x==x) ? x : d;
+}
+
 inline void activateBranch(TTree *t, const char *bname, void *address) {                                  
   t->SetBranchStatus(bname,1);                                                                   
   t->SetBranchAddress(bname,address);                                                            

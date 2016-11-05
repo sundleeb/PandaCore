@@ -2,6 +2,7 @@
 #define FUNCTIONS_H
 
 #include "TLorentzVector.h" //ugh
+#include "TMath.h"
 
 #define PI 3.141592654
 /*
@@ -32,5 +33,10 @@ inline double DeltaR2(double eta1, double phi1, double eta2, double phi2) {
   return dEta2 + dPhi*dPhi;
 }
 
+inline double ExpErf(double x, double a, double b, double c) {
+  double exp_ = TMath::Exp(c*x);
+  double erf_ = TMath::Erf((x-a)/b);
+  return exp_*(1+erf_)/2;
+}
 
 #endif
