@@ -8,6 +8,7 @@
 #include "TROOT.h"
 #include "TCut.h"
 #include "TCanvas.h"
+#include "TPad.h"
 #include "TLatex.h"
 #include "TLegend.h"
 #include  <vector>
@@ -47,6 +48,9 @@ public:
   ~CanvasDrawer();
 
   void SetCanvas(TCanvas *c0);
+  TCanvas *GetCanvas() { return c; }
+  TPad *GetPad1() { return pad1; }
+  TPad *GetPad2() { return pad2; }
 
   void Stack(bool b)  {doStack = b;}
   void DrawEmpty(bool b)  {drawEmpty = b;}
@@ -54,7 +58,8 @@ public:
   void Logy(bool b=true)	{ doLogy = b; maxScale = (b) ? 100 : 1.5; }
   void SetNormFactor(bool b)  { doSetNormFactor = b;  }
   void SetMaxScale(double d) { maxScale = d; }
-  void Ratio(bool b=true)  { doRatio = b;  }
+  void Ratio(bool b=true) { doRatio = b; }
+  void SplitCanvas(TCanvas *c_=0);
   void FixRatio(double m=2) { fixRatio=true; ratioMax=m; }
 
   void SetLumi(float f) { lumi = f; }
@@ -140,6 +145,7 @@ protected:
   };
 
   TCanvas *c=0;
+  TPad *pad1=0, *pad2=0;
   bool canvasIsOwned=false;
   bool doStack=false; // option to stack everything but data
   bool doStackSignal=false; // option to stack signal as well

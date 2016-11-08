@@ -29,6 +29,25 @@ void CanvasDrawer::SetCanvas(TCanvas *c0) {
   canvasIsOwned=false;
 }
 
+void CanvasDrawer::SplitCanvas(TCanvas *c_) {
+  if (!c_ && !c) {
+    c = new TCanvas();
+    canvasIsOwned=true;
+  }
+  if (!c)
+    c = c_;
+  c->cd();
+
+  pad1 = new TPad("pad1","pad1",0,0.3,1,1.0);
+  pad1->SetBottomMargin(0);
+  pad1->Draw();
+
+  pad2 = new TPad("pad2","pad2",0,0.05,1,0.3);
+  pad2->SetTopMargin(0);
+  pad2->SetBottomMargin(0.3);
+  pad2->Draw();
+}
+
 void CanvasDrawer::AddPlotLabel(const char *s, double x, double y, bool drawImmediately, int font, float textSize, int textAlign) {
   if (drawImmediately) {
     c->cd();

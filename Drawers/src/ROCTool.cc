@@ -63,7 +63,7 @@ TMarker *ROCTool::CalcWP(TTree *ts, TTree *tb, int color, TString sigcut, TStrin
   double bgnum = hbn->Integral();
 
   double eff = signum/sigtot; double fake = bgnum/bgtot;
-  PInfo("ROCTool::CalcWP",TString::Format("eff=%.2f, fake=%.2f",eff,fake));
+  PInfo("ROCTool::CalcWP",TString::Format("eff=%.2f => fakerate=%.2f",eff,fake));
 
   TMarker *m = new TMarker(eff,fake,1);
   m->SetMarkerColor(color);
@@ -105,28 +105,21 @@ TGraph *ROCTool::CalcROC1Cut() {
   bool normal = (sigHist->GetMean() > bgHist->GetMean());
   
   unsigned int nB = sigHist->GetNbinsX();
-  float *effs = new float[nB+1], *rejs = new float[nB+1];
+  float *effs = new float[nB+1], *rejs = new float[nB+1], *cuts = new float[nB+1];
   float sigIntegral = sigHist->Integral(1,nB);
   float bgIntegral = bgHist->Integral(1,nB);
 
-  bool foundHalf=false;
   for (unsigned int iB=1; iB!=nB+1; ++iB) {
     if (normal) {
       float eff = sigHist->Integral(iB,nB)/sigIntegral;
       float rej = bgHist->Integral(iB,nB)/bgIntegral;
       effs[iB-1] = eff; rejs[iB-1] = rej;
-      if (!foundHalf && eff<0.5) {
-        PInfo("ROCTool::CalcROC",TString::Format("eff=%.2f, rej=%.2f, at x=%.2f",eff,rej,sigHist->GetBinCenter(iB)));
-        foundHalf=true;
-      }
+      cuts[iB-1] = sigHist->GetBinLowEdge(iB);
     } else {
       float eff = sigHist->Integral(1,iB)/sigIntegral;
       float rej = bgHist->Integral(1,iB)/bgIntegral;
       effs[iB] = eff; rejs[iB] = rej;
-      if (!foundHalf && eff>0.5) {
-        PInfo("ROCTool::CalcROC",TString::Format("eff=%.2f, rej=%.2f, at x=%.2f",eff,rej,sigHist->GetBinCenter(iB)));
-        foundHalf=true;
-      }
+      cuts[iB-1] = sigHist->GetBinLowEdge(iB)+sigHist->GetBinWidth(iB);
     } 
   }
   if (normal)
@@ -140,6 +133,10 @@ TGraph *ROCTool::CalcROC1Cut() {
   roc->GetYaxis()->SetTitleOffset(1.5);
   roc->SetMinimum(minval); roc->SetMaximum(maxval);
   roc->GetXaxis()->SetLimits(0,1);
+
+  TGraph *gcuts = new TGraph(nB+1,effs,cuts);
+
+  PInfo("ROCTool::CalcROC",TString::Format("eff=0.5 => fakerate=%.3f, at x=%.2f",roc->Eval(0.5),gcuts->Eval(0.5)));
 
   return roc;
 }

@@ -33,20 +33,20 @@ inline void activateBranch(TTree *t, const char *bname, void *address) {
   t->SetBranchAddress(bname,address);                                                            
 }                      
 
-inline void PInfo(const char *module, const char *msg) {
-          printf("INFO    [%-40s]: %s\n",module,msg);
+inline void PInfo(const char *module, const char *msg, const char *newline="\n") {
+          printf("INFO    [%-40s]: %s%s",module,msg,newline);
 }
 
-inline void PDebug(const char *module, const char *msg) {
-  fprintf(stderr,"DEBUG   [%-40s]: %s\n",module,msg);
+inline void PDebug(const char *module, const char *msg, const char *newline="\n") {
+  fprintf(stderr,"DEBUG   [%-40s]: %s%s",module,msg,newline);
 }
 
-inline void PWarning(const char *module, const char *msg) {
-  fprintf(stderr,"WARNING [%-40s]: %s\n",module,msg);
+inline void PWarning(const char *module, const char *msg, const char *newline="\n") {
+  fprintf(stderr,"WARNING [%-40s]: %s%s",module,msg,newline);
 }
 
-inline void PError(const char *module, const char *msg) {
-  fprintf(stderr,"ERROR   [%-40s]: %s\n",module,msg);
+inline void PError(const char *module, const char *msg, const char *newline="\n") {
+  fprintf(stderr,"ERROR   [%-40s]: %s%s",module,msg,newline);
 }
 
 inline double getVal(TH1D*h,double val) {
@@ -75,7 +75,9 @@ class ProgressReporter {
     void Report() {
       float progress = 1.*(*idx)/(*N);
       if ( progress >= threshold) {
-        PInfo(name.Data(),TString::Format("%5.2f%% (%u/%u)",progress*100,*idx,*N).Data());
+        PInfo(name.Data(),
+            TString::Format("%-40s",TString::Format("%5.2f%% (%u/%u)",progress*100,*idx,*N).Data()).Data(),
+            "\r");
         threshold += 1./frequency;
       }
     }

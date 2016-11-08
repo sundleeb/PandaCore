@@ -29,12 +29,6 @@ objects = {
                             'PlotUtility':['PlotUtility','Process','Distribution'],
                             'ROCTool':['ROCTool'],
                       }),
-  'Skimmers' : Library(name='Skimmers',pkg='MitPanda',
-                        d={
-                            'LimitTreeBuilder':['VariableMap','Process','Region','LimitTreeBuilder'],
-                            'NeroSkimmer':['NeroSkimmer'],
-                            'SFSkimmer':['SFSkimmer'],
-                          }),
   'SCRAMJetAnalyzer' : Library(name='Analyzer',pkg='SCRAMJet',
                         d={
                             'Analyzer':['Analyzer'],
@@ -43,6 +37,7 @@ objects = {
                         d={
                             'PandaAnalyzer':['PandaAnalyzer'],
                             'LimitTreeBuilder':['LimitTreeBuilder'],
+                            'SFTreeBuilder':['SFTreeBuilder'],
                           }),
   'Statistics'        : Library(name='Statistics',pkg='PandaCore',
                           d={

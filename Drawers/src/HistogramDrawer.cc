@@ -91,7 +91,6 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   }
   int nBins = internalHists[0].h->GetNbinsX();
   c->cd();
-  TPad *pad1=0, *pad2=0;
   float stackIntegral=0;
   THStack *hs=0;
   TH1D *hData=0;
@@ -243,11 +242,9 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   // set up canvases
   c->cd();
   if (doRatio) {
-    pad1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1.0);
+    SplitCanvas();
     if (doLogy)
       pad1->SetLogy();
-    pad1->SetBottomMargin(0);
-    pad1->Draw();
     pad1->cd();
   }
   TString xlabel = internalHists[0].h->GetXaxis()->GetTitle();
@@ -357,10 +354,6 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   TGraphErrors *gRatioErrors;
   double *xVals=0, *yVals=0, *xErrors=0, *yErrors=0;
   if (doRatio) {
-    pad2 = new TPad("pad2", "pad2", 0, 0.05, 1, 0.3);
-    pad2->SetTopMargin(0);
-    pad2->SetBottomMargin(0.3);
-    pad2->Draw();
     pad2->cd();
     hRatio = (TH1D*)hData->Clone("ratio");
     if (doDrawMCErrors)

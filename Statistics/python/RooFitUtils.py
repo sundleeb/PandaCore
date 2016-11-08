@@ -105,7 +105,7 @@ class CategoryManager():
     # x is the RooRealVar which is the dependence
     # base and smear are either:
     #   1) a key in self.pdfs (base)
-    #   2) a string corresponding to a pre-defined smearing option
+    #   2) a string corresponding to a pre-defined smearing option (smear)
     #   3) externally-defined RooAbsPdf (base) or RooAbsReal(smear)
     # if (2) is used, parameters must be specified in params
     def getParam(pname,nNorms=0):
@@ -129,6 +129,13 @@ class CategoryManager():
         sigma = getParam('sigma')
         smear_model = root.RooGaussian(mname+'_gauss',mname+'_gauss',x,mu,sigma)
         self.pdfs[mname+'_gauss'] = smear_model
+      elif  smear.upper()=='CB':
+        mu = getParam('mu')
+        sigma = getParam('sigma')
+        alpha = getParam('alpha')
+        n = getParam('n_cb')
+        smear_model = root.RooCBShape(mname+'_cb',mname+'_cb',x,mu,sigma,alpha,n)
+        self.pdfs[mname+'_cb'] = smear_model
       else:
         PError('RooFitUtils.CategoryManager.buildModel',
                 'Smearing %s is not pre-defined'%(smear.upper()))
@@ -136,7 +143,9 @@ class CategoryManager():
     else:
       smear_model = smear
 
-    smeared = root.RooFFTConvPdf(mname,mname,x,base_model,smear_model)
+    smeared = root.RooFFTConvPdf(mname,mname,x,smear_model,base_model)
+    # smeared = root.RooFFTConvPdf(mname,mname,x,base_model,smear_model)
+
     self.pdfs[mname] = smeared
     self.w.imp(smeared)
     return smeared
@@ -159,11 +168,112 @@ class CategoryManager():
       sigma = getParam('sigma')
       model = root.RooGaussian(mname,mname,x,mu,sigma)
       self.pdfs[mname] = model
+    elif opt.upper()=='BW':
+      mu = getParam('mu')
+      sigma = getParam('sigma')
+      model = root.RooBreitWigner(mname,mname,x,mu,sigma)
+      self.pdfs[mname] = model
+    elif  opt.upper()=='CB':
+      mu = getParam('mu')
+      sigma = getParam('sigma')
+      alpha = getParam('alpha')
+      n = getParam('n_cb')
+      model = root.RooCBShape(mname,mname,x,mu,sigma,alpha,n)
+      self.pdfs[mname] = model
     elif opt.upper()=='EXPERF':
       a = getParam('a')
       b = getParam('b')
       c = getParam('c')
       model = root.RooExpErf(mname,mname,x,a,b,c)
+      self.pdfs[mname] = model
+    elif opt.upper()=='BERN':
+      n = params['n']
+      coefs = []
+      for iN in xrange(n):
+        coefs.append( getParam('c_%i'%iN) ) 
+      model = root.RooBernstein(mname,mname,x,root.RooArgList(*coefs))
+      self.pdfs[mname] = model
+    elif opt.upper()=='CBBERN':
+      mu = getParam('mu')
+      sigma = getParam('sigma')
+      alpha = getParam('alpha')
+      n_cb = getParam('n_cb')
+      n = params['n']
+      coefs = []
+      for iN in xrange(n):
+        coefs.append( getParam('c_%i'%iN) ) 
+      mu    = getParam('mu')
+      sigma = getParam('sigma')
+      ncb   = getParam('norm_cb',2)
+      nb    = getParam('norm_bern',2)
+      cb = root.RooCBShape(mname,mname,x,mu,sigma,alpha,n_cb)
+      if n>0:
+        bern = root.RooBernstein(mname+'_bern',mname+'_bern',x,root.RooArgList(*coefs))
+        model = root.RooAddPdf(mname,mname,
+                                root.RooArgList(cb,bern),
+                                root.RooArgList(ncb,nb))
+        self.pdfs[mname+'_bern'] = bern
+      else:
+        model = cb
+      self.pdfs[mname+'_cb'] = cb
+      self.pdfs[mname] = model
+    elif opt.upper()=='BWBERN':
+      n = params['n']
+      coefs = []
+      for iN in xrange(n):
+        coefs.append( getParam('c_%i'%iN) ) 
+      mu    = getParam('mu')
+      sigma = getParam('sigma')
+      nbw   = getParam('norm_bw',2)
+      nb    = getParam('norm_bern',2)
+      bw = root.RooBreitWigner(mname,mname,x,mu,sigma)
+      if n>0:
+        bern = root.RooBernstein(mname+'_bern',mname+'_bern',x,root.RooArgList(*coefs))
+        model = root.RooAddPdf(mname,mname,
+                                root.RooArgList(bw,bern),
+                                root.RooArgList(nbw,nb))
+        self.pdfs[mname+'_bern'] = bern
+      else:
+        model = bw
+      self.pdfs[mname+'_bw'] = bw
+      self.pdfs[mname] = model
+    elif opt.upper()=='GAUSSBERN':
+      n = params['n']
+      coefs = []
+      for iN in xrange(n):
+        coefs.append( getParam('c_%i'%iN) ) 
+      mu    = getParam('mu')
+      sigma = getParam('sigma')
+      ng    = getParam('norm_gauss',2)
+      nb    = getParam('norm_bern',2)
+      bern = root.RooBernstein(mname+'_bern',mname+'_bern',x,root.RooArgList(*coefs))
+      gauss  = root.RooGaussian(mname+'_gauss',mname+'_gauss',x,mu,sigma)
+      model = root.RooAddPdf(mname,mname,
+                              root.RooArgList(gauss,bern),
+                              root.RooArgList(ng,nb))
+      self.pdfs[mname+'_bern'] = bern
+      self.pdfs[mname+'_gauss'] = gauss
+      self.pdfs[mname] = model
+    elif opt.upper()=='WGAUSSEXPERF':
+      w_mu    = getParam('w_mu')
+      w_sigma = getParam('w_sigma')
+      mu    = getParam('mu')
+      sigma = getParam('sigma')
+      a     = getParam('a')
+      b     = getParam('b')
+      c     = getParam('c')
+      ng    = getParam('norm_gauss',3)
+      ne    = getParam('norm_experf',3)
+      nbw    = getParam('norm_bw',3)
+      gauss  = root.RooGaussian(mname+'_gauss',mname+'_gauss',x,mu,sigma)
+      bw = root.RooBreitWigner(mname+'_bw',mname+'_bw',x,w_mu,w_sigma)
+      experf = root.RooExpErf(mname+'_experf',mname+'_experf',x,a,b,c)
+      model  = root.RooAddPdf(mname,mname,
+                              root.RooArgList(gauss,experf,bw),
+                              root.RooArgList(ng,ne,nbw))
+      self.pdfs[mname+'_bw'] = bw
+      self.pdfs[mname+'_gauss'] = gauss
+      self.pdfs[mname+'_experf'] = experf
       self.pdfs[mname] = model
     elif opt.upper()=='GAUSSEXPERF':
       mu    = getParam('mu')
@@ -174,6 +284,14 @@ class CategoryManager():
       ng    = getParam('norm_gauss',2)
       ne    = getParam('norm_experf',2)
       gauss  = root.RooGaussian(mname+'_gauss',mname+'_gauss',x,mu,sigma)
+      # formula = '@1*TMath::Gaus(@0,@3,@4)+@2*TMath::Exp(@7*@0)*(1+TMath::Erf((@0-@5)/@6))/2'
+      # formula = 'TMath::Exp(@3*@0)*(1+TMath::Erf((@0-@1)/@2))/2'
+      # model = root.RooGenericPdf(mname,mname,formula,
+      #                             root.RooArgList(x,ng,ne,mu,sigma,a,b,c))
+      # experfstring = 'exp(@3*@0)'
+      # experfstring = 'exp(@3*@0)*(1+TMath::Erf((@0-@1)*@2))/2'
+      # experf = root.RooGenericPdf(mname+"_experf",mname+"_experf",
+      #                             formula,root.RooArgList(x,a,b,c))
       experf = root.RooExpErf(mname+'_experf',mname+'_experf',x,a,b,c)
       model  = root.RooAddPdf(mname,mname,
                               root.RooArgList(gauss,experf),

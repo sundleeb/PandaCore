@@ -3,7 +3,7 @@
 import ROOT as root
 import root_numpy as rnp
 import numpy as np
-from Misc import *
+from PandaCore.Tools.Misc import *
 
 def treeToArr(tree,formulae,cut=None,weight=None):
   if weight:

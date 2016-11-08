@@ -9,7 +9,7 @@
 import ROOT as root
 import root_numpy as rnp
 import numpy as np
-from Misc import *
+from PandaCore.Tools.Misc import *
 from RooFitUtils import *
 from numpyUtils import *
 
