@@ -299,6 +299,24 @@ class CategoryManager():
       self.pdfs[mname+'_gauss'] = gauss
       self.pdfs[mname+'_experf'] = experf
       self.pdfs[mname] = model
+    elif opt.upper()=='CBEXPERF':
+      mu    = getParam('mu')
+      sigma = getParam('sigma')
+      a     = getParam('a')
+      b     = getParam('b')
+      c     = getParam('c')
+      alpha = getParam('alpha')
+      n = getParam('n_cb')
+      ncb   = getParam('norm_cb',2)
+      ne    = getParam('norm_experf',2)
+      cb  = root.RooCBShape(mname+'_cb',mname+'_cb',x,mu,sigma,alpha,n)
+      experf = root.RooExpErf(mname+'_experf',mname+'_experf',x,a,b,c)
+      model  = root.RooAddPdf(mname,mname,
+                              root.RooArgList(cb,experf),
+                              root.RooArgList(ncb,ne))
+      self.pdfs[mname+'_cb'] = cb
+      self.pdfs[mname+'_experf'] = experf
+      self.pdfs[mname] = model
     if not model:
       PError('RooFitUtils.CategoryManager.buildModel',
               'Model %s is not pre-defined'%(opt.upper()))

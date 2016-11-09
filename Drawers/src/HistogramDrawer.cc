@@ -412,7 +412,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     maxVal = std::min((double)maxVal,1.5);
     if (fixRatio && ratioMax>0)
       maxVal = ratioMax;
-    maxVal = std::max(double(maxVal),0.6);
+    maxVal = std::max(double(maxVal),0.1);
     hRatio->SetTitle("");
     hRatio->Draw("elp");
     hRatio->SetMinimum(-1.2*maxVal+1);

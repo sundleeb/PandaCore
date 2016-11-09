@@ -1,0 +1,7 @@
+<use   name="root"/>
+<use   name="roofit"/>
+<use   name="PandaCore/Tools"/>
+<use   root=""/>
+<export>
+  <lib   name="1"/>
+</export>
