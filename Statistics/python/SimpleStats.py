@@ -7,7 +7,7 @@
 '''
 
 import ROOT as root
-import root_numpy as rnp
+#import root_numpy as rnp
 import numpy as np
 from PandaCore.Tools.Misc import *
 from RooFitUtils import *
