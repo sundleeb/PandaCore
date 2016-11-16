@@ -94,7 +94,7 @@ void TMVABranchAdder::RunFile(TString fpath) {
 
   for (auto tf : treeformulae)
     delete tf;
-  delete newbranches;
-  delete responses;
+  delete[] newbranches;
+  delete[] responses;
 }
 

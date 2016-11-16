@@ -77,7 +77,7 @@ class ProgressReporter {
       if ( progress >= threshold) {
         PInfo(name.Data(),
             TString::Format("%-40s",TString::Format("%5.2f%% (%u/%u)",progress*100,*idx,*N).Data()).Data(),
-            "\r");
+            "\n");
         threshold += 1./frequency;
       }
     }
