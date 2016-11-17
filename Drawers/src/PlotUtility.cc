@@ -11,33 +11,6 @@
 
 using namespace std;
 
-vector<TString> GetDependencies(TString cut) {
-  vector<TString> deps;
-  int nChars = cut.Length();
-  TString tmpString="";
-  for (int iC=0; iC!=nChars; ++iC) {
-    const char c = cut[iC];
-    if ( c==' ' || c=='&' || c=='|' || c=='(' || c==')' 
-        || c=='*' || c=='+' || c=='-' || c=='/' || c=='!' 
-        || c=='<' || c=='>' || c=='=' || c=='.' ) {
-      if (tmpString != "" && !tmpString.IsDigit() && 
-          // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
-          !tmpString.Contains("TMath")) {
-        deps.push_back(tmpString);
-      }
-      tmpString = "";
-    } else {
-        tmpString.Append(c);
-    }
-  }
-  if (tmpString != "" && !tmpString.IsDigit() && 
-      // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
-      !tmpString.Contains("TMath")) {
-    deps.push_back(tmpString);
-  }
-  return deps;
-}
-
 TString sanitize(TString sIn) { 
   TString sOut = sIn; 
   return sOut.ReplaceAll(".","_").ReplaceAll("(","").ReplaceAll(")","").ReplaceAll("/","Over").ReplaceAll("*","Times").ReplaceAll("+","Plus");
@@ -138,14 +111,14 @@ void PlotUtility::DrawAll(TString outDir) {
       continue;
 
     vector<TString> deps;
-    for (TString dep : GetDependencies(cut.GetTitle()))
+    for (TString dep : getDependencies(cut.GetTitle()))
       deps.push_back(dep);
     if (p->processtype!=kData && p->useCommonWeight) {
-      for (TString dep : GetDependencies(mcWeight.GetTitle()))
+      for (TString dep : getDependencies(mcWeight.GetTitle()))
         deps.push_back(dep);
     }
     for(Distribution *d : distributions) {
-      for (TString dep : GetDependencies(d->name)) {
+      for (TString dep : getDependencies(d->name)) {
         deps.push_back(dep);
       }
     }
@@ -156,11 +129,11 @@ void PlotUtility::DrawAll(TString outDir) {
       p->chain->SetBranchStatus(dep.Data(),1);
     }
 
-    for (TString dep : GetDependencies(p->additionalCut.GetTitle())) {
+    for (TString dep : getDependencies(p->additionalCut.GetTitle())) {
       p->chain->SetBranchStatus(dep.Data(),1);
     }
     
-    for (TString dep : GetDependencies(p->additionalWeight.GetTitle())){
+    for (TString dep : getDependencies(p->additionalWeight.GetTitle())){
       p->chain->SetBranchStatus(dep.Data(),1);
     }
 
