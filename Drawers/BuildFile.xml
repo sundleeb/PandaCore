@@ -1,4 +1,5 @@
 <use   name="root"/>
+<use   name="roottmva"/>
 <use   name="roofit"/>
 <use   name="PandaCore/Tools"/>
 <use   root=""/>
