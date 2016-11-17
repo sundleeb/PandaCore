@@ -17,11 +17,11 @@ vector<TString> GetDependencies(TString cut) {
   TString tmpString="";
   for (int iC=0; iC!=nChars; ++iC) {
     const char c = cut[iC];
-    if ( c=='&' || c=='|' || c=='(' || c==')' 
-        || c=='*' || c=='+' || c=='-' || c=='/' 
+    if ( c==' ' || c=='&' || c=='|' || c=='(' || c==')' 
+        || c=='*' || c=='+' || c=='-' || c=='/' || c=='!' 
         || c=='<' || c=='>' || c=='=' || c=='.' ) {
       if (tmpString != "" && !tmpString.IsDigit() && 
-          tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
+          // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
           !tmpString.Contains("TMath")) {
         deps.push_back(tmpString);
       }
@@ -29,6 +29,11 @@ vector<TString> GetDependencies(TString cut) {
     } else {
         tmpString.Append(c);
     }
+  }
+  if (tmpString != "" && !tmpString.IsDigit() && 
+      // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
+      !tmpString.Contains("TMath")) {
+    deps.push_back(tmpString);
   }
   return deps;
 }
@@ -126,29 +131,40 @@ void PlotUtility::DrawAll(TString outDir) {
       order.push_back(iP);
   }
   
-  vector<TString> deps;
-  for (TString dep : GetDependencies(cut.GetTitle()))
-    deps.push_back(dep);
-  for (TString dep : GetDependencies(mcWeight.GetTitle()))
-    deps.push_back(dep);
-  for(Distribution *d : distributions) {
-    for (TString dep : GetDependencies(d->name))
-      deps.push_back(dep);
-  }
 
   for (unsigned int iP : order) {
     Process *p = processes[iP];
     if (p==NULL)
       continue;
 
-    TCut pCut(cut);
-    pCut += p->additionalCut;
-    if (cloneTrees) {
-      PInfo("PlotUtility::DrawAll",TString::Format("Cloning %s",p->name.Data()));
-      p->clonedTree = (TTree*)p->chain->CopyTree(pCut.GetTitle());
-    } else {
-      p->clonedTree = 0;
+    vector<TString> deps;
+    for (TString dep : GetDependencies(cut.GetTitle()))
+      deps.push_back(dep);
+    if (p->processtype!=kData && p->useCommonWeight) {
+      for (TString dep : GetDependencies(mcWeight.GetTitle()))
+        deps.push_back(dep);
     }
+    for(Distribution *d : distributions) {
+      for (TString dep : GetDependencies(d->name)) {
+        deps.push_back(dep);
+      }
+    }
+
+    p->chain->SetBranchStatus("*",0);
+
+    for (TString dep : deps) {
+      p->chain->SetBranchStatus(dep.Data(),1);
+    }
+
+    for (TString dep : GetDependencies(p->additionalCut.GetTitle())) {
+      p->chain->SetBranchStatus(dep.Data(),1);
+    }
+    
+    for (TString dep : GetDependencies(p->additionalWeight.GetTitle())){
+      p->chain->SetBranchStatus(dep.Data(),1);
+    }
+
+
   }
 
   map<Distribution*,PlotWrapper> pws;
@@ -189,6 +205,8 @@ void PlotUtility::DrawAll(TString outDir) {
   }
 
   // now we loop through each process
+  TimeReporter tr("PlotUtility::DrawAll",true);
+  tr.Start();
   for (unsigned int iP : order) {
     Process *p = processes[iP];
     if (p==NULL)
@@ -267,6 +285,8 @@ void PlotUtility::DrawAll(TString outDir) {
       delete fsystups[iS]; delete fsystdowns[iS];
       fsystups[iS]=0; fsystdowns[iS]=0;
     }
+
+    tr.TriggerEvent(p->name.Data());
   }
 
   // now that all histograms are filled,
