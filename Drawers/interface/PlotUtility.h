@@ -8,6 +8,7 @@
 #include "TROOT.h"
 #include "TCut.h"
 #include "HistogramDrawer.h"
+#include "PandaCore/Tools/interface/TreeTools.h"
 
 class Process {
 public:
@@ -40,7 +41,7 @@ public:
   bool useCommonWeight=true;
   bool useCommonCut=true;
   TCut additionalCut = "1==1"; // anded with whatever cut is being applied
-  TCut additionalWeight = "1"; // multipled with whatever cut is being applied
+  TCut additionalWeight = "1"; // multiplied with whatever cut is being applied
   TString name;
   ProcessType processtype;
   ProcessType color;
@@ -124,6 +125,12 @@ public:
   void Draw(TString outDir, TString baseName) { return; } // not implemented
   
 private:
+  struct PlotWrapper {
+    std::vector<TH1D*> ownedHistos; // for garbage collection
+    std::vector<TH1D*> hSystUp, hSystDown;
+    std::map<Process*,TH1D*> histos;
+    TTreeFormula *tf=0;
+  };
   Process **processes; 
   bool *owned;
   std::vector<Distribution*> distributions;

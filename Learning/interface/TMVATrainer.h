@@ -10,6 +10,7 @@
 #include "TMVA/Factory.h"
 #include "vector"
 #include "PandaCore/Tools/interface/Common.h"
+#include "PandaCore/Tools/interface/TreeTools.h"
 
 class TMVATrainer
 {

@@ -7,6 +7,7 @@
 #include "TString.h"
 #include "TH1F.h"
 #include "Common.h"
+#include "TreeTools.h"
 
 class Normalizer
 {
@@ -16,6 +17,8 @@ public:
 
   void NormalizeTree(TTree *t, double totalEvts, double xsec) {
     float inWeight=0, outWeight=0;
+    t->SetBranchStatus("*",0);
+    turnOnBranches(t,inWeightName.Data());
     TBranch *b = t->Branch(outWeightName.Data(),&outWeight,TString::Format("%s/F",outWeightName.Data()));
     t->SetBranchAddress(inWeightName.Data(),&inWeight);
     unsigned int nEntries = t->GetEntries();

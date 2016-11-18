@@ -6,29 +6,12 @@
 #include "TFile.h"
 #include "TLatex.h"
 #include "TSystem.h"
+#include "TTreeFormula.h"
 #include <math.h>
+#include <iostream>
+#include <fstream>
 
-std::vector<TString> GetDependencies(TString cut) {
-  std::vector<TString> deps;
-  int nChars = cut.Length();
-  TString tmpString="";
-  for (int iC=0; iC!=nChars; ++iC) {
-    const char c = cut[iC];
-    if ( c=='&' || c=='|' || c=='(' || c==')' 
-        || c=='*' || c=='+' || c=='-' || c=='/' 
-        || c=='<' || c=='>' || c=='=' || c=='.' ) {
-      if (tmpString != "" && !tmpString.IsDigit() && 
-          tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
-          !tmpString.Contains("TMath")) {
-        deps.push_back(tmpString);
-      }
-      tmpString = "";
-    } else {
-        tmpString.Append(c);
-    }
-  }
-  return deps;
-}
+using namespace std;
 
 TString sanitize(TString sIn) { 
   TString sOut = sIn; 
@@ -88,165 +71,250 @@ void PlotUtility::Reset(bool clearPlotLabels) {
   HistogramDrawer::Reset(clearPlotLabels);
 }
 
+TString convertName(TString filename) {
+  TString tmpName(filename);
+  tmpName.ReplaceAll("/","Over");
+  tmpName.ReplaceAll("*","Times");
+  tmpName.ReplaceAll("+","Plus");
+  tmpName.ReplaceAll("-","Minus");
+  tmpName.ReplaceAll("TMath::","");
+  tmpName.ReplaceAll(")","");
+  tmpName.ReplaceAll("(","");
+  tmpName.ReplaceAll(".","_");
+  return tmpName; 
+}
+
+void divideBinWidth(TH1D *h) {
+  int nBins = h->GetNbinsX();
+  for (int iB=1; iB!=nBins+1; ++iB) {
+    float currentVal = h->GetBinContent(iB);
+    float currentErr = h->GetBinError(iB);
+    float binWidth = h->GetBinWidth(iB);
+    h->SetBinContent(iB,currentVal/binWidth);
+    h->SetBinError(iB,currentErr/binWidth);
+  }
+}
+
 void PlotUtility::DrawAll(TString outDir) {
   if (!legend)
     InitLegend();
   TFile *fOut = new TFile(outDir+"hists.root","UPDATE");
   TFile *fBuffer = new TFile(TString::Format("/tmp/buffer_%i.root",gSystem->GetPid()).Data(),"RECREATE");
   fBuffer->cd();
-  TH1D *h=0;
-  std::vector<TH1D> histograms;
   if (order.size()==0) {
     for (unsigned int iP=0; iP!=nProcesses; ++iP) 
       order.push_back(iP);
   }
-
   
-  std::vector<TString> deps;
-  for (TString dep : GetDependencies(cut.GetTitle()))
-    deps.push_back(dep);
-  for (TString dep : GetDependencies(mcWeight.GetTitle()))
-    deps.push_back(dep);
-  for(Distribution *d : distributions) {
-    for (TString dep : GetDependencies(d->name))
-      deps.push_back(dep);
-  }
 
   for (unsigned int iP : order) {
     Process *p = processes[iP];
     if (p==NULL)
       continue;
 
-    std::vector<TString> pDeps;
-/*
-    p->chain->Scan("metfilter");
-    for (TString dep : GetDependencies(p->additionalCut.GetTitle()))
-      pDeps.push_back(dep);
-    for (TString dep : GetDependencies(p->additionalWeight.GetTitle()))
-      pDeps.push_back(dep);
     p->chain->SetBranchStatus("*",0);
-    for (TString dep : deps)
-      p->chain->SetBranchStatus(dep.Data(),1);
-    for (TString dep : pDeps)
-      p->chain->SetBranchStatus(dep.Data(),1);
-*/
 
-    TCut pCut(cut);
-    pCut += p->additionalCut;
-    if (cloneTrees) {
-      PInfo("PlotUtility::DrawAll",TString::Format("Cloning %s",p->name.Data()));
-      p->clonedTree = (TTree*)p->chain->CopyTree(pCut.GetTitle());
-    } else {
-      p->clonedTree = 0;
+    turnOnBranches(p->chain,cut.GetTitle());
+    if (p->processtype!=kData && p->useCommonWeight) {
+      turnOnBranches(p->chain,mcWeight.GetTitle());
     }
+    for(Distribution *d : distributions) {
+      turnOnBranches(p->chain,d->name);
+    }
+    turnOnBranches(p->chain,p->additionalCut.GetTitle());
+    turnOnBranches(p->chain,p->additionalWeight.GetTitle());
+
   }
 
-
+  map<Distribution*,PlotWrapper> pws;
+  // first we declare all the necessary histograms
   for (Distribution *d: distributions) {
-    if (d->name!="1")
-      PInfo("PlotUtility::DrawAll",TString::Format("Plotting %s",d->name.Data()));
-    
-    double bgTotal=0, bgErr=0;
-    double sigTotal=0, sigErr=0;
-    double dataTotal=0, dataErr=0;
-
-    
-    TString tmpName(d->filename);
-    tmpName.ReplaceAll("/","Over");
-    tmpName.ReplaceAll("*","Times");
-    tmpName.ReplaceAll("+","Plus");
-    tmpName.ReplaceAll("-","Minus");
-    tmpName.ReplaceAll("TMath::","");
-    tmpName.ReplaceAll(")","");
-    tmpName.ReplaceAll("(","");
-    tmpName.ReplaceAll(".","_");
-
-    std::vector<TH1D*> ownedHistos; // for garbage collection
-    std::vector<TH1D*> hSystUp, hSystDown;
+    PlotWrapper pw;
+    TH1D *hbase=0;
+    if (d->binEdges==0)
+      hbase = new TH1D("hbase","hbase",d->nBins,d->min,d->max);
+    else
+      hbase = new TH1D("hbase","hbase",d->nBins,d->binEdges);
+    // hbase->Sumw2();
+    TString tmpname = convertName(d->filename);
+    // these are the systematic shifts
     for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-      TH1D *hsyst; TString hname;
-      
-      hname = TString::Format("h_%s_Up",systNames[iS].Data());
-      if (d->binEdges==0) {
-        hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->min,d->max);
-      } else {
-        hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->binEdges);
-      }
-      hsyst->SetLineColor(systColors[iS]); hsyst->SetLineWidth(2);
-      hSystUp.push_back(hsyst); ownedHistos.push_back(hsyst);
-
-      hname = TString::Format("h_%s_Down",systNames[iS].Data());
-      if (d->binEdges==0) {
-        hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->min,d->max);
-      } else {
-        hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->binEdges);
-      }
-      hsyst->SetLineColor(systColors[iS]); hsyst->SetLineWidth(2);
-      hSystDown.push_back(hsyst); ownedHistos.push_back(hsyst);
+      TH1D *hsystup = (TH1D*)hbase->Clone(TString::Format("h_%s_%s_Up",
+                                                          tmpname.Data(),systNames[iS].Data()));
+      TH1D *hsystdown = (TH1D*)hbase->Clone(TString::Format("h_%s_%s_Down",
+                                                          tmpname.Data(),systNames[iS].Data()));
+      hsystup->Sumw2(); hsystdown->Sumw2();
+      hsystup->SetLineColor(systColors[iS]); hsystup->SetLineWidth(2);
+      hsystdown->SetLineColor(systColors[iS]); hsystdown->SetLineWidth(2);
+      pw.hSystUp.push_back(hsystup);
+      pw.hSystDown.push_back(hsystdown);
     }
+    // one histogram for each process
     for (unsigned int iP : order) {
       Process *p = processes[iP];
-      if (p==NULL) // not using this process
+      if (p==NULL)
         continue;
-      TTree *drawTree;
-      TCut pWeight = p->additionalWeight;
-      if (p->processtype!=kData && p->useCommonWeight)
-        pWeight *= mcWeight;
-      if (p->processtype<=kSignal3 && p->processtype!=kData)
-        pWeight *= TCut(TString::Format("%f",signalScale));
-      TCut thisCut(cut);
-      if (eventmod!=0) {
-        if (p->processtype==kData) // filter events
-          thisCut += TCut(TString::Format("(%s%%%i)==1",eventnumber.Data(),eventmod).Data());
-        else // scale events
-          pWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-      }
-      if (cloneTrees) {
-        drawTree = p->clonedTree; 
-      } else {
-        drawTree = p->chain;
-        pWeight *= (p->additionalCut + thisCut);
-      }
-      if (d->binEdges==0) {
-        h = new TH1D(TString::Format("h_%s",p->name.Data()),TString::Format("h_%s",p->name.Data()),d->nBins,d->min,d->max);
-        drawTree->Draw(TString::Format("%s>>h_%s",d->name.Data(),p->name.Data()),pWeight);
-      } else {
-        h = new TH1D(TString::Format("h_%s",p->name.Data()), TString::Format("h_%s",p->name.Data()), d->nBins,d->binEdges);
-        drawTree->Draw(TString::Format("%s>>h_%s",d->name.Data(),p->name.Data()),pWeight);
-        // should divide by bin width
-        for (int iB=1; iB!=d->nBins+1; ++iB) {
-          float currentVal = h->GetBinContent(iB);
-          float currentErr = h->GetBinError(iB);
-          float binWidth = d->binEdges[iB]-d->binEdges[iB-1];
-          h->SetBinContent(iB,currentVal/binWidth);
-          h->SetBinError(iB,currentErr/binWidth);
-        }
-      }
-      if (p->processtype!=kData && p->processtype>kSignal3) {
-        for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-          TCut upWeight = mcWeightUp[iS];
-          upWeight *= p->additionalWeight;
-          if (eventmod!=0)
-            upWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-          upWeight *= (p->additionalCut + thisCut);
-          drawTree->Draw(TString::Format("%s>>+%s",d->name.Data(),hSystUp[iS]->GetName()).Data(),upWeight);
+      TH1D *h = (TH1D*)hbase->Clone(TString::Format("h_%s_%s",tmpname.Data(),p->name.Data()));
+      h->Sumw2();
+      pw.histos[p] = h;
+      pw.ownedHistos.push_back(h);
+    }
+    pws[d] = pw;
+    hbase->Delete();
+  }
 
-          TCut downWeight = mcWeightDown[iS];
-          downWeight *= p->additionalWeight;
-          if (eventmod!=0)
-            downWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-          downWeight *= (p->additionalCut + thisCut);
-          drawTree->Draw(TString::Format("%s>>+%s",d->name.Data(),hSystDown[iS]->GetName()).Data(),downWeight);
+  // now we loop through each process
+  TimeReporter tr("PlotUtility::DrawAll",true);
+  tr.Start();
+  for (unsigned int iP : order) {
+    Process *p = processes[iP];
+    if (p==NULL)
+      continue;
+    // build the cut and weight formulae
+    TTree *drawTree = p->chain;
+    TCut finalCut = cut;
+    TCut finalWeight = "1";
+    if (p->processtype!=kData && p->useCommonWeight)
+      finalWeight = mcWeight;
+    if (p->processtype<=kSignal3 && p->processtype!=kData)
+      finalWeight *= TCut(TString::Format("%f",signalScale));
+    if (eventmod!=0) {
+      if (p->processtype==kData)
+        finalCut += TCut(TString::Format("(%s%%%i)==1",eventnumber.Data(),eventmod).Data());
+      else
+        finalWeight *= TCut(TString::Format("%f",1./eventmod).Data());
+    }
+    finalCut += p->additionalCut;
+    finalWeight *= p->additionalWeight;
+    TTreeFormula fcut(finalCut.GetTitle(),finalCut.GetTitle(),drawTree); fcut.SetQuickLoad(true);
+    TTreeFormula fweight(finalWeight.GetTitle(),finalWeight.GetTitle(),drawTree); fweight.SetQuickLoad(true);
+
+    // build the systematic shift weights
+    vector<TTreeFormula*> fsystups, fsystdowns;
+    vector<double> syst_up_weights(systNames.size());
+    vector<double> syst_down_weights(systNames.size());
+    for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+      TCut upWeight = mcWeightUp[iS];
+      upWeight *= p->additionalWeight;
+      if (eventmod!=0)
+        upWeight *= TCut(TString::Format("%f",1./eventmod).Data());
+      TTreeFormula *fup = new TTreeFormula(upWeight.GetTitle(),upWeight.GetTitle(),drawTree); fup->SetQuickLoad(true);
+      fsystups.push_back(fup);
+
+      TCut downWeight = mcWeightDown[iS];
+      downWeight *= p->additionalWeight;
+      if (eventmod!=0)
+        downWeight *= TCut(TString::Format("%f",1./eventmod).Data());
+      TTreeFormula *fdown = new TTreeFormula(downWeight.GetTitle(),downWeight.GetTitle(),drawTree); fdown->SetQuickLoad(true);
+      fsystdowns.push_back(fdown);
+    }
+
+    // build the distribution formulae
+    for (auto *d : distributions) {
+      delete pws[d].tf;
+      pws[d].tf = new TTreeFormula(d->name,d->name,drawTree);
+      pws[d].tf->SetQuickLoad(true);
+    }
+
+    // cut, evaluate, and fill
+    unsigned int nEntries = drawTree->GetEntriesFast();
+    for (unsigned int iE=0; iE!=nEntries; ++iE) {
+      drawTree->GetEntry(iE);
+      if (!fcut.EvalInstance())
+        continue;
+      double weight = fweight.EvalInstance();
+      for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+        syst_up_weights[iS] = fsystups[iS]->EvalInstance();
+        syst_down_weights[iS] = fsystdowns[iS]->EvalInstance();
+      }
+      for (auto *d : distributions) {
+        PlotWrapper &pw = pws[d];
+        TH1D *h = pw.histos[p];
+        double val = pw.tf->EvalInstance();
+        h->Fill(val,weight);
+        for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+          pw.hSystUp.at(iS)->Fill(val,syst_up_weights[iS]);
+          pw.hSystDown.at(iS)->Fill(val,syst_down_weights[iS]);
         }
       }
+    }
+
+    for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+      delete fsystups[iS]; delete fsystdowns[iS];
+      fsystups[iS]=0; fsystdowns[iS]=0;
+    }
+
+    tr.TriggerEvent(p->name.Data());
+  }
+
+  // now that all histograms are filled,
+  // draw each plot
+  for (Distribution *d : distributions) {
+    PlotWrapper &pw = pws[d];
+
+    bool doScaleBins = d->binEdges!=NULL;
+
+    if (d->name=="1") {
+      double bgTotal=0, bgErr=0;
+      double sigTotal=0, sigErr=0;
+      double dataTotal=0, dataErr=0;
+      std::ofstream fyields; fyields.open(outDir+"yields.txt");
+
+      TString stable = TString::Format("%-25s | %15s \\pm %15s","Process","Yield","Error");
+      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+
+      stable = "=================================================================";
+      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+
+      for (unsigned int iP : order) {
+        Process *p = processes[iP];
+        if (p==NULL)
+          continue;
+        TH1D *h = pw.histos[p];
+        double integral=0,error=0;
+        integral = h->IntegralAndError(1,h->GetNbinsX(),error);
+        TString syield = TString::Format("%-25s | %15f \\pm %15f",p->name.Data(),integral,error);
+        fyields << syield.Data() << std::endl;
+        PInfo("PlotUtility::Dump",syield);
+        if (p->processtype==kData) {
+          dataTotal=integral; dataErr=error;
+        } else if (p->processtype<=kSignal3) {
+          sigTotal += integral;
+          sigErr += pow(error,2); 
+        } else {
+          bgTotal += integral;
+          bgErr += pow(error,2);
+        }
+      }
+      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+
+      sigErr = sqrt(sigErr);
+      bgErr = sqrt(bgErr);
+      
+      TString syield = TString::Format("%-25s | %15f \\pm %15f","MC(bkg)",bgTotal,bgErr);
+      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+      syield = TString::Format("%-25s | %15f \\pm %15f","MC(sig)",sigTotal,sigErr);
+      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+      syield = TString::Format("%-25s | %15f \\pm %15f","Data",dataTotal,dataErr);
+      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+
+      syield = TString::Format("S/B=%.3f, S/sqrtB=%.3f",sigTotal/bgTotal,sigTotal/sqrt(bgTotal));
+      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+
+      fyields.close();
+    } 
+    for (unsigned int iP : order) {
+      Process *p = processes[iP];
+      if (p==NULL)
+        continue;
+      TH1D *h = pw.histos[p];
+      if (doScaleBins)
+        divideBinWidth(h);
       if (d->maxY>-999)
         h->SetMaximum(d->maxY);
       if (d->minY<999)
         h->SetMinimum(d->minY);
-      if (h==NULL) {
-         PError("PlotUtility::DrawAll","bad variable");
-         exit(1);
-      }
       h->GetXaxis()->SetTitle(d->xLabel);
       h->GetYaxis()->SetTitle(d->yLabel);
       h->SetTitle("");
@@ -256,50 +324,38 @@ void PlotUtility::DrawAll(TString outDir) {
         AddHistogram(h,TString::Format("%.1f#times%s",signalScale,p->name.Data()).Data(),p->processtype);
       else  
         AddHistogram(h,p->name.Data(),p->processtype);  
-      ownedHistos.push_back(h);
-
-      if (d->name=="1") {
-          double err_;
-          if (iP<=kSignal3 && iP!=kData) {
-            sigTotal += h->IntegralAndError(1,h->GetNbinsX(),err_);
-            sigErr += pow(err_,2);
-          } else if (iP!=kData) {
-            bgTotal += h->IntegralAndError(1,h->GetNbinsX(),err_);
-            bgErr += pow(err_,2);
-          } else if (iP==kData) {
-            dataTotal = h->IntegralAndError(1,h->GetNbinsX(),err_);
-            dataErr = pow(err_,2);
-          }
-          PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f",p->name.Data(),h->Integral(),err_));
-      } else {
-            fOut->WriteTObject(h,TString::Format("h_%s_%s",sanitize(d->filename).Data(),p->name.Data()),"Overwrite");
-      }
-    } // process loop
-    for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-      if (d->binEdges!=0) {
-        hSystUp[iS]->Scale(1,"width");
-        hSystDown[iS]->Scale(1,"width");
-      }
-      AddAdditional(hSystUp[iS],"hist",systNames[iS]);
-      AddAdditional(hSystDown[iS],"hist");
+      fOut->WriteTObject(h);
     }
-    
-    if (tmpName!="1") {
-      if (doLogy)
-        tmpName += "_logy";
-      HistogramDrawer::Draw(outDir,tmpName);
-    } else {
-      PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f","Data",dataTotal,sqrt(dataErr)));
-      PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f","MC",bgTotal,sqrt(bgErr)));
-      PInfo("PlotUtility::DrawAll::Dump",TString::Format("S/B=%.3f; S/sqrt(B)=%.3f",sigTotal/bgTotal,sigTotal/sqrt(bgTotal)));
-    } 
+    for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+      if (doScaleBins) {
+        divideBinWidth(pw.hSystUp[iS]);
+        divideBinWidth(pw.hSystDown[iS]);
+      }
+      AddAdditional(pw.hSystUp[iS],"hist",systNames[iS]);
+      AddAdditional(pw.hSystDown[iS],"hist");
+    }
+    TString tmpname = convertName(d->filename);
+    if (doLogy)
+      tmpname += "_logy";
+    HistogramDrawer::Draw(outDir,tmpname);
     Reset(false);
-    for (auto h : ownedHistos) 
+    for (auto h : pw.ownedHistos)
       delete h;
-  } // distribution loop
+    for (auto h : pw.hSystUp)
+      delete h;
+    for (auto h : pw.hSystDown)
+      delete h;
+    pw.ownedHistos.clear();
+    pw.hSystUp.clear();
+    pw.hSystDown.clear();
+    delete pw.tf; pw.tf=0;
+  }
+
   distributions.clear();
   fOut->Close(); // do not write or cloned trees will get saved
   fBuffer->Close();
   delete fBuffer;
   delete fOut;
+
+  
 } 

@@ -30,7 +30,14 @@ inline bool isClean(double x) {
 void TMVABranchAdder::RunFile(TString fpath) {
   TFile *fin = TFile::Open(fpath,"UPDATE");
   TTree *tin = (TTree*)fin->FindObjectAny(treename);
-
+    
+  tin->SetBranchStatus("*",0);
+  for (auto *x : variables)
+    turnOnBranches(tin,x->formula);
+  for (auto *x : formulae)
+    turnOnBranches(tin,x->formula);
+  turnOnBranches(tin,presel);
+    
   TBranch **newbranches = new TBranch*[bnames.size()];
   float *responses = new float[bnames.size()];
   unsigned int nBranches = bnames.size();

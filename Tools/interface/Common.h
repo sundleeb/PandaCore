@@ -16,6 +16,7 @@
  * Info,Warning,Error: fprintf messages
  * getVal: find scalefactor, etc from 1d or 2d histogram
  * bound: bound a value between min and max
+ * getDependencies: figure out which branches an expression depends on
  * ProgressReporter: class to report progress of a loop 
  * TimeReporter : class to report time taken for events
  * Binner: class to discretely bin a continuous value
@@ -23,6 +24,11 @@
  * */
 
 //////////////////////////////////////////////////////////////////////////////////
+
+template <typename T> inline
+void concat(std::vector<T> &v1,std::vector<T> v2) {
+  v1.insert(v1.end(),v2.begin(),v2.end());
+}
 
 inline double clean(double x, double d=-1) {
   return (x==x) ? x : d;
@@ -59,6 +65,34 @@ inline double getVal(TH2D*h,double val1, double val2) {
 
 inline double bound(double val, double low, double high) {
   return TMath::Max(low,TMath::Min(high,val));
+}
+
+inline std::vector<TString> getDependencies(TString cut) {
+  std::vector<TString> deps;
+  int nChars = cut.Length();
+  TString tmpString="";
+  for (int iC=0; iC!=nChars; ++iC) {
+    const char c = cut[iC];
+    if ( c==' ' || c=='&' || c=='|' || c=='(' || c==')' 
+        || c=='*' || c=='+' || c=='-' || c=='/' || c=='!' 
+        || c=='<' || c=='>' || c=='=' || c=='.' || c==','
+        || c=='[' || c==']') {
+      if (tmpString != "" && !tmpString.IsDigit() && 
+          // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
+          !(tmpString.Contains("TMath")) && !(tmpString=="fabs")) {
+        deps.push_back(tmpString);
+      }
+      tmpString = "";
+    } else {
+        tmpString.Append(c);
+    }
+  }
+  if (tmpString != "" && !tmpString.IsDigit() && 
+      // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
+      !tmpString.Contains("TMath")) {
+    deps.push_back(tmpString);
+  }
+  return deps;
 }
 
 //////////////////////////////////////////////////////////////////////////////////
