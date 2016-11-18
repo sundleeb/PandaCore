@@ -8,6 +8,7 @@
 #include "TROOT.h"
 #include "TCut.h"
 #include "HistogramDrawer.h"
+#include "PandaCore/Tools/interface/TreeTools.h"
 
 class Process {
 public:

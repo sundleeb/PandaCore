@@ -7,6 +7,7 @@
 #include "TString.h"
 #include "TTreeFormula.h"
 #include "Common.h"
+#include "TreeTools.h"
 
 class BranchAdder
 {
@@ -16,6 +17,10 @@ public:
 
   void AddBranchFromFormula(TTree *t) {
     float newBranchVal=0;
+    
+    t->SetBranchStatus("*",0);
+    turnOnBranches(t,formula);
+
     TBranch *b = t->Branch(newBranchName.Data(),&newBranchVal,TString::Format("%s/F",newBranchName.Data()));
 
     TTreeFormula tformula(newBranchName.Data(),formula.Data(),t);
@@ -46,6 +51,10 @@ public:
 
   void AddBranchFromHistogram(TTree *t, TH1F *h) {
     float newBranchVal=0;
+    
+    t->SetBranchStatus("*",0);
+    turnOnBranches(t,formula);
+
     TBranch *b = t->Branch(newBranchName.Data(),&newBranchVal,TString::Format("%s/F",newBranchName.Data()));
 
     TTreeFormula tformula(newBranchName.Data(),formula.Data(),t);

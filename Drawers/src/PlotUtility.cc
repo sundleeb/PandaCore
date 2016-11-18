@@ -8,6 +8,8 @@
 #include "TSystem.h"
 #include "TTreeFormula.h"
 #include <math.h>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -110,33 +112,17 @@ void PlotUtility::DrawAll(TString outDir) {
     if (p==NULL)
       continue;
 
-    vector<TString> deps;
-    for (TString dep : getDependencies(cut.GetTitle()))
-      deps.push_back(dep);
-    if (p->processtype!=kData && p->useCommonWeight) {
-      for (TString dep : getDependencies(mcWeight.GetTitle()))
-        deps.push_back(dep);
-    }
-    for(Distribution *d : distributions) {
-      for (TString dep : getDependencies(d->name)) {
-        deps.push_back(dep);
-      }
-    }
-
     p->chain->SetBranchStatus("*",0);
 
-    for (TString dep : deps) {
-      p->chain->SetBranchStatus(dep.Data(),1);
+    turnOnBranches(p->chain,cut.GetTitle());
+    if (p->processtype!=kData && p->useCommonWeight) {
+      turnOnBranches(p->chain,mcWeight.GetTitle());
     }
-
-    for (TString dep : getDependencies(p->additionalCut.GetTitle())) {
-      p->chain->SetBranchStatus(dep.Data(),1);
+    for(Distribution *d : distributions) {
+      turnOnBranches(p->chain,d->name);
     }
-    
-    for (TString dep : getDependencies(p->additionalWeight.GetTitle())){
-      p->chain->SetBranchStatus(dep.Data(),1);
-    }
-
+    turnOnBranches(p->chain,p->additionalCut.GetTitle());
+    turnOnBranches(p->chain,p->additionalWeight.GetTitle());
 
   }
 
@@ -184,7 +170,6 @@ void PlotUtility::DrawAll(TString outDir) {
     Process *p = processes[iP];
     if (p==NULL)
       continue;
-
     // build the cut and weight formulae
     TTree *drawTree = p->chain;
     TCut finalCut = cut;
@@ -269,41 +254,85 @@ void PlotUtility::DrawAll(TString outDir) {
 
     bool doScaleBins = d->binEdges!=NULL;
 
-    // double bgTotal=0, bgErr=0;
-    // double sigTotal=0, sigErr=0;
-    // double dataTotal=0, dataErr=0;
-
     if (d->name=="1") {
+      double bgTotal=0, bgErr=0;
+      double sigTotal=0, sigErr=0;
+      double dataTotal=0, dataErr=0;
+      std::ofstream fyields; fyields.open(outDir+"yields.txt");
 
-    } else {
+      TString stable = TString::Format("%-25s | %15s \\pm %15s","Process","Yield","Error");
+      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+
+      stable = "=================================================================";
+      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+
       for (unsigned int iP : order) {
         Process *p = processes[iP];
         if (p==NULL)
           continue;
         TH1D *h = pw.histos[p];
-        if (doScaleBins)
-          divideBinWidth(h);
-        if (d->maxY>-999)
-          h->SetMaximum(d->maxY);
-        if (d->minY<999)
-          h->SetMinimum(d->minY);
-        h->GetXaxis()->SetTitle(d->xLabel);
-        h->GetYaxis()->SetTitle(d->yLabel);
-        h->SetTitle("");
-        if (!doStack && p->processtype!=kData)
-          h->SetLineWidth(2);
-        if (p->processtype<=kSignal3 && p->processtype!=kData && signalScale!=1)
-          AddHistogram(h,TString::Format("%.1f#times%s",signalScale,p->name.Data()).Data(),p->processtype);
-        else  
-          AddHistogram(h,p->name.Data(),p->processtype);  
-      }
-      for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-        if (doScaleBins) {
-          divideBinWidth(pw.hSystUp[iS]);
-          divideBinWidth(pw.hSystDown[iS]);
+        double integral=0,error=0;
+        integral = h->IntegralAndError(1,h->GetNbinsX(),error);
+        TString syield = TString::Format("%-25s | %15f \\pm %15f",p->name.Data(),integral,error);
+        fyields << syield.Data() << std::endl;
+        PInfo("PlotUtility::Dump",syield);
+        if (p->processtype==kData) {
+          dataTotal=integral; dataErr=error;
+        } else if (p->processtype<=kSignal3) {
+          sigTotal += integral;
+          sigErr += pow(error,2); 
+        } else {
+          bgTotal += integral;
+          bgErr += pow(error,2);
         }
-        AddAdditional(pw.hSystUp[iS],"hist",systNames[iS]);
       }
+      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+
+      sigErr = sqrt(sigErr);
+      bgErr = sqrt(bgErr);
+      
+      TString syield = TString::Format("%-25s | %15f \\pm %15f","MC(bkg)",bgTotal,bgErr);
+      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+      syield = TString::Format("%-25s | %15f \\pm %15f","MC(sig)",sigTotal,sigErr);
+      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+      syield = TString::Format("%-25s | %15f \\pm %15f","Data",dataTotal,dataErr);
+      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+
+      syield = TString::Format("S/B=%.3f, S/sqrtB=%.3f",sigTotal/bgTotal,sigTotal/sqrt(bgTotal));
+      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+
+      fyields.close();
+    } 
+    for (unsigned int iP : order) {
+      Process *p = processes[iP];
+      if (p==NULL)
+        continue;
+      TH1D *h = pw.histos[p];
+      if (doScaleBins)
+        divideBinWidth(h);
+      if (d->maxY>-999)
+        h->SetMaximum(d->maxY);
+      if (d->minY<999)
+        h->SetMinimum(d->minY);
+      h->GetXaxis()->SetTitle(d->xLabel);
+      h->GetYaxis()->SetTitle(d->yLabel);
+      h->SetTitle("");
+      if (!doStack && p->processtype!=kData)
+        h->SetLineWidth(2);
+      if (p->processtype<=kSignal3 && p->processtype!=kData && signalScale!=1)
+        AddHistogram(h,TString::Format("%.1f#times%s",signalScale,p->name.Data()).Data(),p->processtype);
+      else  
+        AddHistogram(h,p->name.Data(),p->processtype);  
+      fOut->WriteTObject(h);
+    }
+    for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+      if (doScaleBins) {
+        divideBinWidth(pw.hSystUp[iS]);
+        divideBinWidth(pw.hSystDown[iS]);
+      }
+      AddAdditional(pw.hSystUp[iS],"hist",systNames[iS]);
+      AddAdditional(pw.hSystDown[iS],"hist");
     }
     TString tmpname = convertName(d->filename);
     if (doLogy)
@@ -328,136 +357,5 @@ void PlotUtility::DrawAll(TString outDir) {
   delete fBuffer;
   delete fOut;
 
-  // for (Distribution *d: distributions) {
-  //   if (d->name!="1")
-  //     PInfo("PlotUtility::DrawAll",TString::Format("Plotting %s",d->name.Data()));
-    
-
-  //   for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-  //     TH1D *hsyst; TString hname;
-      
-  //     hname = TString::Format("h_%s_Up",systNames[iS].Data());
-  //     if (d->binEdges==0) {
-  //       hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->min,d->max);
-  //     } else {
-  //       hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->binEdges);
-  //     }
-  //     hsyst->SetLineColor(systColors[iS]); hsyst->SetLineWidth(2);
-  //     hSystUp.push_back(hsyst); ownedHistos.push_back(hsyst);
-
-  //     hname = TString::Format("h_%s_Down",systNames[iS].Data());
-  //     if (d->binEdges==0) {
-  //       hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->min,d->max);
-  //     } else {
-  //       hsyst = new TH1D(hname.Data(),hname.Data(),d->nBins,d->binEdges);
-  //     }
-  //     hsyst->SetLineColor(systColors[iS]); hsyst->SetLineWidth(2);
-  //     hSystDown.push_back(hsyst); ownedHistos.push_back(hsyst);
-  //   }
-  //   for (unsigned int iP : order) {
-  //     Process *p = processes[iP];
-  //     if (p==NULL) // not using this process
-  //       continue;
-  //     TTree *drawTree;
-  //     TCut pWeight = p->additionalWeight;
-  //     if (p->processtype!=kData && p->useCommonWeight)
-  //       pWeight *= mcWeight;
-  //     if (p->processtype<=kSignal3 && p->processtype!=kData)
-  //       pWeight *= TCut(TString::Format("%f",signalScale));
-  //     TCut thisCut(cut);
-  //     if (eventmod!=0) {
-  //       if (p->processtype==kData) // filter events
-  //         thisCut += TCut(TString::Format("(%s%%%i)==1",eventnumber.Data(),eventmod).Data());
-  //       else // scale events
-  //         pWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-  //     }
-  //     if (cloneTrees) {
-  //       drawTree = p->clonedTree; 
-  //     } else {
-  //       drawTree = p->chain;
-  //       pWeight *= (p->additionalCut + thisCut);
-  //     }
-  //     if (d->binEdges==0) {
-  //       h = new TH1D(TString::Format("h_%s",p->name.Data()),TString::Format("h_%s",p->name.Data()),d->nBins,d->min,d->max);
-  //       drawTree->Draw(TString::Format("%s>>h_%s",d->name.Data(),p->name.Data()),pWeight);
-  //     } else {
-  //       h = new TH1D(TString::Format("h_%s",p->name.Data()), TString::Format("h_%s",p->name.Data()), d->nBins,d->binEdges);
-  //       drawTree->Draw(TString::Format("%s>>h_%s",d->name.Data(),p->name.Data()),pWeight);
-  //       // should divide by bin width
-  //     }
-  //     if (p->processtype!=kData && p->processtype>kSignal3) {
-  //       for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-  //         TCut upWeight = mcWeightUp[iS];
-  //         upWeight *= p->additionalWeight;
-  //         if (eventmod!=0)
-  //           upWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-  //         upWeight *= (p->additionalCut + thisCut);
-  //         drawTree->Draw(TString::Format("%s>>+%s",d->name.Data(),hSystUp[iS]->GetName()).Data(),upWeight);
-
-  //         TCut downWeight = mcWeightDown[iS];
-  //         downWeight *= p->additionalWeight;
-  //         if (eventmod!=0)
-  //           downWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-  //         downWeight *= (p->additionalCut + thisCut);
-  //         drawTree->Draw(TString::Format("%s>>+%s",d->name.Data(),hSystDown[iS]->GetName()).Data(),downWeight);
-  //       }
-  //     }
-  //     if (d->maxY>-999)
-  //       h->SetMaximum(d->maxY);
-  //     if (d->minY<999)
-  //       h->SetMinimum(d->minY);
-  //     if (h==NULL) {
-  //        PError("PlotUtility::DrawAll","bad variable");
-  //        exit(1);
-  //     }
-  //     h->GetXaxis()->SetTitle(d->xLabel);
-  //     h->GetYaxis()->SetTitle(d->yLabel);
-  //     h->SetTitle("");
-  //     if (!doStack && p->processtype!=kData)
-  //       h->SetLineWidth(2);
-  //     if (p->processtype<=kSignal3 && p->processtype!=kData && signalScale!=1)
-  //       AddHistogram(h,TString::Format("%.1f#times%s",signalScale,p->name.Data()).Data(),p->processtype);
-  //     else  
-  //       AddHistogram(h,p->name.Data(),p->processtype);  
-  //     ownedHistos.push_back(h);
-
-  //     if (d->name=="1") {
-  //         double err_;
-  //         if (iP<=kSignal3 && iP!=kData) {
-  //           sigTotal += h->IntegralAndError(1,h->GetNbinsX(),err_);
-  //           sigErr += pow(err_,2);
-  //         } else if (iP!=kData) {
-  //           bgTotal += h->IntegralAndError(1,h->GetNbinsX(),err_);
-  //           bgErr += pow(err_,2);
-  //         } else if (iP==kData) {
-  //           dataTotal = h->IntegralAndError(1,h->GetNbinsX(),err_);
-  //           dataErr = pow(err_,2);
-  //         }
-  //         PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f",p->name.Data(),h->Integral(),err_));
-  //     } else {
-  //           fOut->WriteTObject(h,TString::Format("h_%s_%s",sanitize(d->filename).Data(),p->name.Data()),"Overwrite");
-  //     }
-  //   } // process loop
-  //   for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-  //     if (d->binEdges!=0) {
-  //       hSystUp[iS]->Scale(1,"width");
-  //       hSystDown[iS]->Scale(1,"width");
-  //     }
-  //     AddAdditional(hSystUp[iS],"hist",systNames[iS]);
-  //     AddAdditional(hSystDown[iS],"hist");
-  //   }
-    
-  //   if (tmpName!="1") {
-  //     if (doLogy)
-  //       tmpName += "_logy";
-  //     HistogramDrawer::Draw(outDir,tmpName);
-  //   } else {
-  //     PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f","Data",dataTotal,sqrt(dataErr)));
-  //     PInfo("PlotUtility::DrawAll::Dump",TString::Format("%-25s %15f \\pm %15f","MC",bgTotal,sqrt(bgErr)));
-  //     PInfo("PlotUtility::DrawAll::Dump",TString::Format("S/B=%.3f; S/sqrt(B)=%.3f",sigTotal/bgTotal,sigTotal/sqrt(bgTotal)));
-  //   } 
-  //   Reset(false);
-  //   for (auto h : ownedHistos) 
-  //     delete h;
-  // } // distribution loop
+  
 } 

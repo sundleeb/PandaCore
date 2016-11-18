@@ -25,6 +25,11 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
+template <typename T> inline
+void concat(std::vector<T> &v1,std::vector<T> v2) {
+  v1.insert(v1.end(),v2.begin(),v2.end());
+}
+
 inline double clean(double x, double d=-1) {
   return (x==x) ? x : d;
 }
@@ -74,7 +79,7 @@ inline std::vector<TString> getDependencies(TString cut) {
         || c=='[' || c==']') {
       if (tmpString != "" && !tmpString.IsDigit() && 
           // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
-          !(tmpString=="TMath") && !(tmpString=="fabs")) {
+          !(tmpString.Contains("TMath")) && !(tmpString=="fabs")) {
         deps.push_back(tmpString);
       }
       tmpString = "";
