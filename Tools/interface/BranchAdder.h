@@ -9,12 +9,24 @@
 #include "Common.h"
 #include "TreeTools.h"
 
+/**
+ * \brief Adds a branch to a tree
+ *
+ * Can be used to add a branch to a tree based on a generic formula
+ * or based on a histogram
+ */
 class BranchAdder
 {
 public:
   BranchAdder() { }
   ~BranchAdder() { }
 
+  /**
+   * \param t tree to modify
+   * \brief Adds a branch based on a generic formula
+   *
+   * formula should be set before this is called
+   */
   void AddBranchFromFormula(TTree *t) {
     float newBranchVal=0;
     
@@ -37,6 +49,12 @@ public:
     }
   }
 
+  /**
+   * \param f path to file containing tree to modify
+   * \brief Adds a branch based on a generic formula
+   *
+   * formula should be set before this is called
+   */
   void AddBranchFromFormula(TString fpath) {
     TFile *fIn = TFile::Open(fpath,"UPDATE");
     TTree *t = (TTree*)fIn->Get(treeName.Data());
@@ -49,6 +67,11 @@ public:
     fIn->Close();
   }
 
+  /**
+   * \param t tree to modify
+   * \param h histogram containing binned values
+   * \brief Adds a branch based on a histogram
+   */
   void AddBranchFromHistogram(TTree *t, TH1F *h) {
     float newBranchVal=0;
     
@@ -72,6 +95,11 @@ public:
     }
   }
 
+  /**
+   * \param f path to file containing tree to modify
+   * \param h histogram containing binned values
+   * \brief Adds a branch based on a histogram
+   */
   void AddBranchFromHistogram(TString fpath, TH1F *h) {
     TFile *fIn = TFile::Open(fpath,"UPDATE");
     TTree *t = (TTree*)fIn->Get(treeName.Data());
@@ -84,8 +112,8 @@ public:
     fIn->Close();
   }
 
-  TString formula = "";
-  TString newBranchName = "";
-  TString treeName = "events";
+  TString formula = ""; /**< formula to be compiled on input tree */
+  TString newBranchName = ""; /**< name of output branch */
+  TString treeName = "events"; /**< name of input tree, if file path is provided */
 };
 #endif

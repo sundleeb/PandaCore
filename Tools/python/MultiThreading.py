@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+'''@package docstring
+Wrappers around multiprocessing
+'''
 
 from ROOT import gSystem,gROOT
 import ROOT as root
@@ -11,15 +14,30 @@ def globalTarget(s,x):
   return r
 
 class Runner(object):
+  '''
+  Creates a pool and runs multiple tasks
+  '''
   target = None
   def __init__(self):
-#    self.target = None
+    '''
+    Constructor
+    '''
     self.argList = None
   def setArgList(self,l):
+    '''
+    @type l: list
+    @param l: list of list of arguments
+    '''
     self.argList = l
   def summary(self,x):
     return
   def run(self,nProc):
+    ''' 
+    Runs the argument list
+
+    @type nProc: int
+    @param nProc: number of threads to spawn
+    '''
     if self.argList is None:
       print 'please call setArgList() first'
       return None
@@ -31,6 +49,9 @@ class Runner(object):
     
 class GenericRunner(Runner):
   def __init__(self,f):
+    '''
+    Sets the global target function as a simple lambda
+    '''
     super(self.__class__,self).__init__()
     Runner.target = lambda s,x : f(*x)
   def summary(self,x):

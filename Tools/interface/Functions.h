@@ -5,12 +5,16 @@
 #include "TMath.h"
 
 #define PI 3.141592654
-/*
- * This header simply has numerical functions that are used in many places
- * */
+
+/** \file Functions.h
+ * \brief Some numerical functions
+ */
 
 //////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * \brief Invariant mass of a pair of particles
+ */
 inline double Mxx(double pt1, double eta1, double phi1, double m1, double pt2, double eta2, double phi2, double m2) {
   TLorentzVector v1,v2;
   v1.SetPtEtaPhiM(pt1,eta1,phi1,m1);
@@ -18,6 +22,9 @@ inline double Mxx(double pt1, double eta1, double phi1, double m1, double pt2, d
   return (v1+v2).M();
 }
 
+/**
+ * \brief Signed delta-phi
+ */
 inline double SignedDeltaPhi(double phi1, double phi2) {
   double dPhi = phi1-phi2;
   if (dPhi<-PI)
@@ -27,12 +34,18 @@ inline double SignedDeltaPhi(double phi1, double phi2) {
   return dPhi;
 }
 
+/**
+ * \brief Calculates the delta-R-squared metric
+ */
 inline double DeltaR2(double eta1, double phi1, double eta2, double phi2) {
   float dEta2 = (eta1-eta2); dEta2 *= dEta2;
   float dPhi = SignedDeltaPhi(phi1,phi2);
   return dEta2 + dPhi*dPhi;
 }
 
+/**
+ * \brief Exponential times erf, aka CMSShape
+ */
 inline double ExpErf(double x, double a, double b, double c) {
   double exp_ = TMath::Exp(c*x);
   double erf_ = TMath::Erf((x-a)/b);

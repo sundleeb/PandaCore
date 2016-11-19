@@ -1,8 +1,13 @@
 #!/usr/bin/env python
+'''@package docstring
+Module that catalogs C++ objects known to ROOT/PandaCore.
+Can load the libraries and object definitions on-demand
+'''
 
 from Misc import *
 
 class Library():
+  '''Simple class that defines a library'''
   def __init__(self,name,pkg,d):
     self.name = name
     self.pkg = pkg
@@ -52,6 +57,15 @@ import ROOT as root
 from os import getenv
 
 def Load(lib,obj):
+  '''
+  Function that loads a shared object file and any header files required for a particular object
+
+  @type lib: str
+  @param lib: Name of library
+
+  @type obj: str
+  @param obj: Name of object
+  '''
   root_include_path = getenv('ROOT_INCLUDE_PATH')
   for p in root_include_path.split(":"):
     gInterpreter.AddIncludePath(p)

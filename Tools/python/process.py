@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+'''@package docstring
+Just a giant list of processes and properties
+'''
 
 
 processes =  {
