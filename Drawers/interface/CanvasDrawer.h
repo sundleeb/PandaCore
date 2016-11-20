@@ -16,20 +16,28 @@
 #include "algorithm"
 #include "PandaCore/Tools/interface/Common.h"
 
+/**
+ * \file CanvasDrawer.h
+ * \brief Defines the CanvasDrawer class
+ */
+
+/**
+ * \brief Enumerator of processes
+ */
 enum ProcessType {
-  kData=0,
-  kSignal,
+  kData=0, /**< data */
+  kSignal, /**< start of signals */
   kSignal1,
   kSignal2,
   kSignal3,
-  kQCD,
+  kQCD,  /**< start of backgrounds */
   kTTbar,
   kWjets,
   kZjets,
   kST,
   kDiboson,
   kGjets,
-  kExtra1,   // used for things like fakes
+  kExtra1,  /**< start of extra processes */
   kExtra2,   
   kExtra3,   
   kExtra4,   
@@ -37,56 +45,85 @@ enum ProcessType {
   kExtra6,   
   kExtra7,   
   kExtra8,   
-  nProcesses
+  nProcesses /**< should never ever be used to label a process */
 };
 
+/**
+ * \brief Wrapper class for TCanvas
+ *
+ * Base class for all other PandaCore::Drawer objects.
+ * Essentially used as a wrapper for TCanvas, defining various
+ * methods for formatting the owned canvas. An externally-constructed
+ * canvas can also be provided.
+ */
 class CanvasDrawer
 {
 public:
+  /**
+   * \brief Constructor - creates new TCanvas
+   * \param x x-width
+   * \param y y-width
+   */
   CanvasDrawer(double x=-1, double y=-1);
-  CanvasDrawer(TCanvas *c0);
-  ~CanvasDrawer();
+  CanvasDrawer(TCanvas *c0); //!< Constructor - given existing TCanvas
+  ~CanvasDrawer(); //!< Destructor
 
-  void SetCanvas(TCanvas *c0);
-  TCanvas *GetCanvas() { return c; }
-  TPad *GetPad1() { return pad1; }
-  TPad *GetPad2() { return pad2; }
+  void SetCanvas(TCanvas *c0); //!< Set externally-defined TCanvas
+  TCanvas *GetCanvas() { return c; } //!< Return canvas
+  TPad *GetPad1() { return pad1; } //!< Return top plot pad (or NULL)
+  TPad *GetPad2() { return pad2; } //!< Return bottom ratio pad (or NULL)
 
-  void Stack(bool b)  {doStack = b;}
-  void DrawEmpty(bool b)  {drawEmpty = b;}
-  void StackSignal(bool b)  {doStackSignal = b; if (b) doStack=true;}
-  void Logy(bool b=true)	{ doLogy = b; maxScale = (b) ? 100 : 1.5; }
-  void SetNormFactor(bool b)  { doSetNormFactor = b;  }
-  void SetMaxScale(double d) { maxScale = d; }
-  void Ratio(bool b=true) { doRatio = b; }
-  void SplitCanvas(TCanvas *c_=0);
-  void FixRatio(double m=2) { fixRatio=true; ratioMax=m; }
+  void Stack(bool b)  {doStack = b;} //!< Set stack option for histograms
+  void DrawEmpty(bool b)  {drawEmpty = b;} //!< Option to not fill histograms when drawing
+  void StackSignal(bool b)  {doStackSignal = b; if (b) doStack=true;} //!< Option to stack signal with BGs
+  void Logy(bool b=true)	{ doLogy = b; maxScale = (b) ? 100 : 1.5; } //!< Set y log scale
+  void SetNormFactor(bool b)  { doSetNormFactor = b;  } //!< Set histograms normalized to 1
+  void SetMaxScale(double d) { maxScale = d; } //!< Set maximum scale
+  void Ratio(bool b=true) { doRatio = b; } //!< Turn on ratio pad calculation (only implemented in certain inherited classes)
+  void SplitCanvas(TCanvas *c_=0); //!< Split canvas into two pads
+  void FixRatio(double m=2) { fixRatio=true; ratioMax=m; } //!< Fix range of ratio pad
 
-  void SetLumi(float f) { lumi = f; }
-  void AddPlotLabel(const char *s, double x, double y, bool drawImmediately=true, int font=42, float textSize=-1, int textAlign=11);
-  void SetSignalScale(double d) { signalScale = d; }
-  void InitLegend(double x0=0.6, double y0=0.55, double x1=0.88, double y1=0.9);
+  void SetLumi(float f) { lumi = f; } //!< Set luminosity label
+  void AddPlotLabel(const char *s, double x, double y, bool drawImmediately=true, int font=42, float textSize=-1, int textAlign=11); //!< Draw a label on top of the plot
+  void SetSignalScale(double d) { signalScale = d; } //!< Scale the signal by a factor
+  void InitLegend(double x0=0.6, double y0=0.55, double x1=0.88, double y1=0.9); //!< Initialize a TLegend
 
-  virtual void Draw(TString outDir,TString baseName);
-  void SetDrawOption(const char *s) { drawOption=s; }
-  void DrawMCErrors(bool b) { doDrawMCErrors=b; }
-  void SetEvtNum(const char *s) { eventnumber=s; }
-  void SetEvtMod(int i) { eventmod=i; }
+  /**
+   * \brief Draw the TCanvas and save it
+   * \param outDir location of output files
+   * \param baseName baseName.[pdf,png,C] are created
+   */
+  virtual void Draw(TString outDir,TString baseName); 
+  void SetDrawOption(const char *s) { drawOption=s; } //!< Set draw option
+  void DrawMCErrors(bool b) { doDrawMCErrors=b; } //!< Set MC errors
+  void SetEvtNum(const char *s) { eventnumber=s; } //!< Set name for event number
+  void SetEvtMod(int i) { eventmod=i; } //!< Set number of events to mod by
 
-  void SetTDRStyle();
-  void SetAutoRange(bool b) { doAutoRange=b; }
-  void SetRatioStyle();
-  void AddCMSLabel(double x=0.18, double y=0.85);
-  void AddLumiLabel(bool fb=true, double customLumi=-1);
-  void ClearCanvas() { c->Clear(); }
-  void cd() { c->cd(); }
-  void SetGrid() { gStyle->SetGridColor(16); c->SetGrid(); }
+  void SetTDRStyle(); //!< Set some plotting options to be CMS-friendly
+  void SetAutoRange(bool b) { doAutoRange=b; } //!< Automatically calculate ranges as plotting
+  void SetRatioStyle(); //!< Some predefined options nice for drawing some ratio plots
+  void AddCMSLabel(double x=0.18, double y=0.85); //!< Add a CMS label
+  void AddLumiLabel(bool fb=true, double customLumi=-1); //!< Add a luminosity label
+  void ClearCanvas() { c->Clear(); } //!< Clear
+  void cd() { c->cd(); } //!< cd
+  void SetGrid() { gStyle->SetGridColor(16); c->SetGrid(); } //!< Set a grid
 
   bool HasLegend() { return legend!=0; }
 
 protected:
+  /**
+   * \brief Internal class used for managing labels 
+   */
   class Label {
     public:
+      /**
+       * \param n label text
+       * \param x0 x-coordinate
+       * \param y0 y-coordinate
+       * \param f0 ROOT font index
+       * \param s0 text size
+       * \param a0 ROOT text align index
+       */
       Label(const char *n, double x0, double y0, int f0=42, float s0=-1, int a0=11) {
         strcpy(name,n);
         x = x0;
@@ -103,6 +140,9 @@ protected:
     float size;
   };
 
+  /**
+   * \brief Colors of histograms
+   */
   int PlotColors[20] = {1,
                         kBlack,
                         kBlue,
@@ -123,6 +163,9 @@ protected:
                         kViolet,
                         kAzure,
                         kSpring+8};
+  /**
+   * \brief Colors of graphs
+   */
   int GraphColors[18] = {
                         1, //black
                         2,  //red
@@ -144,15 +187,15 @@ protected:
                         kCyan+3
   };
 
-  TCanvas *c=0;
-  TPad *pad1=0, *pad2=0;
-  bool canvasIsOwned=false;
-  bool doStack=false; // option to stack everything but data
-  bool doStackSignal=false; // option to stack signal as well
-  bool doLogy=false;
-  bool doDrawMCErrors=false; // option to draw MC errors
-  bool doSetNormFactor=false; // option to scale mc to match data (if doStack) else SetNormFactor() everything
-  bool doAutoRange=true;
+  TCanvas *c=0; //!< pointer to canvas
+  TPad *pad1=0, *pad2=0; //!< pointers to TPads
+  bool canvasIsOwned=false; //!< is canvas owned?
+  bool doStack=false; //!< option to stack everything but data
+  bool doStackSignal=false; //!< option to stack signal as well
+  bool doLogy=false; //!< do y-axes log
+  bool doDrawMCErrors=false; //!< option to draw MC errors
+  bool doSetNormFactor=false; //!< option to scale mc to match data (if doStack) else SetNormFactor() everything
+  bool doAutoRange=true; //!< automatically calculate ranges
   bool doRatio=false;
   bool fixRatio=false;
   double ratioMax=2;
@@ -161,11 +204,11 @@ protected:
   TLatex *label=0;
   TLegend *legend=0;
   double signalScale=1;
-  TString drawOption="hist";
-  std::vector<Label> plotLabels; // labels to be plotted right before saving the canvas
-  TString eventnumber="eventNumber";
-  int eventmod=0;
-  int whichstyle=0;
+  TString drawOption="hist"; //!< default draw option
+  std::vector<Label> plotLabels; //!< labels to be plotted right before saving the canvas
+  TString eventnumber="eventNumber"; //!< name of event branch
+  int eventmod=0; //!< event mod value
+  int whichstyle=0; 
   double maxScale=1.5;
   bool drawEmpty=false; // for stacks, do not fill in the histograms
 };
