@@ -1,3 +1,10 @@
+
+/**
+ * \file GraphDrawer.h
+ * \brief Defines the BaseGraphDrawaer class and its inherited classes
+ * \author S. Narayanan
+ */
+
 #ifndef PANDACORE_TOOLS_GDRAWER
 #define PANDACORE_TOOLS_GDRAWER
 
@@ -9,24 +16,51 @@
 #include "TFile.h"
 #include <iostream>
 
+/**
+ * \brief Implements a base class for a generic graph drawer 
+ */
 template <typename T> class BaseGraphDrawer : public CanvasDrawer {
   public:
-    BaseGraphDrawer(double x=-1, double y=-1);
-    virtual ~BaseGraphDrawer();
+    BaseGraphDrawer(double x=-1, double y=-1); //!< Constructor
+    virtual ~BaseGraphDrawer(); //!< Destructor
 
+  /**
+   * \brief Add a graph to be plotted
+   * \param g the graph
+   * \param label the label to be used in the legend
+   * \param color the color
+   * \param style the style
+   * \param drawOption the draw option
+   */
   void AddGraph(T *g, const char *label,unsigned int color,int style=1, const char *drawOption="L");
+  /**
+   * \brief Add a graph to be plotted from file
+   * \param gname the key of the graph
+   * \param label the label to be used in the legend
+   * \param color the color
+   * \param style the style
+   * \param drawOption the draw option
+   */
   void AddGraph(TString gname, const char *label,unsigned int color,int style=1, const char *drawOption="L");
+  /**
+   * \brief Add a single TMarker to the plot
+   * \param m the marker
+   * \param label the legend label
+   */
   void AddMarker(TMarker *m, const char *label);
-  void SetInputFile(TString fname);
-  void SetInputFile(TFile *f);
-  void SetLineWidth(int l0) { lineWidth = l0; }
-  virtual void Draw(TString outDir, TString baseName) override;
+  void SetInputFile(TString fname); //!< Set input file by path
+  void SetInputFile(TFile *f); //!< Set input file
+  void SetLineWidth(int l0) { lineWidth = l0; } //!< Set line width
+  virtual void Draw(TString outDir, TString baseName) override; //!< Draw canvas
   
+  /**
+   * \brief Reset the object
+   */
   void Clear() { graphs.clear(); labels.clear(); colors.clear();
-                 styles.clear(); drawOptions.clear();            }
+                 styles.clear(); drawOptions.clear();            } 
 
   protected:
-    bool fileIsOwned=false;
+    bool fileIsOwned=false; 
     int lineWidth=2;
     TFile *centralFile=0;
     std::vector<T*> graphs;

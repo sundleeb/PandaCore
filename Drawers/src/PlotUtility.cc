@@ -85,6 +85,7 @@ TString convertName(TString filename) {
 }
 
 void divideBinWidth(TH1D *h) {
+  // I trust this more than TH1::Scale(1,"width")
   int nBins = h->GetNbinsX();
   for (int iB=1; iB!=nBins+1; ++iB) {
     float currentVal = h->GetBinContent(iB);
@@ -112,18 +113,19 @@ void PlotUtility::DrawAll(TString outDir) {
     if (p==NULL)
       continue;
 
-    p->chain->SetBranchStatus("*",0);
+    for (TTree *t : p->trees) {
+      t->SetBranchStatus("*",0);
 
-    turnOnBranches(p->chain,cut.GetTitle());
-    if (p->processtype!=kData && p->useCommonWeight) {
-      turnOnBranches(p->chain,mcWeight.GetTitle());
+      turnOnBranches(t,cut.GetTitle());
+      if (p->processtype!=kData && p->useCommonWeight) {
+        turnOnBranches(t,mcWeight.GetTitle());
+      }
+      for(Distribution *d : distributions) {
+        turnOnBranches(t,d->name);
+      }
+      turnOnBranches(t,p->additionalCut.GetTitle());
+      turnOnBranches(t,p->additionalWeight.GetTitle());
     }
-    for(Distribution *d : distributions) {
-      turnOnBranches(p->chain,d->name);
-    }
-    turnOnBranches(p->chain,p->additionalCut.GetTitle());
-    turnOnBranches(p->chain,p->additionalWeight.GetTitle());
-
   }
 
   map<Distribution*,PlotWrapper> pws;
@@ -171,7 +173,6 @@ void PlotUtility::DrawAll(TString outDir) {
     if (p==NULL)
       continue;
     // build the cut and weight formulae
-    TTree *drawTree = p->chain;
     TCut finalCut = cut;
     TCut finalWeight = "1";
     if (p->processtype!=kData && p->useCommonWeight)
@@ -186,64 +187,68 @@ void PlotUtility::DrawAll(TString outDir) {
     }
     finalCut += p->additionalCut;
     finalWeight *= p->additionalWeight;
-    TTreeFormula fcut(finalCut.GetTitle(),finalCut.GetTitle(),drawTree); fcut.SetQuickLoad(true);
-    TTreeFormula fweight(finalWeight.GetTitle(),finalWeight.GetTitle(),drawTree); fweight.SetQuickLoad(true);
 
-    // build the systematic shift weights
-    vector<TTreeFormula*> fsystups, fsystdowns;
-    vector<double> syst_up_weights(systNames.size());
-    vector<double> syst_down_weights(systNames.size());
-    for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-      TCut upWeight = mcWeightUp[iS];
-      upWeight *= p->additionalWeight;
-      if (eventmod!=0)
-        upWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-      TTreeFormula *fup = new TTreeFormula(upWeight.GetTitle(),upWeight.GetTitle(),drawTree); fup->SetQuickLoad(true);
-      fsystups.push_back(fup);
+    // loop through each subprocess
+    for (TTree *drawTree : p->trees) {
+      TTreeFormula fcut(finalCut.GetTitle(),finalCut.GetTitle(),drawTree); fcut.SetQuickLoad(true);
+      TTreeFormula fweight(finalWeight.GetTitle(),finalWeight.GetTitle(),drawTree); fweight.SetQuickLoad(true);
 
-      TCut downWeight = mcWeightDown[iS];
-      downWeight *= p->additionalWeight;
-      if (eventmod!=0)
-        downWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-      TTreeFormula *fdown = new TTreeFormula(downWeight.GetTitle(),downWeight.GetTitle(),drawTree); fdown->SetQuickLoad(true);
-      fsystdowns.push_back(fdown);
-    }
-
-    // build the distribution formulae
-    for (auto *d : distributions) {
-      delete pws[d].tf;
-      pws[d].tf = new TTreeFormula(d->name,d->name,drawTree);
-      pws[d].tf->SetQuickLoad(true);
-    }
-
-    // cut, evaluate, and fill
-    unsigned int nEntries = drawTree->GetEntriesFast();
-    for (unsigned int iE=0; iE!=nEntries; ++iE) {
-      drawTree->GetEntry(iE);
-      if (!fcut.EvalInstance())
-        continue;
-      double weight = fweight.EvalInstance();
+      // build the systematic shift weights
+      vector<TTreeFormula*> fsystups, fsystdowns;
+      vector<double> syst_up_weights(systNames.size());
+      vector<double> syst_down_weights(systNames.size());
       for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-        syst_up_weights[iS] = fsystups[iS]->EvalInstance();
-        syst_down_weights[iS] = fsystdowns[iS]->EvalInstance();
+        TCut upWeight = mcWeightUp[iS];
+        upWeight *= p->additionalWeight;
+        if (eventmod!=0)
+          upWeight *= TCut(TString::Format("%f",1./eventmod).Data());
+        TTreeFormula *fup = new TTreeFormula(upWeight.GetTitle(),upWeight.GetTitle(),drawTree); fup->SetQuickLoad(true);
+        fsystups.push_back(fup);
+
+        TCut downWeight = mcWeightDown[iS];
+        downWeight *= p->additionalWeight;
+        if (eventmod!=0)
+          downWeight *= TCut(TString::Format("%f",1./eventmod).Data());
+        TTreeFormula *fdown = new TTreeFormula(downWeight.GetTitle(),downWeight.GetTitle(),drawTree); fdown->SetQuickLoad(true);
+        fsystdowns.push_back(fdown);
       }
+      
+      // build the distribution formulae
       for (auto *d : distributions) {
-        PlotWrapper &pw = pws[d];
-        TH1D *h = pw.histos[p];
-        double val = pw.tf->EvalInstance();
-        h->Fill(val,weight);
+        delete pws[d].tf;
+        pws[d].tf = new TTreeFormula(d->name,d->name,drawTree);
+        pws[d].tf->SetQuickLoad(true);
+      }
+      
+      // cut, evaluate, and fill
+      unsigned int nEntries = drawTree->GetEntries();
+      for (unsigned int iE=0; iE!=nEntries; ++iE) {
+        drawTree->GetEntry(iE);
+        if (!fcut.EvalInstance())
+          continue;
+        double weight = fweight.EvalInstance();
         for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-          pw.hSystUp.at(iS)->Fill(val,syst_up_weights[iS]);
-          pw.hSystDown.at(iS)->Fill(val,syst_down_weights[iS]);
+          syst_up_weights[iS] = fsystups[iS]->EvalInstance();
+          syst_down_weights[iS] = fsystdowns[iS]->EvalInstance();
+        }
+        for (auto *d : distributions) {
+          PlotWrapper &pw = pws[d];
+          TH1D *h = pw.histos[p];
+          double val = pw.tf->EvalInstance();
+          h->Fill(val,weight);
+          for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+            pw.hSystUp.at(iS)->Fill(val,syst_up_weights[iS]);
+            pw.hSystDown.at(iS)->Fill(val,syst_down_weights[iS]);
+          }
         }
       }
-    }
 
-    for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-      delete fsystups[iS]; delete fsystdowns[iS];
-      fsystups[iS]=0; fsystdowns[iS]=0;
-    }
+      for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+        delete fsystups[iS]; delete fsystdowns[iS];
+        fsystups[iS]=0; fsystdowns[iS]=0;
+      }
 
+    }
     tr.TriggerEvent(p->name.Data());
   }
 

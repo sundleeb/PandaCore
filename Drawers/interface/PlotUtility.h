@@ -1,3 +1,9 @@
+/**
+ * \file PlotUtility.h
+ * \brief Defines the PlotUtility class
+ * \author S. Narayanan
+ */
+
 #ifndef PANDACORE_TOOLS_PLOTUTILITY
 #define PANDACORE_TOOLS_PLOTUTILITY
 
@@ -10,50 +16,96 @@
 #include "HistogramDrawer.h"
 #include "PandaCore/Tools/interface/TreeTools.h"
 
+/**
+ * \brief Defines a single process to be plotted. Can have several input trees
+ */
 class Process {
 public:
+  /**
+   * \brief Constructor
+   * \param n name of this process
+   * \param c the defining ProcessType
+   * \param customColor a custom choice of color, if none is provided one is set automatically
+   */
   Process(TString n, ProcessType c, ProcessType customColor=nProcesses) { 
     name = n; 
     processtype = c; 
-    chain = NULL;
     if (customColor==nProcesses) 
       color=c;
     else
       color=customColor;
   }
+  /**
+   * \brief Destructor
+   */
   ~Process() {
-    delete chain;
+    for (auto *f : files)
+      f->Close();
   }
+  /**
+   * \brief Initialize the process
+   * \param treeName name of the tree to harvest from files
+   */
   void Init(const char *treeName = "events") {
-    chain = new TChain(treeName);
+    treename = treeName;
   }
+  /**
+   * \brief Add a file to this process
+   * \param s file path
+   */
   void AddFile(TString s) {
-    if (chain==NULL) Init();
-    chain->AddFile(s);
-    for (TChain *f : friends)
-      f->AddFile(s);
+    TFile *f = new TFile(s);
+    files.push_back(f);
+
+    TTree *t = (TTree*)f->FindObjectAny(treename);
+    trees.push_back(t);
+
+    for (auto fn : friendnames) {
+      TTree *tf = (TTree*)f->FindObjectAny(fn);
+      friends.push_back(tf);
+      t->AddFriend(tf);
+    }
   }
+
+  /**
+   * \brief Add a friend tree to the main tree
+   * \param s name of friend tree
+   */
   void AddFriend(const char *s) {
-    friends.push_back(new TChain(s));
-    chain->AddFriend(friends.back());
+    friendnames.push_back(s);
   }
-  bool dashed=false;
-  bool useCommonWeight=true;
-  bool useCommonCut=true;
-  TCut additionalCut = "1==1"; // anded with whatever cut is being applied
-  TCut additionalWeight = "1"; // multiplied with whatever cut is being applied
-  TString name;
-  ProcessType processtype;
-  ProcessType color;
-  TChain *chain;
-  TTree *clonedTree=0;
-  std::vector<TChain*>friends;
+  bool dashed=false; //!< dashed lines?
+  bool useCommonWeight=true; //!< if an externally-defined weight should be applied
+  bool useCommonCut=true; //!< if an externally-defined cut should be applied
+  TCut additionalCut = "1==1"; //!< anded with whatever cut is being applied
+  TCut additionalWeight = "1"; //!< multiplied with whatever weight is being applied
+  TString name; //!< name of process
+  ProcessType processtype; //!< type of process
+  ProcessType color; //!< color of the output histogram
+  std::vector<TTree*> trees; //!< the trees contained in this process
+private:
+  TString treename="events"; //!< name of trees to harvest
+  std::vector<TString>friendnames; //!< names of friends to harvest
+  std::vector<TTree*>friends; //!< these are not accessed externally; just kept here for GC
+  std::vector<TFile*>files; //!< these are not accessed externally; just kept here for GC
 };
 
+/**
+ * \brief A class to define a distribution to be plotted
+ */
 class Distribution {
 public:
+  /**
+   * \brief Variable width bin constructor
+   * \param n variable to be plotted
+   * \param nb number of bins
+   * \param x x-label
+   * \param y y-label
+   * \param minY_ minimum y-bound
+   * \param maxY_ maximum y-bound
+   * \param fn filename, if none is provided n is used
+   */
   Distribution(TString n, int nb, TString x, TString y, double minY_=999, double maxY_=-999, TString fn="") {
-    // this is the variable bin constructor
     name = n;
     nBins = nb;
     xLabel = x;
@@ -63,6 +115,18 @@ public:
     binEdges = new float[nBins+1];
     filename = (fn!="") ? fn : n;
   }
+  /**
+   * \brief Fixed-width bin constructor
+   * \param n variable to be plotted
+   * \param m low
+   * \param M high
+   * \param nb number of bins
+   * \param x x-label
+   * \param y y-label
+   * \param minY_ minimum y-bound
+   * \param maxY_ maximum y-bound
+   * \param fn filename, if none is provided n is used
+   */
   Distribution(TString n, float m, float M, int nb, TString x, TString y, double minY_=999, double maxY_=-999, TString fn="") {
     name = n;
     min = m;
@@ -74,7 +138,17 @@ public:
     yLabel = y;
     filename = (fn!="") ? fn : n;
   }
+  /**
+   * \brief Destructor
+   */
   ~Distribution() { delete binEdges; }
+  /**
+   * \brief Add a bin edge 
+   * \param e low edge of bin
+   *
+   * 
+   * Should be replaced by access to std::vector in pyROOT
+   */
   void AddBinEdge(float e) {
     binEdges[counter] = e;
     if (counter==0)
@@ -83,7 +157,7 @@ public:
       max=e;
     ++counter;
   }
-  TString name, filename;
+  TString name, filename; 
   float min; 
   float max;
   float minY;
@@ -95,10 +169,13 @@ public:
   TString yLabel;
 };
 
+/**
+ * \brief A class to make analysis plots given TTrees
+ */
 class PlotUtility : public HistogramDrawer
 {
 public:
-  PlotUtility(double x=-1, double y=-1);
+  PlotUtility(double x=-1, double y=-1); //!< Constructor
   ~PlotUtility();
 
   void AddProcess(Process *p);

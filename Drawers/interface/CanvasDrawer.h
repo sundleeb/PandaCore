@@ -1,3 +1,9 @@
+/**
+ * \file CanvasDrawer.h
+ * \brief Defines the CanvasDrawer class
+ * \author S. Narayanan
+ */
+
 #ifndef PANDACORE_TOOLS_THINGDRAWER
 #define PANDACORE_TOOLS_THINGDRAWER
 
@@ -16,10 +22,6 @@
 #include "algorithm"
 #include "PandaCore/Tools/interface/Common.h"
 
-/**
- * \file CanvasDrawer.h
- * \brief Defines the CanvasDrawer class
- */
 
 /**
  * \brief Enumerator of processes
@@ -84,7 +86,17 @@ public:
   void FixRatio(double m=2) { fixRatio=true; ratioMax=m; } //!< Fix range of ratio pad
 
   void SetLumi(float f) { lumi = f; } //!< Set luminosity label
-  void AddPlotLabel(const char *s, double x, double y, bool drawImmediately=true, int font=42, float textSize=-1, int textAlign=11); //!< Draw a label on top of the plot
+  /**
+   * \brief Draw a label on top of the plot
+   * \param s the label
+   * \param x the x-position
+   * \param y the y-position
+   * \param drawImmediately if true, then draw it now, else draw right before the canvas is printed to file
+   * \param font font choice (default is Helvetica)
+   * \param textSize text size, if not provided, default is used
+   * \param textAlign alignment of text, if not provided, left-align is used
+   */
+  void AddPlotLabel(const char *s, double x, double y, bool drawImmediately=true, int font=42, float textSize=-1, int textAlign=11); 
   void SetSignalScale(double d) { signalScale = d; } //!< Scale the signal by a factor
   void InitLegend(double x0=0.6, double y0=0.55, double x1=0.88, double y1=0.9); //!< Initialize a TLegend
 
@@ -187,29 +199,29 @@ protected:
                         kCyan+3
   };
 
-  TCanvas *c=0; //!< pointer to canvas
-  TPad *pad1=0, *pad2=0; //!< pointers to TPads
-  bool canvasIsOwned=false; //!< is canvas owned?
-  bool doStack=false; //!< option to stack everything but data
-  bool doStackSignal=false; //!< option to stack signal as well
-  bool doLogy=false; //!< do y-axes log
-  bool doDrawMCErrors=false; //!< option to draw MC errors
-  bool doSetNormFactor=false; //!< option to scale mc to match data (if doStack) else SetNormFactor() everything
-  bool doAutoRange=true; //!< automatically calculate ranges
-  bool doRatio=false;
-  bool fixRatio=false;
-  double ratioMax=2;
-  TCut mcWeight;
-  float lumi=-1;
-  TLatex *label=0;
-  TLegend *legend=0;
-  double signalScale=1;
-  TString drawOption="hist"; //!< default draw option
-  std::vector<Label> plotLabels; //!< labels to be plotted right before saving the canvas
-  TString eventnumber="eventNumber"; //!< name of event branch
-  int eventmod=0; //!< event mod value
-  int whichstyle=0; 
-  double maxScale=1.5;
-  bool drawEmpty=false; // for stacks, do not fill in the histograms
+  TCanvas *c=0;                         //!< pointer to canvas
+  TPad *pad1=0, *pad2=0;                //!< pointers to TPads
+  bool canvasIsOwned=false;             //!< is canvas owned?
+  bool doStack=false;                   //!< option to stack everything but data
+  bool doStackSignal=false;             //!< option to stack signal as well
+  bool doLogy=false;                    //!< do y-axes log
+  bool doDrawMCErrors=false;            //!< option to draw MC errors
+  bool doSetNormFactor=false;           //!< option to scale mc to match data (if doStack) else SetNormFactor() everything 
+  bool doAutoRange=true;                //!< automatically calculate ranges
+  bool doRatio=false;                   //!< draw a ratio pad
+  bool fixRatio=false;                  //!< fix the ratio pad size to ratioMax
+  double ratioMax=2;                    //!< maximum size of ratio pad
+  TCut mcWeight;                        //!< mc weight
+  float lumi=-1;                        //!< luminosity for label
+  TLatex *label=0;                      //!< label
+  TLegend *legend=0;                    //!< legend
+  double signalScale=1;                 //!< factor by which to scale the signal
+  TString drawOption="hist";            //!< default draw option
+  std::vector<Label> plotLabels;        //!< labels to be plotted right before saving the canvas
+  TString eventnumber="eventNumber";    //!< name of event branch
+  int eventmod=0;                       //!< event mod value
+  int whichstyle=0;                     //!< for different styles of plotting
+  double maxScale=1.5;                  //!< factor by which to scale the y-axis relative to the largest histogram
+  bool drawEmpty=false;                 // for stacks, do not fill in the histograms
 };
 #endif
