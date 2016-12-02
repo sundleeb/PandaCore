@@ -43,6 +43,7 @@ public:
       outWeight = xsec*inWeight/totalEvts;
       b->Fill();
     }
+    t->SetBranchStatus("*",1);
   }
 
   /**
