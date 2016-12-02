@@ -47,6 +47,7 @@ public:
       newBranchVal = tformula.EvalInstance();
       b->Fill();
     }
+    t->SetBranchStatus("*",1);
   }
 
   /**
@@ -93,6 +94,7 @@ public:
       newBranchVal = h->GetBinContent(h->FindBin(xval));
       b->Fill();
     }
+    t->SetBranchStatus("*",1);
   }
 
   /**

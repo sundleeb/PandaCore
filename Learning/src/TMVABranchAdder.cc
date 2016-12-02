@@ -96,6 +96,7 @@ void TMVABranchAdder::RunFile(TString fpath) {
     }
   }
 
+  tin->SetBranchStatus("*",1);
   fin->WriteTObject(tin,treename,"Overwrite");
   fin->Close();
 
