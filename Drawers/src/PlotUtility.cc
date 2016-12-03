@@ -116,6 +116,7 @@ void PlotUtility::DrawAll(TString outDir) {
     for (TTree *t : p->trees) {
       t->SetBranchStatus("*",0);
 
+      turnOnBranches(t,eventnumber);
       turnOnBranches(t,cut.GetTitle());
       if (p->processtype!=kData && p->useCommonWeight) {
         turnOnBranches(t,mcWeight.GetTitle());
