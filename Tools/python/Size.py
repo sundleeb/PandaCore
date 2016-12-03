@@ -108,7 +108,7 @@ class SizeChecker:
           pie.SetEntryLineColor(iV,root.kBlack)
           pie.SetEntryLineWidth(iV,root.kBlack)
           pie.SetEntryLabel(iV,labels[iV] )
-        pie.SetTitle('')
+        pie.SetTitle(pfile.nickname)
         pie.SetCircle(0.5,.45,0.3)
         pie.Draw('rsc')
         
