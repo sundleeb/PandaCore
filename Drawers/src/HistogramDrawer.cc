@@ -148,9 +148,6 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       h->SetLineColor(w.cc);
       h->SetLineWidth(3);
     }
-    TString legOption = "L";
-    if (w.opt.Contains("elp"))
-      legOption = "ELP";
     if (pt!=kData && (pt==kData || pt>kSignal3 || doStackSignal)) {
       if (doStack) {
         // if it's stackable
@@ -161,7 +158,6 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
           h->SetFillColor(w.cc);
         }
         hs->Add(h);
-        legOption = "F";
         stackIntegral += h->Integral();
       } else {
         if (doSetNormFactor) 
@@ -170,7 +166,6 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hOthers.push_back(w);
     } else if (pt==kData) {
       // if it's data
-      legOption = "ELP";
       hData = h;
       hData->SetMarkerColor(PlotColors[pt]);
       hData->SetMarkerStyle(20);
@@ -189,8 +184,18 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       if (doSetNormFactor)
         hSignal[pt-1]->Scale(1./hSignal[pt-1]->Integral());
     } 
-    if (legend && w.label!="") 
-      legend->AddEntry(h,w.label,legOption);
+  }
+  for (int iH=nH-1; iH!=-1; --iH) {
+    HistWrapper w = internalHists[iH];
+    TString legOption = "L";
+    if (w.opt.Contains("elp"))
+      legOption = "ELP";
+    if (doStack)
+      legOption = "F";
+    if (w.pt==kData)
+      legOption = "ELP";
+    if (legend && w.label!="")
+      legend->AddEntry(w.h,w.label,legOption);
   }
 
   // scale stacked histograms and calculate stacked error bands
@@ -285,7 +290,8 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   TString xlabel = internalHists[0].h->GetXaxis()->GetTitle();
   TString ylabel = internalHists[0].h->GetYaxis()->GetTitle();
   for (HistWrapper w : internalHists) {
-    w.h->GetXaxis()->SetTitle("");
+    w.h->GetXaxis()->SetTitle(xlabel);
+    w.h->GetYaxis()->SetTitle(ylabel);
   }
 
   // figure out what to do with the first histogram
@@ -315,12 +321,14 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       firstHist->Draw(hOthers[0].opt);
     else
       firstHist->Draw(drawOption);
+    /*
     if (!doRatio) {
       firstHist->GetXaxis()->SetTitle(xlabel);
     } else {
       firstHist->GetXaxis()->SetTitle("");
     }
     firstHist->GetYaxis()->SetTitle(ylabel);
+    */
     firstHist->GetYaxis()->SetTitleOffset(1.5);
   }
 

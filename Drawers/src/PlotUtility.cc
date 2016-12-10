@@ -349,6 +349,7 @@ void PlotUtility::DrawAll(TString outDir) {
     Logy(false);
     HistogramDrawer::Draw(outDir,tmpname);
     tmpname += "_logy";
+    legend->Clear();
     Logy(true);
     HistogramDrawer::Draw(outDir,tmpname);
     Reset(false);
