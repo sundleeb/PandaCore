@@ -78,7 +78,7 @@ public:
   void Stack(bool b)  {doStack = b;} //!< Set stack option for histograms
   void DrawEmpty(bool b)  {drawEmpty = b;} //!< Option to not fill histograms when drawing
   void StackSignal(bool b)  {doStackSignal = b; if (b) doStack=true;} //!< Option to stack signal with BGs
-  void Logy(bool b=true)	{ doLogy = b; maxScale = (b) ? 100 : 1.5; } //!< Set y log scale
+  void Logy(bool b=true)	{ doLogy = b; maxScale = (b) ? 100 : 2.; } //!< Set y log scale
   void SetNormFactor(bool b)  { doSetNormFactor = b;  } //!< Set histograms normalized to 1
   void SetMaxScale(double d) { maxScale = d; } //!< Set maximum scale
   void Ratio(bool b=true) { doRatio = b; } //!< Turn on ratio pad calculation (only implemented in certain inherited classes)

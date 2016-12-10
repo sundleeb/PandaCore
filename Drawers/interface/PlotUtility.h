@@ -163,10 +163,11 @@ public:
   float minY;
   float maxY;
   float *binEdges=0;
-  int counter=0;
   int nBins;
   TString xLabel;
   TString yLabel;
+private:
+  int counter=0;
 };
 
 /**
@@ -195,7 +196,8 @@ public:
                                                                 systColors.push_back(color); }
   void SetPlotLabel(const char *s)  { plotLabel = s;  }
   void SetSignalScale(double d) { signalScale = d; }
-  void CloneTrees(bool b) { cloneTrees = b; }
+  void SetDoOverflow(bool b=true) { doOverflow = b; }
+  void SetDoUnderflow(bool b=true) { doUnderflow = b; }
   void Reset(bool clearPlotLabels=true);
 
   void DrawAll(TString outDir);
@@ -214,8 +216,9 @@ private:
   std::vector<unsigned int> order;
   TCut cut;
   TCut mcWeight;
-  bool cloneTrees=false;
   TString plotLabel="#it{CMS Preliminary}";
+  bool doOverflow=false;
+  bool doUnderflow=false;
 
   std::vector<TCut> mcWeightUp, mcWeightDown;
   std::vector<int> systColors;

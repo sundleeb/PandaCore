@@ -8,6 +8,7 @@ CanvasDrawer::CanvasDrawer(double x, double y) {
   }
   label = new TLatex();
   label->SetNDC(); 
+  gErrorIgnoreLevel=kWarning;
 }
 
 CanvasDrawer::CanvasDrawer(TCanvas *c0) {
@@ -15,6 +16,7 @@ CanvasDrawer::CanvasDrawer(TCanvas *c0) {
   canvasIsOwned=false;
   label = new TLatex();
   label->SetNDC();
+  gErrorIgnoreLevel=kWarning;
 }
 
 CanvasDrawer::~CanvasDrawer() {
@@ -66,8 +68,8 @@ void CanvasDrawer::SetTDRStyle() {
     whichstyle=1;
     gStyle->SetCanvasBorderMode(0);
     gStyle->SetCanvasColor(0); 
-    gStyle->SetCanvasDefH(doRatio ? 720 : 600); 
-    gStyle->SetCanvasDefW(600); 
+    gStyle->SetCanvasDefH(doRatio ? 1440 : 1200); 
+    gStyle->SetCanvasDefW(1200); 
     gStyle->SetCanvasDefX(0);  
     gStyle->SetCanvasDefY(0);
 
@@ -231,4 +233,5 @@ void CanvasDrawer::Draw(TString outDir, TString baseName) {
   c->SaveAs(outDir+baseName+".png");
   c->SaveAs(outDir+baseName+".pdf");
   c->SaveAs(outDir+baseName+".C");
+  PInfo("CanvasDrawer::Draw",TString::Format("Drew %s %s",outDir.Data(),baseName.Data()));
 }

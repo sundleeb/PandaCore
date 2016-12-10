@@ -182,7 +182,7 @@ void PlotUtility::DrawAll(TString outDir) {
       finalWeight *= TCut(TString::Format("%f",signalScale));
     if (eventmod!=0) {
       if (p->processtype==kData)
-        finalCut += TCut(TString::Format("(%s%%%i)==1",eventnumber.Data(),eventmod).Data());
+        finalCut += TCut(TString::Format("(%s%%%i)==0",eventnumber.Data(),eventmod).Data());
       else
         finalWeight *= TCut(TString::Format("%f",1./eventmod).Data());
     }
@@ -236,6 +236,11 @@ void PlotUtility::DrawAll(TString outDir) {
           PlotWrapper &pw = pws[d];
           TH1D *h = pw.histos[p];
           double val = pw.tf->EvalInstance();
+          double minX = d->min, maxX = d->max;
+          if (doOverflow && val>maxX)
+            val = h->GetBinCenter(d->nBins);
+          else if (doUnderflow && val<minX)
+            val = h->GetBinCenter(1);
           h->Fill(val,weight);
           for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
             pw.hSystUp.at(iS)->Fill(val,syst_up_weights[iS]);
@@ -298,12 +303,12 @@ void PlotUtility::DrawAll(TString outDir) {
       bgErr = sqrt(bgErr);
       
       TString syield = TString::Format("%-25s | %15f \\pm %15f","MC(bkg)",bgTotal,bgErr);
-      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+      fyields << syield.Data() << std::endl;      PInfo("PlotUtility::Dump",syield);
       syield = TString::Format("%-25s | %15f \\pm %15f","MC(sig)",sigTotal,sigErr);
-      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
+      fyields << syield.Data() << std::endl;      PInfo("PlotUtility::Dump",syield);
       syield = TString::Format("%-25s | %15f \\pm %15f","Data",dataTotal,dataErr);
-      fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
-      fyields << stable << std::endl;  PInfo("PlotUtility::Dump",stable);
+      fyields << syield.Data() << std::endl;      PInfo("PlotUtility::Dump",syield);
+      fyields << stable << std::endl;             PInfo("PlotUtility::Dump",stable);
 
       syield = TString::Format("S/B=%.3f, S/sqrtB=%.3f",sigTotal/bgTotal,sigTotal/sqrt(bgTotal));
       fyields << syield.Data() << std::endl; PInfo("PlotUtility::Dump",syield);
@@ -341,8 +346,10 @@ void PlotUtility::DrawAll(TString outDir) {
       AddAdditional(pw.hSystDown[iS],"hist");
     }
     TString tmpname = convertName(d->filename);
-    if (doLogy)
-      tmpname += "_logy";
+    Logy(false);
+    HistogramDrawer::Draw(outDir,tmpname);
+    tmpname += "_logy";
+    Logy(true);
     HistogramDrawer::Draw(outDir,tmpname);
     Reset(false);
     for (auto h : pw.ownedHistos)

@@ -55,6 +55,13 @@ class HistogramDrawer : public CanvasDrawer {
    * \param aname if provided and legend is created, this label is used in the legend
    */
   void AddAdditional(TObject *o, TString opt="", TString aname="");
+  /**
+   * \brief Similar to AddAdditional, but specifically for histograms to be treated as systematic errors
+   * \param o a TH1D to draw
+   * \param opt option to use when drawing
+   * \param aname if provided and legend is created, this label is used in the legend
+   */
+  void AddSystematic(TH1D *o, TString opt="", TString aname="");
   void SetInputFile(TString fname); //!< Set the input file by name
   void SetInputFile(TFile *f); //!< Set the input file
   void SetAbsMin(double f) { absMin = f; } //!< Set the absolute minimum of the plot (by default 0)
@@ -100,6 +107,7 @@ class HistogramDrawer : public CanvasDrawer {
     TFile *centralFile=0; //!< an input file from which to harvest histograms by key
     std::vector<HistWrapper> internalHists; //!< collection of histograms to plot
     std::vector<ObjWrapper> internalAdds; //!< collection of TObjects to plot
+    std::vector<HistWrapper> internalSysts; //!< Collection of systematic weights (subset of internalAdds)
     double absMin=-999; //!<absolute minimum of the plot
 };
 
