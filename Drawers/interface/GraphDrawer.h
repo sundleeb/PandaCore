@@ -32,7 +32,7 @@ template <typename T> class BaseGraphDrawer : public CanvasDrawer {
    * \param style the style
    * \param drawOption the draw option
    */
-  void AddGraph(T *g, const char *label,unsigned int color,int style=1, const char *drawOption="L");
+  void AddGraph(T *g, TString label,unsigned int color,int style=1, TString drawOption="L");
   /**
    * \brief Add a graph to be plotted from file
    * \param gname the key of the graph
@@ -41,13 +41,13 @@ template <typename T> class BaseGraphDrawer : public CanvasDrawer {
    * \param style the style
    * \param drawOption the draw option
    */
-  void AddGraph(TString gname, const char *label,unsigned int color,int style=1, const char *drawOption="L");
+  void AddGraph(TString gname, TString label,unsigned int color,int style=1, TString drawOption="L");
   /**
    * \brief Add a single TMarker to the plot
    * \param m the marker
    * \param label the legend label
    */
-  void AddMarker(TMarker *m, const char *label);
+  void AddMarker(TMarker *m, TString label);
   void SetInputFile(TString fname); //!< Set input file by path
   void SetInputFile(TFile *f); //!< Set input file
   void SetLineWidth(int l0) { lineWidth = l0; } //!< Set line width
@@ -64,13 +64,13 @@ template <typename T> class BaseGraphDrawer : public CanvasDrawer {
     int lineWidth=2;
     TFile *centralFile=0;
     std::vector<T*> graphs;
-    std::vector<const char*> labels;
+    std::vector<TString> labels;
     std::vector<int> colors;
     std::vector<int> styles;
-    std::vector<const char*> drawOptions;
+    std::vector<TString> drawOptions;
 
     std::vector<TMarker*> markers;
-    std::vector<const char*> marker_labels;
+    std::vector<TString> marker_labels;
 };
 
 template <typename T> BaseGraphDrawer<T>::BaseGraphDrawer(double x, double y):
@@ -81,38 +81,28 @@ template <typename T> BaseGraphDrawer<T>::BaseGraphDrawer(double x, double y):
 template <typename T> BaseGraphDrawer<T>::~BaseGraphDrawer() {
   if (fileIsOwned)
     delete centralFile;
-  for (auto *label : labels)
-    delete label;
-  for (auto *marker_label : marker_labels)
-    delete marker_label;
 }
 
 template <typename T>
-void BaseGraphDrawer<T>::AddMarker(TMarker *m, const char *label) {
+void BaseGraphDrawer<T>::AddMarker(TMarker *m, TString label) {
   markers.push_back(m);
-  char *labelCpy = new char[100];
-  strcpy(labelCpy,label);
-  marker_labels.push_back(labelCpy);
+  marker_labels.push_back(label);
 }
 
 template <typename T> 
-void BaseGraphDrawer<T>::AddGraph(T* g, const char *label, unsigned int color, int style, const char *drawOption) {
+void BaseGraphDrawer<T>::AddGraph(T* g, TString label, unsigned int color, int style, TString drawOption) {
   if (g!=NULL) {
     g->SetTitle("");
     graphs.push_back(g);
-    char *labelCpy = new char[100];
-    strcpy(labelCpy,label);
-    labels.push_back(labelCpy);
+    labels.push_back(label);
     colors.push_back(GraphColors[color]);
     styles.push_back(style);
-    char *drawCpy = new char[10];
-    strcpy(drawCpy,drawOption);
     drawOptions.push_back(drawOption);
   }
 }
 
 template <typename T> 
-void BaseGraphDrawer<T>::AddGraph(TString gname, const char *label, unsigned int color, int style, const char *drawOption) {
+void BaseGraphDrawer<T>::AddGraph(TString gname, TString label, unsigned int color, int style, TString drawOption) {
   T *g = (T*)centralFile->Get(gname);
   AddGraph(g,label,color,style,drawOption);
 }
