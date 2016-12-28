@@ -32,11 +32,15 @@ public:
     
     t->SetBranchStatus("*",0);
     turnOnBranches(t,formula);
+    turnOnBranches(t,cut);
 
     TBranch *b = t->Branch(newBranchName.Data(),&newBranchVal,TString::Format("%s/F",newBranchName.Data()));
 
     TTreeFormula tformula(newBranchName.Data(),formula.Data(),t);
     tformula.SetQuickLoad(true);
+
+    TTreeFormula tcut("cut",cut.Data(),t);
+    tcut.SetQuickLoad(true);
 
     unsigned int nEntries = t->GetEntries();
     unsigned int iE=0;
@@ -44,7 +48,11 @@ public:
     for (iE=0; iE!=nEntries; ++iE) {
       pr.Report();
       t->GetEntry(iE);
-      newBranchVal = tformula.EvalInstance();
+      if (tcut.EvalInstance()) {
+        newBranchVal = tformula.EvalInstance();
+      } else {
+        newBranchVal = defaultValue;
+      }
       b->Fill();
     }
     t->SetBranchStatus("*",1);
@@ -73,16 +81,20 @@ public:
    * \param h histogram containing binned values
    * \brief Adds a branch based on a histogram
    */
-  void AddBranchFromHistogram(TTree *t, TH1F *h) {
+  void AddBranchFromHistogram(TTree *t, TH1D *h) {
     float newBranchVal=0;
     
     t->SetBranchStatus("*",0);
     turnOnBranches(t,formula);
+    turnOnBranches(t,cut);
 
     TBranch *b = t->Branch(newBranchName.Data(),&newBranchVal,TString::Format("%s/F",newBranchName.Data()));
 
     TTreeFormula tformula(newBranchName.Data(),formula.Data(),t);
     tformula.SetQuickLoad(true);
+
+    TTreeFormula tcut("cut",cut.Data(),t);
+    tcut.SetQuickLoad(true);
 
     unsigned int nEntries = t->GetEntries();
     unsigned int iE=0;
@@ -90,8 +102,12 @@ public:
     for (iE=0; iE!=nEntries; ++iE) {
       pr.Report();
       t->GetEntry(iE);
-      double xval = tformula.EvalInstance();
-      newBranchVal = h->GetBinContent(h->FindBin(xval));
+      if (tcut.EvalInstance()) {
+        double xval = tformula.EvalInstance();
+        newBranchVal = h->GetBinContent(h->FindBin(xval));
+      } else {
+        newBranchVal = defaultValue;
+      }
       b->Fill();
     }
     t->SetBranchStatus("*",1);
@@ -102,7 +118,7 @@ public:
    * \param h histogram containing binned values
    * \brief Adds a branch based on a histogram
    */
-  void AddBranchFromHistogram(TString fpath, TH1F *h) {
+  void AddBranchFromHistogram(TString fpath, TH1D *h) {
     TFile *fIn = TFile::Open(fpath,"UPDATE");
     TTree *t = (TTree*)fIn->Get(treeName.Data());
     if (t==NULL) {
@@ -117,5 +133,8 @@ public:
   TString formula = ""; /**< formula to be compiled on input tree */
   TString newBranchName = ""; /**< name of output branch */
   TString treeName = "events"; /**< name of input tree, if file path is provided */
+  double defaultValue = 1; /**< Default value */
+  TString cut = "1==1";
+  
 };
 #endif

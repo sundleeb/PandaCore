@@ -43,6 +43,7 @@ objects = {
   'PandaAnalysisFlat' : Library(name='Flat',pkg='PandaAnalysis',
                         d={
                             'PandaAnalyzer'       :['PandaAnalyzer'],
+                            'GenAnalyzer'         :['GenAnalyzer'],
                             'LimitTreeBuilder'    :['LimitTreeBuilder'],
                             'SFTreeBuilder'       :['SFTreeBuilder'],
                           }),

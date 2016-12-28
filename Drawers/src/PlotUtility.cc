@@ -335,7 +335,6 @@ void PlotUtility::DrawAll(TString outDir) {
         AddHistogram(h,TString::Format("%.1f#times%s",signalScale,p->name.Data()).Data(),p->processtype);
       else  
         AddHistogram(h,p->name.Data(),p->processtype);  
-      fOut->WriteTObject(h);
     }
     for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
       if (doScaleBins) {
@@ -353,12 +352,18 @@ void PlotUtility::DrawAll(TString outDir) {
     Logy(true);
     HistogramDrawer::Draw(outDir,tmpname);
     Reset(false);
-    for (auto h : pw.ownedHistos)
+    for (auto h : pw.ownedHistos) {
+      fOut->WriteTObject(h);
       delete h;
-    for (auto h : pw.hSystUp)
+    }
+    for (auto h : pw.hSystUp) {
+      fOut->WriteTObject(h);
       delete h;
-    for (auto h : pw.hSystDown)
+    }
+    for (auto h : pw.hSystDown) {
+      fOut->WriteTObject(h);
       delete h;
+    }
     pw.ownedHistos.clear();
     pw.hSystUp.clear();
     pw.hSystDown.clear();

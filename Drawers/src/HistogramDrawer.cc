@@ -171,9 +171,11 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hData->SetMarkerStyle(20);
       hData->SetMarkerSize(2);
       if (doSetNormFactor) {
+        /*
         for (int iB=0; iB!=nBins; ++iB) {
           hData->SetBinError(iB,hData->GetBinError(iB)/hData->Integral());
         }
+        */
         hData->Scale(1./hData->Integral());
       }
     } else if (pt<=kSignal3 && pt!=kData) {
