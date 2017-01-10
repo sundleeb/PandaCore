@@ -191,8 +191,8 @@ void PlotUtility::DrawAll(TString outDir) {
 
     // loop through each subprocess
     for (TTree *drawTree : p->trees) {
-      TTreeFormula fcut(finalCut.GetTitle(),finalCut.GetTitle(),drawTree); fcut.SetQuickLoad(true);
-      TTreeFormula fweight(finalWeight.GetTitle(),finalWeight.GetTitle(),drawTree); fweight.SetQuickLoad(true);
+      TTreeFormula fcut(finalCut.GetTitle(),finalCut.GetTitle(),drawTree); fcut.SetQuickLoad(true); fcut.GetNdata();
+      TTreeFormula fweight(finalWeight.GetTitle(),finalWeight.GetTitle(),drawTree); fweight.SetQuickLoad(true); fweight.GetNdata();
 
       // build the systematic shift weights
       vector<TTreeFormula*> fsystups, fsystdowns;
