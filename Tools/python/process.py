@@ -76,10 +76,10 @@ processes =  {
 'tZq_ll_4f_13TeV-amcatnlo-pythia8':('tZq_ll','MC',0.0758),
 'tZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1':('tZq_nunu','MC',0.1379),
 
-'EWKZ2Jets_ZToNuNu_13TeV':('ZtoNuNu_EWK','MC',10.04),
-'EWKZ2Jets_ZToLL_M-50_13TeV':('ZJets_EWK','MC',3.99),
-'EWKWPlus2Jets_WToLNu_M-50_13TeV':('WJets_EWKWPlus','MC',25.81),
-'EWKWMinus2Jets_WToLNu_M-50_13TeV':('WJets_EWKWMinus','MC',20.35),
+'EWKZ2Jets_ZToNuNu_13TeV-madgraph-pythia8':('ZtoNuNu_EWK','MC',10.04),
+'EWKZ2Jets_ZToLL_M-50_13TeV-madgraph-pythia8':('ZJets_EWK','MC',3.99),
+'EWKWPlus2Jets_WToLNu_M-50_13TeV-madgraph-pythia8':('WJets_EWKWPlus','MC',25.81),
+'EWKWMinus2Jets_WToLNu_M-50_13TeV-madgraph-pythia8':('WJets_EWKWMinus','MC',20.35),
 
 'WW_TuneCUETP8M1_13TeV-pythia8':('Diboson_ww','MC',118.7),
 'WZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_wz','MC',47.2),
@@ -259,8 +259,8 @@ processes =  {
 'MonoHbb_ZpBaryonic_MZp-10000_MChi-500_13TeV-madgraph':('ZpBaryonic_med-10000_dm-500','MC',1),
 
 'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZHbb_mH125','MC',0.1),
-'ggZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ggZHbb_mH125',0.012),
-'WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WmLNuHbb',0.100),
-'WplusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WpLNuHbb',0.159),
+'ggZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ggZHbb_mH125','MC',0.012),
+'WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WmLNuHbb','MC',0.100),
+'WplusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WpLNuHbb','MC',0.159),
 
             }
