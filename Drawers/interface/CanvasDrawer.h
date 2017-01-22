@@ -119,6 +119,7 @@ public:
   void ClearCanvas() { c->Clear(); } //!< Clear
   void cd() { c->cd(); } //!< cd
   void SetGrid() { gStyle->SetGridColor(16); c->SetGrid(); } //!< Set a grid
+  void SetRatioLabel(TString s) { ratioLabel = s; }
 
   bool HasLegend() { return legend!=0; }
 
@@ -222,6 +223,7 @@ protected:
   int eventmod=0;                       //!< event mod value
   int whichstyle=0;                     //!< for different styles of plotting
   double maxScale=1.5;                  //!< factor by which to scale the y-axis relative to the largest histogram
-  bool drawEmpty=false;                 // for stacks, do not fill in the histograms
+  bool drawEmpty=false;                 //!< for stacks, do not fill in the histograms
+  TString ratioLabel="#frac{Data-Exp}{Exp}"; //!< y-axis label for ratio pad
 };
 #endif

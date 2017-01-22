@@ -17,12 +17,12 @@
  * and sets the status of those branches to 1
  */
 inline void turnOnBranches(TTree*t,TString s) {
-  std::vector<TString> deps = getDependencies(s);
-  for (auto d : deps) {
-    TBranch *b = (TBranch*)t->GetListOfBranches()->FindObject(d);
-    if (b)
-      t->SetBranchStatus(d,1);
-  }
+	std::vector<TString> deps = getDependencies(s);
+	for (auto d : deps) {
+		TBranch *b = (TBranch*)t->GetListOfBranches()->FindObject(d);
+		if (b)
+			t->SetBranchStatus(d,1);
+	}
 }
 
 /**
@@ -33,12 +33,12 @@ inline void turnOnBranches(TTree*t,TString s) {
  * TChains becacuse SetBranchStatus behaves differently
  */
 inline void turnOnBranchesChain(TChain*t,TString s) {
-  std::vector<TString> deps = getDependencies(s);
-  for (auto d : deps) {
-    TBranch *b = (TBranch*)t->GetListOfBranches()->FindObject(d);
-    if (b)
-      t->SetBranchStatus(d,1);
-  }
+	std::vector<TString> deps = getDependencies(s);
+	for (auto d : deps) {
+		TBranch *b = (TBranch*)t->GetListOfBranches()->FindObject(d);
+		if (b)
+			t->SetBranchStatus(d,1);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////////

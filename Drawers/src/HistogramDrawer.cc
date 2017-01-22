@@ -87,6 +87,10 @@ void HistogramDrawer::Reset(bool clearPlotLabels) {
     legend->Clear();
   if (c!=NULL)
     c->Clear();
+  if (pad1!=NULL)
+    pad1->Clear();
+  if (pad2!=NULL)
+    pad2->Clear();
 }
 
 double getHistMin(TH1D *h, bool ignoreZero=false) {
@@ -142,7 +146,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     HistWrapper w = internalHists[iH];
     TH1D *h = w.h;
     ProcessType pt = w.pt;
-    if (doStack && pt>kSignal3) {
+    if (doStack && pt>kSignal3 && !drawEmpty) {
       h->SetLineColor(1);
     } else {
       h->SetLineColor(w.cc);
@@ -402,13 +406,17 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     pad2->cd();
     pad2->SetGridy();
     hRatio = (TH1D*)hData->Clone("ratio");
+    hRatio->SetMaximum(-1111); hRatio->SetMinimum(-1111);
     if (doDrawMCErrors) {
       hRatioErrorUp = (TH1D*)hSum->Clone("sumratioup");
       hRatioErrorDown = (TH1D*)hSum->Clone("sumratiodown");
+      hRatioErrorUp->SetMaximum(-1111); hRatioErrorUp->SetMinimum(-1111);
+      hRatioErrorDown->SetMaximum(-1111); hRatioErrorDown->SetMinimum(-1111);
       hRatioErrorUp->SetFillStyle(3003); hRatioErrorUp->SetLineWidth(1);
       hRatioErrorDown->SetFillStyle(3003); hRatioErrorDown->SetLineWidth(1);
     }
     hZero = (TH1D*)hData->Clone("zero"); 
+    hZero->SetMaximum(-1111); hZero->SetMinimum(-1111);
     for (int iB=0; iB!=nBins; ++iB) 
       hZero->SetBinContent(iB+1,0);
     
@@ -487,11 +495,11 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     hRatio->SetMarkerStyle(20);
     hRatio->SetMarkerSize(2);
     hRatio->GetXaxis()->SetTitle(xlabel);
-    hRatio->GetYaxis()->SetTitle("#frac{Data-Exp}{Exp}");
+    hRatio->GetYaxis()->SetTitle(ratioLabel);
     hRatio->GetYaxis()->SetNdivisions(5);
     hRatio->GetYaxis()->SetTitleSize(40);
     hRatio->GetYaxis()->SetTitleFont(43);
-    hRatio->GetYaxis()->SetTitleOffset(2.5);
+    hRatio->GetYaxis()->SetTitleOffset(2);
     hRatio->GetYaxis()->SetLabelFont(43); 
     hRatio->GetYaxis()->SetLabelSize(30);
     hRatio->GetXaxis()->SetTitleSize(40);
