@@ -2,7 +2,74 @@
 '''@package docstring
 Just a giant list of processes and properties
 '''
+from re import sub
 
+class DataSample:
+	def __init__(self,name,dtype,xsec):
+		self.name = name
+		self.dtype = dtype
+		self.xsec = xsec
+		self.files = []
+	def add_file(self,fname):
+		self.files.append(fname)
+	def get_config(self,nfiles):
+		nfiles = int(nfiles)
+		rlist = []
+		nall_files = len(self.files)
+		for i in xrange(nall_files/nfiles+1):
+			rstr = '[CONFIG %i]\n'
+			rstr += '{0:<25} {1:<10} {2:<15}\n'.format('%s_%%i'%self.name,self.dtype,self.xsec)
+			for f in self.files[i*nfiles:min((i+1)*nfiles,nall_files)]:
+				rstr += '\t%s\n'%f
+			rlist.append(rstr)
+		return rlist
+
+def read_sample_config(fpath,asDict=False):
+	f = open(fpath)
+	samples = []
+	class State:
+		def __init__(self):
+			return
+	NULL,CONFIG,DATASET,FILE = [State() for x in xrange(4)]
+	state=NULL
+	current_sample = None
+	for line in f:
+		if "CONFIG" in line:
+			if current_sample:
+				samples.append(current_sample)
+			state=CONFIG
+			continue
+		if state==CONFIG:
+			ll = line.split()
+			current_sample = DataSample(ll[0],ll[1],float(ll[2]))
+			state==DATASET
+			continue
+		if state==DATASET or state==FILE:
+			ll = line.strip()
+			current_sample.add_file(ll)
+			state==FILE
+	if state==FILE:
+		samples.append(current_sample)
+	
+	if asDict:
+		return { x.name:x for x in samples }
+	else:
+		return samples
+
+def merge_config_samples(sample_list,asDict=False):
+	if type(sample_list)==dict:
+		sample_list = [v for k,v in sample_list.iteritems()]
+	samples = {}
+	for s in sample_list:
+		rename = sub('_[0-9]+$','',s.name)
+		if rename not in samples:
+			samples[rename] = DataSample(rename,s.dtype,s.xsec)
+		for f in s.files:
+			samples[rename].add_file(f)
+	if asDict:
+		return samples
+	else:
+		return [v for k,v in samples.iteritems()]
 
 processes =	{
 'DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('ZJets_nlo','MC',6025.2),

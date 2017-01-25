@@ -8,7 +8,7 @@ from sys import stdout,stderr
 
 def PInfo(module,msg):
 	''' function to write to stdout'''
-	stdout.write('\033[0;32mINFO\033[0m		[%-40s]: %s\n'%(module,msg))
+	stdout.write('\033[0;32mINFO\033[0m    [%-40s]: %s\n'%(module,msg))
 
 def PWarning(module,msg):
 	''' function to write to stdout'''
@@ -16,11 +16,11 @@ def PWarning(module,msg):
 
 def PDebug(module,msg):
 	''' function to write to stdout'''
-	stderr.write('\033[0;36mDEBUG\033[0m	 [%-40s]: %s\n'%(module,msg))
+	stderr.write('\033[0;36mDEBUG\033[0m   [%-40s]: %s\n'%(module,msg))
 
 def PError(module,msg):
 	''' function to write to stdout'''
-	stderr.write('\033[0;41mERROR\033[0m	 [%-40s]: %s\n'%(module,msg))
+	stderr.write('\033[0;41mERROR\033[0m   [%-40s]: %s\n'%(module,msg))
 
 def setBins(dist,bins):
 	''' Given a list of bin edges, sets them for a PlotUtility::Distribution '''
@@ -66,4 +66,9 @@ def removeCut(basecut,var):
 	@rtype: string
 	@return: Returns a formula with the var dependence removed
 	'''
-	return sub('[0-9\.]*[=<>]*%s'%(var.replace('(','\(').replace(')','\)')),'1==1',sub('%s[=<>]+[0-9\.]+'%(var.replace('(','\(').replace(')','\)')),'1==1',basecut))
+	return sub('[0-9\.]*[=<>]*%s'%(var.replace('(','\(').replace(')','\)')),
+			       '1==1',
+						 sub('%s[=<>]+[0-9\.]+'%(var.replace('(','\(').replace(')','\)')),
+							 '1==1',
+							 basecut)
+						 )
