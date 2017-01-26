@@ -67,7 +67,7 @@ void TMVABranchAdder::RunFile(TString fpath) {
   unsigned int nMVA = bnames.size();
 
   unsigned int iE=0;
-  ProgressReporter pr("TMVABranchAdder::RunFile",&iE,&nEntries,100); 
+  ProgressReporter pr("TMVABranchAdder::RunFile",&iE,&nEntries,10); 
 
   for (iE=0; iE!=nEntries; ++iE) {
     pr.Report();

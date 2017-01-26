@@ -11,13 +11,15 @@ class DataSample:
 		self.files = []
 	def add_file(self,fname):
 		self.files.append(fname)
-	def get_config(self,nfiles):
+	def get_config(self,nfiles,suffix=''):
 		nfiles = int(nfiles)
 		rlist = []
 		nall_files = len(self.files)
+		if nfiles<0:
+			nfiles = nall_files+1
 		for i in xrange(nall_files/nfiles+1):
-			rstr = '[CONFIG %i]\n'
-			rstr += '{0:<25} {1:<10} {2:<15}\n'.format('%s_%%i'%self.name,self.dtype,self.xsec)
+			rstr = '[CONFIG%s]\n'%(suffix)
+			rstr += '{0:<25} {1:<10} {2:<15}\n'.format('%s%s'%(self.name,suffix),self.dtype,self.xsec)
 			for f in self.files[i*nfiles:min((i+1)*nfiles,nall_files)]:
 				rstr += '\t%s\n'%f
 			rlist.append(rstr)
@@ -29,7 +31,7 @@ def read_sample_config(fpath,as_dict=True):
 	class State:
 		def __init__(self):
 			return
-	NULL,CONFIG,DATASET,FILE = [State() for x in xrange(4)]
+	NULL,CONFIG,DATASET,FILE = [State() for _ in xrange(4)]
 	state=NULL
 	current_sample = None
 	for line in f:
@@ -41,12 +43,12 @@ def read_sample_config(fpath,as_dict=True):
 		if state==CONFIG:
 			ll = line.split()
 			current_sample = DataSample(ll[0],ll[1],float(ll[2]))
-			state==DATASET
+			state=DATASET
 			continue
 		if state==DATASET or state==FILE:
 			ll = line.strip()
 			current_sample.add_file(ll)
-			state==FILE
+			state=FILE
 	if state==FILE:
 		samples.append(current_sample)
 	
