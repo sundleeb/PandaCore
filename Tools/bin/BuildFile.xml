@@ -1,0 +1,7 @@
+<use name="PandaCore/Tools"/>
+<use name="root"/>
+<flags CXXFLAGS="-g -Wall"/>
+<bin file="PInfo.cc" name="PInfo"> </bin>
+<bin file="PDebug.cc" name="PDebug"> </bin>
+<bin file="PWarning.cc" name="PWarning"> </bin>
+<bin file="PError.cc" name="PError"> </bin>
