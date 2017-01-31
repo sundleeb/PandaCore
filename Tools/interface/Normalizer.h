@@ -36,7 +36,7 @@ public:
 		t->SetBranchAddress(inWeightName.Data(),&inWeight);
 		unsigned int nEntries = t->GetEntries();
 		unsigned int iE=0;
-		ProgressReporter pr("PandaCoreNormalizer::NormalizeTree",&iE,&nEntries,10);
+		ProgressReporter pr("Normalizer::NormalizeTree",&iE,&nEntries,10);
 		for (iE=0; iE!=nEntries; ++iE) {
 			pr.Report();
 			t->GetEntry(iE);
@@ -57,7 +57,7 @@ public:
 		TTree *t = (TTree*)fIn->Get(treeName.Data());
 		TH1F *h = (TH1F*)fIn->Get(histName.Data());
 		if (t==NULL || h==NULL) {
-			fprintf(stderr,"Could not normalize %s because tree=%p and hist=%p\n",fpath.Data(),t,h);
+			PError("Normalizer::NormalizeTree",TString::Format("Could not normalize %s because tree=%p and hist=%p\n",fpath.Data(),t,h));
 			return; 
 		}
 		NormalizeTree(t,h->Integral(),xsec);
