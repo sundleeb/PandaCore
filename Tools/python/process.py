@@ -46,6 +46,7 @@ processes =	{
 'GJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('GJets_ht400to600','MC',277.6),
 'GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('GJets_ht600toinf','MC',93.47),
 
+'QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('QCD_ht100to200','MC',27990000),
 'QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('QCD_ht200to300','MC',1735000),
 'QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('QCD_ht300to500','MC',366800),
 'QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('QCD_ht500to700','MC',29370),
@@ -109,27 +110,11 @@ processes =	{
 
 'TTbarDMJets_pseudoscalar_Mchi-1_Mphi-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('TTbarDM','MC',1),
 
-
-'MET+Run2015D-16Dec2015-v1+AOD':('MET2015D','Data',1),
-'MET+Run2015D-PromptReco-v3+AOD':('MET2015Dv3','Data',1),
-'MET+Run2015D-PromptReco-v4+AOD':('MET2015Dv4','Data',1),
 'MET':('MET','Data',1),
-'MET_Run2016B-PromptReco-v2':('MET2016bv2','Data',1),
-
 'SingleMuon':('SingleMuon','Data',1),
-'SingleMuon+Run2015D-16Dec2015-v1+AOD':('SingleMuon2015D','Data',1),
-
 'DoubleEG':('DoubleEG','Data',1),
-
 'SingleElectron':('SingleElectron','Data',1),
-'SingleElectron+Run2015D-16Dec2015-v1+AOD':('SingleElectron2015D','Data',1),
-'SingleElectron+Run2015D-PromptReco-v3+AOD':('SingleElectron2015Dv3','Data',1),
-'SingleElectron+Run2015D-PromptReco-v4+AOD':('SingleElectron2015Dv4','Data',1),
-
 'SinglePhoton':('SinglePhoton','Data',1),
-'SinglePhoton+Run2015D-16Dec2015-v1+AOD':('SinglePhoton2015D','Data',1),
-'SinglePhoton+Run2015D-PromptReco-v3+AOD':('SinglePhoton2015Dv3','Data',1),
-'SinglePhoton+Run2015D-PromptReco-v4+AOD':('SinglePhoton2015Dv4','Data',1),
 
 'ZprimeToTT_M-750_W-7p5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('Zprime_M750','MC',1),
 'ZprimeToTT_M-500_W-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('Zprime_M500','MC',1),
