@@ -100,6 +100,10 @@ void PlotUtility::DrawAll(TString outDir) {
   if (!legend)
     InitLegend();
   TFile *fOut = new TFile(outDir+"hists.root","UPDATE");
+	if (fOut->IsZombie()) {
+		fOut->Close();
+		fOut = new TFile(outDir+"hists.root","RECREATE");
+	}
   TFile *fBuffer = new TFile(TString::Format("/tmp/buffer_%i.root",gSystem->GetPid()).Data(),"RECREATE");
   fBuffer->cd();
   if (order.size()==0) {
@@ -126,6 +130,10 @@ void PlotUtility::DrawAll(TString outDir) {
       }
       turnOnBranches(t,p->additionalCut.GetTitle());
       turnOnBranches(t,p->additionalWeight.GetTitle());
+      for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+        turnOnBranches(t,mcWeightUp[iS].GetTitle());
+        turnOnBranches(t,mcWeightDown[iS].GetTitle());
+			}
     }
   }
 
@@ -198,21 +206,28 @@ void PlotUtility::DrawAll(TString outDir) {
       vector<TTreeFormula*> fsystups, fsystdowns;
       vector<double> syst_up_weights(systNames.size());
       vector<double> syst_down_weights(systNames.size());
-      for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-        TCut upWeight = mcWeightUp[iS];
-        upWeight *= p->additionalWeight;
-        if (eventmod!=0)
-          upWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-        TTreeFormula *fup = new TTreeFormula(upWeight.GetTitle(),upWeight.GetTitle(),drawTree); fup->SetQuickLoad(true);
-        fsystups.push_back(fup);
+			if (p->processtype!=kData && p->useCommonWeight) {
+				for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+					TCut upWeight = mcWeightUp[iS];
+					upWeight *= p->additionalWeight;
+					if (eventmod!=0)
+						upWeight *= TCut(TString::Format("%f",1./eventmod).Data());
+					TTreeFormula *fup = new TTreeFormula(upWeight.GetTitle(),upWeight.GetTitle(),drawTree); fup->SetQuickLoad(true);
+					fsystups.push_back(fup);
 
-        TCut downWeight = mcWeightDown[iS];
-        downWeight *= p->additionalWeight;
-        if (eventmod!=0)
-          downWeight *= TCut(TString::Format("%f",1./eventmod).Data());
-        TTreeFormula *fdown = new TTreeFormula(downWeight.GetTitle(),downWeight.GetTitle(),drawTree); fdown->SetQuickLoad(true);
-        fsystdowns.push_back(fdown);
-      }
+					TCut downWeight = mcWeightDown[iS];
+					downWeight *= p->additionalWeight;
+					if (eventmod!=0)
+						downWeight *= TCut(TString::Format("%f",1./eventmod).Data());
+					TTreeFormula *fdown = new TTreeFormula(downWeight.GetTitle(),downWeight.GetTitle(),drawTree); fdown->SetQuickLoad(true);
+					fsystdowns.push_back(fdown);
+				}
+			} else {
+				for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+					fsystups.push_back(&fweight);
+					fsystdowns.push_back(&fweight);
+				}
+			}
       
       // build the distribution formulae
       for (auto *d : distributions) {
@@ -228,10 +243,12 @@ void PlotUtility::DrawAll(TString outDir) {
         if (!fcut.EvalInstance())
           continue;
         double weight = fweight.EvalInstance();
-        for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-          syst_up_weights[iS] = fsystups[iS]->EvalInstance();
-          syst_down_weights[iS] = fsystdowns[iS]->EvalInstance();
-        }
+				if (p->processtype!=kData) {
+					for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+						syst_up_weights[iS] = fsystups[iS]->EvalInstance();
+						syst_down_weights[iS] = fsystdowns[iS]->EvalInstance();
+					}
+				}
         for (auto *d : distributions) {
           PlotWrapper &pw = pws[d];
           TH1D *h = pw.histos[p];
@@ -242,17 +259,21 @@ void PlotUtility::DrawAll(TString outDir) {
           else if (doUnderflow && val<minX)
             val = h->GetBinCenter(1);
           h->Fill(val,weight);
-          for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-            pw.hSystUp.at(iS)->Fill(val,syst_up_weights[iS]);
-            pw.hSystDown.at(iS)->Fill(val,syst_down_weights[iS]);
-          }
+					if (p->processtype!=kData) {
+						for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+							pw.hSystUp.at(iS)->Fill(val,syst_up_weights[iS]);
+							pw.hSystDown.at(iS)->Fill(val,syst_down_weights[iS]);
+						}
+					}
         }
       }
 
-      for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
-        delete fsystups[iS]; delete fsystdowns[iS];
-        fsystups[iS]=0; fsystdowns[iS]=0;
-      }
+			if (p->processtype!=kData && p->useCommonWeight) {
+				for (unsigned int iS=0; iS!=systNames.size(); ++iS) {
+					delete fsystups[iS]; delete fsystdowns[iS];
+					fsystups[iS]=0; fsystdowns[iS]=0;
+				}
+			}
 
     }
     tr.TriggerEvent(p->name.Data());
@@ -341,8 +362,8 @@ void PlotUtility::DrawAll(TString outDir) {
         divideBinWidth(pw.hSystUp[iS]);
         divideBinWidth(pw.hSystDown[iS]);
       }
-      AddAdditional(pw.hSystUp[iS],"hist",systNames[iS]);
-      AddAdditional(pw.hSystDown[iS],"hist");
+      AddSystematic(pw.hSystUp[iS],"hist",systNames[iS]);
+      AddSystematic(pw.hSystDown[iS],"hist");
     }
     TString tmpname = convertName(d->filename);
     Logy(false);
