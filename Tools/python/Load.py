@@ -16,41 +16,43 @@ class Library():
 objects = {
 	'Learning' : Library(name='Learning',pkg='PandaCore',
 												d={
-														'TMVATrainer'				 :['TMVATrainer'],
-														'TMVABranchAdder'		 :['TMVABranchAdder'],
+														'TMVATrainer'           :['TMVATrainer'],
+														'TMVABranchAdder'       :['TMVABranchAdder'],
 													}),
 	'Tools' : Library(name='Tools', pkg='PandaCore',
 												d={
-														'Functions'					 :['Functions'],
-														'Common'							:['Common'],
-														'TreeTools'					 :['TreeTools'],
-														'DuplicateRemover'		:['DuplicateRemover'],
-														'Normalizer'					:['Normalizer'],
-														'Cutter'							:['Cutter'],
-														'BranchAdder'				 :['BranchAdder'],
+														'Functions'             :['Functions'],
+														'Common'                :['Common'],
+														'TreeTools'             :['TreeTools'],
+														'DuplicateRemover'      :['DuplicateRemover'],
+														'Normalizer'            :['Normalizer'],
+														'Cutter'                :['Cutter'],
+														'BranchAdder'           :['BranchAdder'],
+														'EventSyncher'          :['EventSyncher'],
 													}),
 	'Drawers' : Library(name='Drawers',pkg='PandaCore',
 											d={
-														'CanvasDrawer'				:['CanvasDrawer'],
-														'GraphDrawer'				 :['GraphDrawer','GraphErrDrawer','GraphAsymmErrDrawer'],
-														'HistogramDrawer'		 :['HistogramDrawer'],
-														'PlotUtility'				 :['PlotUtility','Process','Distribution'],
-														'ROCTool'						 :['ROCTool'],
+														'CanvasDrawer'        :['CanvasDrawer'],
+														'GraphDrawer'         :['GraphDrawer','GraphErrDrawer','GraphAsymmErrDrawer'],
+														'HistogramDrawer'     :['HistogramDrawer'],
+														'PlotUtility'         :['PlotUtility','Process','Distribution'],
+														'ROCTool'             :['ROCTool'],
 											}),
 	'SCRAMJetAnalyzer' : Library(name='Analyzer',pkg='SCRAMJet',
 												d={
-														'Analyzer'						:['Analyzer'],
+														'Analyzer'            :['Analyzer'],
 													}),
 	'PandaAnalysisFlat' : Library(name='Flat',pkg='PandaAnalysis',
 												d={
-														'PandaAnalyzer'			 :['PandaAnalyzer'],
-														'GenAnalyzer'				 :['GenAnalyzer'],
-														'LimitTreeBuilder'		:['LimitTreeBuilder'],
-														'SFTreeBuilder'			 :['SFTreeBuilder'],
+														'PandaAnalyzer'      :['PandaAnalyzer'],
+														'GenAnalyzer'        :['GenAnalyzer'],
+														'LimitTreeBuilder'   :['LimitTreeBuilder'],
+														'SFTreeBuilder'      :['SFTreeBuilder'],
+														'BTagTreeBuilder'    :['BTagTreeBuilder'],
 													}),
 	'Statistics'				: Library(name='Statistics',pkg='PandaCore',
 													d={
-															'RooExpErf'				 :['RooExpErf'],
+															'RooExpErf'        :['RooExpErf'],
 													}),
 }
 
@@ -68,11 +70,17 @@ def Load(lib,obj):
 	@type obj: str
 	@param obj: Name of object
 	'''
+
+	# import the include path
 	root_include_path = getenv('ROOT_INCLUDE_PATH')
 	for p in root_include_path.split(":"):
 		gInterpreter.AddIncludePath(p)
+
+	# hack the fatjet paths in
 	gInterpreter.AddIncludePath('/cvmfs/cms.cern.ch/slc6_amd64_gcc530/external/fastjet-contrib/1.020/include/')
-	gInterpreter.AddIncludePath("%s/src/fastjet/include/"%(getenv('CMSSW_BASE'))) # why isn't this set by CMSSW...?
+	gInterpreter.AddIncludePath("%s/src/fastjet/include/"%(getenv('CMSSW_BASE'))) 
+
+	# try to load headers
 	includepath=None
 	subpackage = objects[lib]
 	for header in subpackage.d:
@@ -82,9 +90,13 @@ def Load(lib,obj):
 	if includepath==None:
 		PError('PandaCore.Tools.Load','Could not load %s from %s'%(obj,lib))
 		return
+
+	# try to load the shared objects
 	libpath = "lib%s%s.so"%(subpackage.pkg,subpackage.name)
 	PInfo('PandaCore.Tools.Load','Loading %s'%libpath)
 	gSystem.Load(libpath)
+
+	# also pick up additional dependencies
 	if 'SCRAMJet' in lib:
 		for objpath in ['libSCRAMJetSDAlgorithm.so','libSCRAMJetObjects.so','libfastjet.so','libfastjetcontribfragile.so','libfastjetplugins.so','libfastjettools.so']:
 			PInfo('PandaCore.Tools.Load','Loading %s'%objpath)
@@ -93,5 +105,6 @@ def Load(lib,obj):
 		neropath = 'libNeroProducerCore.so'
 		PInfo('PandaCore.Tools.Load','Loading %s'%neropath)
 		gSystem.Load(neropath)
+
 	PInfo('PandaCore.Tools.Load','Including %s'%includepath)
 	gROOT.LoadMacro(includepath)

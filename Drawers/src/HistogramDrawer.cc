@@ -81,6 +81,7 @@ void HistogramDrawer::SetInputFile(TString fname) {
 void HistogramDrawer::Reset(bool clearPlotLabels) {
   internalHists.clear();
   internalAdds.clear();
+  internalSysts.clear();
   if (clearPlotLabels)
     plotLabels.clear();
   if (legend!=NULL)
@@ -150,7 +151,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       h->SetLineColor(1);
     } else {
       h->SetLineColor(w.cc);
-      h->SetLineWidth(3);
+      h->SetLineWidth(2);
     }
     if (pt!=kData && (pt==kData || pt>kSignal3 || doStackSignal)) {
       if (doStack) {
@@ -173,7 +174,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hData = h;
       hData->SetMarkerColor(PlotColors[pt]);
       hData->SetMarkerStyle(20);
-      hData->SetMarkerSize(2);
+      hData->SetMarkerSize(1);
       if (doSetNormFactor) {
         /*
         for (int iB=0; iB!=nBins; ++iB) {
@@ -493,21 +494,21 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     hRatio->SetMaximum(maxVal*1.2);
     hRatio->SetLineColor(1);
     hRatio->SetMarkerStyle(20);
-    hRatio->SetMarkerSize(2);
+    hRatio->SetMarkerSize(1);
     hRatio->GetXaxis()->SetTitle(xlabel);
     hRatio->GetYaxis()->SetTitle(ratioLabel);
     hRatio->GetYaxis()->SetNdivisions(5);
-    hRatio->GetYaxis()->SetTitleSize(40);
+    hRatio->GetYaxis()->SetTitleSize(15);
     hRatio->GetYaxis()->SetTitleFont(43);
-    hRatio->GetYaxis()->SetTitleOffset(2);
+    hRatio->GetYaxis()->SetTitleOffset(2.5);
     hRatio->GetYaxis()->SetLabelFont(43); 
-    hRatio->GetYaxis()->SetLabelSize(30);
-    hRatio->GetXaxis()->SetTitleSize(40);
+    hRatio->GetYaxis()->SetLabelSize(15);
+    hRatio->GetXaxis()->SetTitleSize(20);
     hRatio->GetXaxis()->SetTitleFont(43);
-    hRatio->GetXaxis()->SetTitleOffset(5.);
+    hRatio->GetXaxis()->SetTitleOffset(5);
     hRatio->GetXaxis()->SetLabelFont(43);
-    hRatio->GetXaxis()->SetLabelSize(30);
-    gRatioErrors->SetLineWidth(3);
+    hRatio->GetXaxis()->SetLabelSize(20);
+    gRatioErrors->SetLineWidth(2);
     hZero->SetLineColor(1);
     hZero->Draw("hist same");
     if (doDrawMCErrors) {

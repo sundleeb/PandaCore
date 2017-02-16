@@ -68,8 +68,8 @@ void CanvasDrawer::SetTDRStyle() {
     whichstyle=1;
     gStyle->SetCanvasBorderMode(0);
     gStyle->SetCanvasColor(0); 
-    gStyle->SetCanvasDefH(doRatio ? 1440 : 1200); 
-    gStyle->SetCanvasDefW(1200); 
+    gStyle->SetCanvasDefH(doRatio ? 720 : 600); 
+    gStyle->SetCanvasDefW(600); 
     gStyle->SetCanvasDefX(0);  
     gStyle->SetCanvasDefY(0);
 

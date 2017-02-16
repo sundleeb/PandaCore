@@ -1,7 +1,9 @@
 <use   name="root"/>
 <use   name="roofit"/>
 <use   root=""/>
-<use   name="PandaUtilities/Common"/>
+<use name="PandaUtilities/Common"/>
+<use name="PandaProd/Objects"/>
+<use name="CondFormats/JetMETObjects"/>
 <export>
   <lib   name="1"/>
 </export>
