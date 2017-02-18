@@ -1,9 +1,8 @@
 # PandaCore 
 A set of common tools on which several of my analysis packages depend
 
-## Tools
-Various useful tools for analysis-independent calculations
-
-## Drawers
-A collection of tools for making plots
-
+To build:
+```bash
+make all -j4 # must be every time a header file changes => builds ROOT dicts
+scram b -j12 # use SCRAM to compile the code
+```

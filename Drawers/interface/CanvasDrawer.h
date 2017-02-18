@@ -68,7 +68,7 @@ public:
    */
   CanvasDrawer(double x=-1, double y=-1);
   CanvasDrawer(TCanvas *c0); //!< Constructor - given existing TCanvas
-  ~CanvasDrawer(); //!< Destructor
+  virtual ~CanvasDrawer(); //!< Destructor
 
   void SetCanvas(TCanvas *c0); //!< Set externally-defined TCanvas
   TCanvas *GetCanvas() { return c; } //!< Return canvas

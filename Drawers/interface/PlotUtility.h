@@ -177,7 +177,7 @@ class PlotUtility : public HistogramDrawer
 {
 public:
   PlotUtility(double x=-1, double y=-1); //!< Constructor
-  ~PlotUtility();
+  virtual ~PlotUtility();
 
   void AddProcess(Process *p);
   void AddFile(ProcessType pt,TString filePath,TString name="");
