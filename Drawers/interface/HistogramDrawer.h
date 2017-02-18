@@ -29,7 +29,7 @@ class HistogramDrawer : public CanvasDrawer {
      * \param y y-width
      */
     HistogramDrawer(double x=-1, double y=-1);
-    ~HistogramDrawer(); //!< Destructor
+    virtual ~HistogramDrawer(); //!< Destructor
 
   /**
    * \brief Adds a histogram to be drawn
