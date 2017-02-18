@@ -85,6 +85,8 @@ public:
   void SplitCanvas(TCanvas *c_=0); //!< Split canvas into two pads
   void FixRatio(double m=2) { fixRatio=true; ratioMax=m; } //!< Fix range of ratio pad
 
+  bool IsStack() { return doStack; }
+
   void SetLumi(float f) { lumi = f; } //!< Set luminosity label
   /**
    * \brief Draw a label on top of the plot
@@ -122,6 +124,7 @@ public:
   void SetRatioLabel(TString s) { ratioLabel = s; }
 
   bool HasLegend() { return legend!=0; }
+  void ClearLegend() { if (legend) legend->Clear(); }
 
 protected:
   /**
