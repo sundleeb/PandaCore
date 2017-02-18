@@ -48,7 +48,7 @@ libraries = [
                                                 'SFTreeBuilder',
                                                 'BTagTreeBuilder',
                                                ],
-            deps = ['${CMSSW_BASE}/src/PandaTree/lib/libpanda.so']), 
+            ), 
 ]
 # TODO: refactor SCRAMJet to have dictionary interface, will need following libs:
 # 'libfastjet.so','libfastjetcontribfragile.so','libfastjetplugins.so','libfastjettools.so'
