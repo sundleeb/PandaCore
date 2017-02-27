@@ -8,7 +8,7 @@ from PandaCore.Tools.Misc import *
 from PandaCore.Tools.Load import Load
 from os import getenv
 
-Load('Drawers','HistogramDrawer')
+Load('HistogramDrawer')
 
 class Process():
     def __init__(self,name,pt,custom_color=root.nProcesses):
@@ -287,7 +287,6 @@ class PlotUtility():
                 for t in table:
                     PInfo('plot_utility.PlotUtility.Dump',t)
 
-            self.canvas.Reset(False)
             for proc in self.__processes:
                 h = dist.histograms[proc.name]
                 if self.do_overflow:
@@ -331,7 +330,7 @@ class PlotUtility():
             self.canvas.Logy(True)
             self.canvas.Draw(outdir,dist.filename+'_logy')
 
-
+            self.canvas.Reset(False)
 
 
 
