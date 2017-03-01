@@ -20,6 +20,7 @@ class Process():
             self.color = custom_color
         # public config - defaults
         self.dashed = False
+        self.dotted = False
         self.use_common_weight = True 
         self.use_common_cut = True
         self.additional_cut = '1==1'
@@ -304,6 +305,10 @@ class PlotUtility():
                 h.SetTitle('')
                 if self.canvas.IsStack():
                     h.SetLineWidth(2)
+                if proc.dashed:
+                    h.SetLineStyle(2)
+                elif proc.dotted:
+                    h.SetLineStyle(3)
                 if (proc.process_type<=root.kSignal3 
                        and proc.process_type!=root.kData 
                        and self.signal_scale!=1):
