@@ -5,6 +5,8 @@ Some common python functions
 
 from re import sub
 from sys import stdout,stderr
+from os import getenv
+from collections import namedtuple
 
 def PInfo(module,msg):
 	''' function to write to stdout'''
@@ -22,20 +24,35 @@ def PError(module,msg):
 	''' function to write to stdout'''
 	stderr.write('\033[0;41mERROR\033[0m   [%-40s]: %s\n'%(module,msg))
 
+
+ModelParams = namedtuple('ModelParams',['m_V','m_DM','gV_DM','gA_DM','gV_q','gA_q','sigma','delta'])
+
+def read_nr_model(mV,mDM,couplings=None):
+	tmpl = getenv('PANDA_XSECS')+'/non-resonant/%i_%i_xsec_gencut.dat'
+	try:
+		fdat = open(tmpl%(mV,mDM))
+	except IOError:
+		PError('PandaCore.Tools.Misc.read_nr_model','Could not open %s'%(tmpl%(mV,mDM)))
+		return None
+	for line in fdat:
+		if 'med dm' in line:
+			continue
+		p = ModelParams(*[float(x) for x in line.strip().split()])
+		if couplings:
+			if couplings==(p.gV_DM,p.gA_DM,p.gV_q,p.gA_q):
+				return p
+				fdat.Close()
+			else:
+				continue
+		else:
+			# if not specified, take the first valid model (nominal)
+			return p
+			fdat.Close()
+
 def setBins(dist,bins):
-	''' Given a list of bin edges, sets them for a PlotUtility::Distribution '''
+	''' Given a list of bin edges, sets them for a PlotUtility::Distribution DEPRECATED'''
 	for b in bins:
 		dist.AddBinEdge(b)
-
-def contains(s1,s2):
-	''' uh... why did I write a function for this? '''
-	if type(s2)==type(""):
-		return s1.find(s2)>=0
-	else:
-		for s in s2:
-			if s1.find(s)>=0:
-				return True
-		return False
 
 def tAND(s1,s2):
 	''' ANDs two strings '''
@@ -72,3 +89,4 @@ def removeCut(basecut,var):
 							 '1==1',
 							 basecut)
 						 )
+

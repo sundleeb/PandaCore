@@ -20,6 +20,7 @@ class Process():
             self.color = custom_color
         # public config - defaults
         self.dashed = False
+        self.dotted = False
         self.use_common_weight = True 
         self.use_common_cut = True
         self.additional_cut = '1==1'
@@ -31,10 +32,10 @@ class Process():
     def add_file(self,fpath):
         self.__files.append(fpath)
     def read(self,variables,weights,cut):
-        branches = variables + weights
+        branches = set(variables + weights)
         xarr = rnp.root2array(filenames=self.__files,
                               treename=self.tree_name,
-                              branches=branches,
+                              branches=list(branches),
                               selection=cut)
         return xarr
 
@@ -303,12 +304,17 @@ class PlotUtility():
                 h.SetTitle('')
                 if self.canvas.IsStack():
                     h.SetLineWidth(2)
+                if proc.dashed:
+                    h.SetLineStyle(2)
+                elif proc.dotted:
+                    h.SetLineStyle(3)
                 if (proc.process_type<=root.kSignal3 
                        and proc.process_type!=root.kData 
                        and self.signal_scale!=1):
                     self.canvas.AddHistogram(h,'%.1f#times%s'%(self.signal_scale,proc.name),proc.process_type)
                 else:
                     self.canvas.AddHistogram(h,proc.name,proc.process_type)
+                f_out.WriteTObject(h,h.GetName(),"overwrite")
             for syst in self.__systematics:
                 hup,hdown = dist.systs[syst.name]
                 for h in [hup,hdown]:
@@ -322,6 +328,8 @@ class PlotUtility():
                     h.SetLineColor(syst.color)
                 self.canvas.AddSystematic(hup,'hist',syst.name)
                 self.canvas.AddSystematic(hdown,'hist')
+                f_out.WriteTObject(hup,hup.GetName(),"overwrite")
+                f_out.WriteTObject(hdown,hdown.GetName(),"overwrite")
 
             # output the canvas
             self.canvas.Logy(False)
@@ -329,6 +337,7 @@ class PlotUtility():
             self.canvas.ClearLegend()
             self.canvas.Logy(True)
             self.canvas.Draw(outdir,dist.filename+'_logy')
+        f_out.Close()
 
             self.canvas.Reset(False)
 
