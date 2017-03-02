@@ -32,10 +32,10 @@ class Process():
     def add_file(self,fpath):
         self.__files.append(fpath)
     def read(self,variables,weights,cut):
-        branches = variables + weights
+        branches = set(variables + weights)
         xarr = rnp.root2array(filenames=self.__files,
                               treename=self.tree_name,
-                              branches=branches,
+                              branches=list(branches),
                               selection=cut)
         return xarr
 
@@ -315,6 +315,7 @@ class PlotUtility():
                     self.canvas.AddHistogram(h,'%.1f#times%s'%(self.signal_scale,proc.name),proc.process_type)
                 else:
                     self.canvas.AddHistogram(h,proc.name,proc.process_type)
+                f_out.WriteTObject(h,h.GetName(),"overwrite")
             for syst in self.__systematics:
                 hup,hdown = dist.systs[syst.name]
                 for h in [hup,hdown]:
@@ -328,6 +329,8 @@ class PlotUtility():
                     h.SetLineColor(syst.color)
                 self.canvas.AddSystematic(hup,'hist',syst.name)
                 self.canvas.AddSystematic(hdown,'hist')
+                f_out.WriteTObject(hup,hup.GetName(),"overwrite")
+                f_out.WriteTObject(hdown,hdown.GetName(),"overwrite")
 
             # output the canvas
             self.canvas.Logy(False)
@@ -335,6 +338,7 @@ class PlotUtility():
             self.canvas.ClearLegend()
             self.canvas.Logy(True)
             self.canvas.Draw(outdir,dist.filename+'_logy')
+        f_out.Close()
 
 
 
