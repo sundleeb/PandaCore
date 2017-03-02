@@ -33,7 +33,10 @@ public:
 		t->SetBranchStatus("*",0);
 		turnOnBranches(t,inWeightName.Data());
 		TBranch *b = t->Branch(outWeightName.Data(),&outWeight,TString::Format("%s/F",outWeightName.Data()));
-		t->SetBranchAddress(inWeightName.Data(),&inWeight);
+		if (inWeightName!="") 
+			t->SetBranchAddress(inWeightName.Data(),&inWeight);
+		else
+			inWeight = 1;
 		unsigned int nEntries = t->GetEntries();
 		unsigned int iE=0;
 		ProgressReporter pr("Normalizer::NormalizeTree",&iE,&nEntries,10);

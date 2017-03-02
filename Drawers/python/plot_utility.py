@@ -337,7 +337,7 @@ class PlotUtility():
             self.canvas.ClearLegend()
             self.canvas.Logy(True)
             self.canvas.Draw(outdir,dist.filename+'_logy')
-        f_out.Close()
+            f_out.Close()
 
             self.canvas.Reset(False)
 
