@@ -119,12 +119,6 @@ processes =	{
 'SingleElectron':('SingleElectron','Data',1),
 'SinglePhoton':('SinglePhoton','Data',1),
 
-'ZprimeToTT_M-750_W-7p5_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('Zprime_M750','MC',1),
-'ZprimeToTT_M-500_W-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('Zprime_M500','MC',1),
-'ZprimeToTT_M-2500_W-25_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('Zprime_M2500','MC',1),
-'ZprimeToTT_M-2000_W-20_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('Zprime_M2000','MC',1),
-'ZprimeToTT_M-1500_W-15_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('Zprime_M1500','MC',1),
-'ZprimeToTT_M-1000_W-10_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('Zprime_M1000','MC',1),
 
 'monotop_med-900_dm-100':('monotop_med-900_dm-100','MC',3.09067),
 'monotop_med-1100_dm-100':('monotop_med-1100_dm-100','MC',1.307),
