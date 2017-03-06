@@ -108,7 +108,7 @@ base_job_properties = {
     "Requirements" : classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
     "AcctGroup" : "group_t3mit.urgent",
     "X509UserProxy" : "/tmp/x509up_uUID",
-    "OnExitHold" : "( ExitBySignal == true ) || ( ExitCode != 0 )",
+    "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
     "In" : "/dev/null",
     "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
 }
@@ -139,6 +139,7 @@ class Submission:
             self.sub_id = 0
         self.submission_time = -1
         self.cluster_id = None # HTCondor ClusterID
+        self.proc_ids = None # ProcID of each sample
         self.coll = htcondor.Collector()
         self.schedd = htcondor.Schedd(self.coll.locate(htcondor.DaemonTypes.Schedd,
                                                        "t3home000.mit.edu"))
@@ -191,21 +192,25 @@ class Submission:
 
         PInfo('Submission.execute','Submitting %i jobs!'%(len(procs)))
         self.submission_time = time.time()
-        self.cluster_id = self.schedd.submitMany(cluster_ad,procs)
+        results = []
+        self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
+        self.proc_ids = {}
+        for result,name in zip(results,sorted(self.sample_config)):
+            self.proc_ids[result['ProcId']] = name
         PInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
 
 
     def query_status(self):
         if not self.cluster_id:
-            PError("Submission.status","This submission has not been executed yet (ClusterId not set)")
+            PError("Submission.status",
+                   "This submission has not been executed yet (ClusterId not set)")
         results = self.schedd.query(
             'Owner =?= "%s" && ClusterId =?= %i'%(getenv('USER'),self.cluster_id))
         jobs = {x:[] for x in ['running','idle','held','other']}
-        names = sorted(self.sample_config)
         for job in results:
             proc_id = job['ProcId']
             status = job['JobStatus']
-            sample = self.sample_config[names[proc_id]]
+            sample = self.sample_config[self.proc_ids[proc_id]]
             if job_status[status] in jobs:
                 jobs[job_status[status]].append(sample)
             else:
