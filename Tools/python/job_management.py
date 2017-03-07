@@ -178,7 +178,7 @@ class Submission:
         procs = []
         for name in sorted(self.sample_config):
             sample = self.sample_config[name]
-            repl['PROCID'] = str(proc_id)
+            repl['PROCID'] = name.split('_')[-1] 
             proc_ad = classad.ClassAd()
             for key,value in proc_properties.iteritems():
                 if type(value)==str:
@@ -197,6 +197,7 @@ class Submission:
         self.proc_ids = {}
         for result,name in zip(results,sorted(self.sample_config)):
             self.proc_ids[result['ProcId']] = name
+            print 'Mapping %i->%s'%(result['ProcId'],name)
         PInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
 
 
