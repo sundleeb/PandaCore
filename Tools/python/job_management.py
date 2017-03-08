@@ -107,6 +107,7 @@ base_job_properties = {
     "ShouldTransferFiles" : "YES",
     "Requirements" : classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
     "AcctGroup" : "group_t3mit.urgent",
+    "AccountingGroup" : "group_t3mit.urgent.snarayan",
     "X509UserProxy" : "/tmp/x509up_uUID",
     "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
     "In" : "/dev/null",
@@ -167,6 +168,7 @@ class Submission:
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
+        print cluster_ad
 
         proc_properties = {
             "Arguments" : "PROCID SUBMITID",
@@ -197,7 +199,7 @@ class Submission:
         self.proc_ids = {}
         for result,name in zip(results,sorted(self.sample_config)):
             self.proc_ids[result['ProcId']] = name
-            print 'Mapping %i->%s'%(result['ProcId'],name)
+#            print 'Mapping %i->%s'%(result['ProcId'],name)
         PInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
 
 
