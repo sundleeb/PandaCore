@@ -6,7 +6,7 @@ import root_numpy as rnp
 from array import array
 from PandaCore.Tools.Misc import *
 from PandaCore.Tools.Load import Load
-from os import getenv
+from os import getenv,system
 
 Load('HistogramDrawer')
 
@@ -176,7 +176,8 @@ class PlotUtility():
         if f_out.IsZombie():
             f_out.close()
             f_out = root.TFile(outdir+'hists.root','RECREATE')
-        f_buffer = root.TFile('/tmp/%s/buffer_%i.root'%(getenv('USER'),root.gSystem.GetPid()),'RECREATE')
+        f_buffer_path = '/tmp/%s/buffer_%i.root'%(getenv('USER'),root.gSystem.GetPid())
+        f_buffer = root.TFile(f_buffer_path,'RECREATE')
         f_buffer.cd()
 
         variables = []
@@ -215,8 +216,6 @@ class PlotUtility():
                         down_weight = syst.generate_weight(final_weight,False)
                     else:
                         continue
-                    if up_weight in weight_map or down_weight in weight_map:
-                        continue # do not request duplicate branches
                     weight_map['%s_Up'%(syst.name)] = up_weight
                     weight_map['%s_Down'%(syst.name)] = down_weight
                     weights.append(up_weight)
@@ -337,11 +336,9 @@ class PlotUtility():
             self.canvas.ClearLegend()
             self.canvas.Logy(True)
             self.canvas.Draw(outdir,dist.filename+'_logy')
-            f_out.Close()
 
             self.canvas.Reset(False)
 
-
-
-
-
+        f_out.Close()
+        f_buffer.Close()
+        system('rm %s'%f_buffer_path)
