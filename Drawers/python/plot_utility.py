@@ -2,10 +2,10 @@
 
 import ROOT as root
 import numpy as np
-import root_numpy as rnp
 from array import array
 from PandaCore.Tools.Misc import *
 from PandaCore.Tools.Load import Load
+from PandaCore.Tools.root_interface import read_tree,draw_hist
 from os import getenv,system
 
 Load('HistogramDrawer')
@@ -32,12 +32,10 @@ class Process():
     def add_file(self,fpath):
         self.__files.append(fpath)
     def read(self,variables,weights,cut):
-        branches = set(variables + weights)
-        xarr = rnp.root2array(filenames=self.__files,
-                              treename=self.tree_name,
-                              branches=list(branches),
-                              selection=cut)
-        return xarr
+        return read_tree(filenames = self.__files,
+                         branches = variables+weights,
+                         cut = cut,
+                         treename = self.tree_name)
 
 def convert_name(n):
     rn = str(n)
@@ -226,23 +224,26 @@ class PlotUtility():
             for dist in self.__distributions:
                 vals = xarr[dist.name]
                 weights_nominal = xarr[weight_map['nominal']]
-                rnp.fill_hist(hist=dist.histograms[proc.name],
-                              array=vals,
-                              weights=weights_nominal)
+                draw_hist(hist = dist.histograms[proc.name],
+                          xarr = xarr,
+                          fields = (dist.name),
+                          weight = weight_map['nominal'])
                 if proc.process_type!=root.kData:
                     for syst in self.__systematics:
                         if proc.use_common_weight:
-                            weights_up = xarr[weight_map['%s_Up'%syst.name]]
-                            weights_down = xarr[weight_map['%s_Down'%syst.name]]
+                            weights_up = weight_map['%s_Up'%syst.name]
+                            weights_down = weight_map['%s_Down'%syst.name]
                         else:
-                            weights_up = weights_nominal
-                            weights_down = weights_nominal
-                        rnp.fill_hist(hist=dist.systs[syst.name][0],
-                                      array=vals,
-                                      weights=weights_up)
-                        rnp.fill_hist(hist=dist.systs[syst.name][1],
-                                      array=vals,
-                                      weights=weights_down)
+                            weights_up = weight_map['nominal']
+                            weights_down = weight_map['nominal']
+                        draw_hist(hist = dist.systs[syst.name][0],
+                                  xarr = xarr,
+                                  fields = (dist.name),
+                                  weight = weights_up)
+                        draw_hist(hist = dist.systs[syst.name][1],
+                                  xarr = xarr,
+                                  fields = (dist.name),
+                                  weight = weights_up)
 
         # everything is filled, now draw the histograms!
         for dist in self.__distributions:
