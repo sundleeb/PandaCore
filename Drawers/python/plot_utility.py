@@ -5,7 +5,7 @@ import numpy as np
 from array import array
 from PandaCore.Tools.Misc import *
 from PandaCore.Tools.Load import Load
-from PandaCore.Tools.root_interface import read_tree,draw_hist
+from PandaCore.Tools.root_interface import read_files,draw_hist
 from os import getenv,system
 
 Load('HistogramDrawer')
@@ -32,10 +32,10 @@ class Process():
     def add_file(self,fpath):
         self.__files.append(fpath)
     def read(self,variables,weights,cut):
-        return read_tree(filenames = self.__files,
-                         branches = variables+weights,
-                         cut = cut,
-                         treename = self.tree_name)
+        return read_files(filenames = self.__files,
+                          branches = variables+weights,
+                          cut = cut,
+                          treename = self.tree_name)
 
 def convert_name(n):
     rn = str(n)
@@ -226,7 +226,7 @@ class PlotUtility():
                 weights_nominal = xarr[weight_map['nominal']]
                 draw_hist(hist = dist.histograms[proc.name],
                           xarr = xarr,
-                          fields = (dist.name),
+                          fields = (dist.name,),
                           weight = weight_map['nominal'])
                 if proc.process_type!=root.kData:
                     for syst in self.__systematics:
@@ -238,11 +238,11 @@ class PlotUtility():
                             weights_down = weight_map['nominal']
                         draw_hist(hist = dist.systs[syst.name][0],
                                   xarr = xarr,
-                                  fields = (dist.name),
+                                  fields = (dist.name,),
                                   weight = weights_up)
                         draw_hist(hist = dist.systs[syst.name][1],
                                   xarr = xarr,
-                                  fields = (dist.name),
+                                  fields = (dist.name,),
                                   weight = weights_up)
 
         # everything is filled, now draw the histograms!
