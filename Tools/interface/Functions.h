@@ -15,10 +15,7 @@
 
 template <typename T>
 inline int sign(T x) {
-    if (x>=0)
-        return 1;
-    if (x<0)
-        return -1;
+    return (x<0) ? -1 : 1;
 }
 
 /**
