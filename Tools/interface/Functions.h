@@ -13,6 +13,14 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
+template <typename T>
+inline int sign(T x) {
+    if (x>=0)
+        return 1;
+    if (x<0)
+        return -1;
+}
+
 /**
  * \brief Invariant mass of a pair of particles
  */
