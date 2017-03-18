@@ -46,7 +46,8 @@ public:
 		unsigned int iE=0;
 		ProgressReporter pr("PandaCore::BranchAdder",&iE,&nEntries,10);
 		for (iE=0; iE!=nEntries; ++iE) {
-			pr.Report();
+			if (verbose)
+				pr.Report();
 			t->GetEntry(iE);
 			if (tcut.EvalInstance()) {
 				newBranchVal = tformula.EvalInstance();
@@ -81,7 +82,9 @@ public:
 	 * \param h histogram containing binned values
 	 * \brief Adds a branch based on a histogram
 	 */
-	void AddBranchFromHistogram(TTree *t, TH1D *h) {
+	void AddBranchFromHistogram(TTree *t, TH1 *h) {
+		TH1D hd;
+		h->Copy(hd);
 		float newBranchVal=0;
 		
 		t->SetBranchStatus("*",0);
@@ -96,15 +99,20 @@ public:
 		TTreeFormula tcut("cut",cut.Data(),t);
 		tcut.SetQuickLoad(true);
 
+		double lo = hd.GetBinCenter(1);
+		double hi = hd.GetBinCenter(hd.GetNbinsX());
+
 		unsigned int nEntries = t->GetEntries();
 		unsigned int iE=0;
 		ProgressReporter pr("PandaCore::BranchAdder",&iE,&nEntries,10);
 		for (iE=0; iE!=nEntries; ++iE) {
-			pr.Report();
+			if (verbose)
+				pr.Report();
 			t->GetEntry(iE);
 			if (tcut.EvalInstance()) {
 				double xval = tformula.EvalInstance();
-				newBranchVal = h->GetBinContent(h->FindBin(xval));
+				xval = bound(xval,lo,hi);
+				newBranchVal = hd.GetBinContent(hd.FindBin(xval));
 			} else {
 				newBranchVal = defaultValue;
 			}
@@ -118,7 +126,7 @@ public:
 	 * \param h histogram containing binned values
 	 * \brief Adds a branch based on a histogram
 	 */
-	void AddBranchFromHistogram(TString fpath, TH1D *h) {
+	void AddBranchFromHistogram(TString fpath, TH1 *h) {
 		TFile *fIn = TFile::Open(fpath,"UPDATE");
 		TTree *t = (TTree*)fIn->Get(treeName.Data());
 		if (t==NULL) {
@@ -135,6 +143,7 @@ public:
 	TString treeName = "events"; /**< name of input tree, if file path is provided */
 	double defaultValue = 1; /**< Default value */
 	TString cut = "1==1";
+	bool verbose = true;
 	
 };
 #endif

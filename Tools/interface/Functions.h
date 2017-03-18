@@ -18,8 +18,14 @@ inline int sign(T x) {
     return (x<0) ? -1 : 1;
 }
 
+// need a non-templated instance to be able to 
+// load in interactive ROOT => use in TTreeFormula
+inline int dsign(double x) {
+    return sign(x);
+}
+
 /**
- * \brief Invariant mass of a pair of particles
+ * \brief Mass of a pair of particles
  */
 inline double Mxx(double pt1, double eta1, double phi1, double m1, double pt2, double eta2, double phi2, double m2) {
     TLorentzVector v1,v2;

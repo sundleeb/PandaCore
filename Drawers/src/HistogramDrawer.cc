@@ -195,9 +195,9 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   for (int iH=nH-1; iH!=-1; --iH) {
     HistWrapper w = internalHists[iH];
     TString legOption = "L";
-    if (w.opt.Contains("elp"))
-      legOption = "ELP";
-    if (doStack)
+    if (w.opt.Contains("el"))
+      legOption = "EL";
+    if (doStack || w.opt.Contains("e2"))
       legOption = "F";
     if (w.pt==kData)
       legOption = "ELP";
