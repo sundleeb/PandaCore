@@ -22,9 +22,9 @@ class PandaFile:
 class SizeChecker:
 	def __init__(self):
 		self.pfiles = []
-	def addFile(self,fpath,nickname):
+	def add_file(self,fpath,nickname):
 		self.pfiles.append(PandaFile(fpath,nickname))
-	def dumpInfo(self,makePlot=False,outdir=None):
+	def dump_info(self,makePlot=False,outdir=None):
 		for pfile in self.pfiles:
 			cmd = '''root -b -l	<<EOF 
 			 gSystem->Load("libPandaProdObjects.so");

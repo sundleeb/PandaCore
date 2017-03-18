@@ -80,7 +80,10 @@ def Load(request):
         PWarning('PandaCore.Tools.Load','Requested %s has already been loaded'%(request))
         return
 
-    for d in l.deps:
+    if not requested_lib:
+        PError('PandaCore.Tools.Load','Could not load lib %s'%request)
+
+    for d in requested_lib.deps:
         if 'CMSSW' in d:
             load_lib(d)
         else:
