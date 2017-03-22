@@ -19,6 +19,11 @@ class DataSample:
         self.dtype = dtype
         self.xsec = xsec
         self.files = []
+    def get_id(self):
+        try:
+            return int(self.name.split('_')[-1])
+        except:
+            return -1
     def add_file(self,fname):
         self.files.append(fname)
     def get_config(self,nfiles,suffix=''):
@@ -124,10 +129,6 @@ job_status = {
            7:'suspended',
         }
 
-# SubProperties = namedtuple('SubProperties',
-#                            ['sub_id','cluster_id','submission_time',
-#                             'sample_config'])
-
 class Submission:
     def __init__(self,sample_configpath,cache_filepath):
         self.sample_config = read_sample_config(sample_configpath)
@@ -180,7 +181,7 @@ class Submission:
         procs = []
         for name in sorted(self.sample_config):
             sample = self.sample_config[name]
-            repl['PROCID'] = name.split('_')[-1] 
+            repl['PROCID'] = '%i'%sample.get_id() #name.split('_')[-1] 
             proc_ad = classad.ClassAd()
             for key,value in proc_properties.iteritems():
                 if type(value)==str:
@@ -239,8 +240,6 @@ class Submission:
                 cache = pickle.load(fcache)
         except:
             cache = []
-        # props = SubProperties(self.sub_id,self.cluster_id,
-        #                       self.submission_time,self.sample_config)
         cache.append(self)
         with open(self.cache_filepath,'wb') as fcache:
             pickle.dump(cache,fcache,2)
