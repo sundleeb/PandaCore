@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+from sys import argv
+import argparse
+
+parser = argparse.ArgumentParser(description='root2hdf5 reimplementation')
+parser.add_argument('--output',help='output hdf5 file',type=str,default=None)
+parser.add_argument('--nentries',help='max number of entries',type=int,default=-1)
+parser.add_argument('--selection',help='cut to apply to trees',type=str,default=None)
+parser.add_argument('--silent',help='supress progress bar',action='store_true')
+parser.add_argument('infile',metavar='input',type=str,nargs='+',help='input file(s) to process')
+args = parser.parse_args()
+
+argv = []
+
+import rootpy.root2hdf5
+
+for rf_ in args.infile:
+    if args.output:
+        hf_ = args.output
+    else:
+        hf_ = rf_.replace('.root','.h5')
+    print rf_, hf_,args.nentries,args.selection,args.silent
+    rootpy.root2hdf5.root2hdf5(rf_,
+                               hf_,
+                               entries=args.nentries,
+                               selection=args.selection,
+                               show_progress=not(args.silent), )
+
