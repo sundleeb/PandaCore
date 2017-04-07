@@ -173,6 +173,9 @@ processes =	{
 'monotop-nr-v3-2700-10_med-2700_dm-10':('monotop-nr-v3-2700-10','MC',1),
 'monotop-nr-v3-2900-10_med_2900_dm-10':('monotop-nr-v3-2900-10','MC',1),
 
+'thq':('thq','MC',0.7927),
+'thw':('thw','MC',0.147),
+
 'non-res-v3-1100':('non-res-v3-1100','MC',1),
 'op-resonant-1100':('op-resonant-1100','MC',1),
 'op-non-resonant-1100':('op-non-resonant-1100','MC',1),

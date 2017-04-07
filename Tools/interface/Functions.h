@@ -13,6 +13,25 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * \param x	value to be cleaned
+ * \param d	default value
+ * \brief Returns a default value if input is NaN
+ */
+inline double clean(double x, double d=-1) {
+	return TMath::Finite(x) ? x : d;
+}
+
+/**
+ * \param val	input value
+ * \param low	low value
+ * \param high	high value
+ * \brief Bounds a value within a range
+ */
+inline double bound(double val, double low, double high) {
+	return TMath::Max(low,TMath::Min(high,val));
+}
+
 template <typename T>
 inline int sign(T x) {
     return (x<0) ? -1 : 1;

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from PandaCore.Tools.Misc import PInfo, PError
 from sys import argv, exit
 import argparse
 
@@ -12,10 +13,6 @@ parser.add_argument('infile',metavar='input',type=str,nargs='+',help='input file
 args = parser.parse_args()
 
 argv = []
-
-from PandaCore.Tools.root_interface import read_files, rename_dtypes
-from PandaCore.Tools.Misc import PInfo, PError
-from numpy import save
 
 infiles = args.infile
 if not args.output:
@@ -41,6 +38,10 @@ if args.config:
             formula = field
         branches.append(formula)
         repl[formula] = field
+
+from PandaCore.Tools.root_interface import read_files, rename_dtypes
+import PandaCore.Tools.Functions
+from numpy import save
 
 xarr = read_files(filenames = infiles,
                   branches = branches,

@@ -32,15 +32,6 @@ void concat(std::vector<T> &v1,std::vector<T> v2) {
 }
 
 /**
- * \param x	value to be cleaned
- * \param d	default value
- * \brief Returns a default value if input is NaN
- */
-inline double clean(double x, double d=-1) {
-	return (x==x) ? x : d;
-}
-
-/**
  * \param t	input tree
  * \param bname	name of branch
  * \param address	address of branch
@@ -108,16 +99,6 @@ inline double getVal(TH1D*h,double val) {
  */
 inline double getVal(TH2D*h,double val1, double val2) {
 	return h->GetBinContent(h->FindBin(val1,val2));
-}
-
-/**
- * \param val	input value
- * \param low	low value
- * \param high	high value
- * \brief Bounds a value within a range
- */
-inline double bound(double val, double low, double high) {
-	return TMath::Max(low,TMath::Min(high,val));
 }
 
 /**

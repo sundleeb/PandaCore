@@ -22,7 +22,7 @@ def PDebug(module,msg):
 
 def PError(module,msg):
     ''' function to write to stdout'''
-    stderr.write('\033[0;41mERROR\033[0m   [%-40s]: %s\n'%(module,msg))
+    stderr.write('\033[0;41m\033[1;37mERROR\033[0m   [%-40s]: %s\n'%(module,msg))
 
 
 ModelParams = namedtuple('ModelParams',['m_V','m_DM','gV_DM','gA_DM','gV_q','gA_q','sigma','delta'])
@@ -73,15 +73,30 @@ def setBins(dist,bins):
 
 def tAND(s1,s2):
     ''' ANDs two strings '''
-    return "(( "+s1+" ) && ( "+s2+" ))"
+    if s1 and s2:
+        return "(( "+s1+" ) && ( "+s2+" ))"
+    if not s1:
+        return s2
+    if not s2:
+        return s1
 
 def tOR(s1,s2):
     ''' ORs two strings'''
-    return "(( "+s1+" ) || ( "+s2+" ))"
+    if s1 and s2:
+        return "(( "+s1+" ) || ( "+s2+" ))"
+    if not s1:
+        return s2
+    if not s2:
+        return s1
 
 def tTIMES(w,s):
     ''' MULTIPLIES two strings'''
-    return "( "+w+" ) * ( "+s+" )"
+    if w and s:
+        return "( "+w+" ) * ( "+s+" )"
+    if not w:
+        return s
+    if not s:
+        return w
 
 def tNOT(w):
     ''' NOTs two strings'''
