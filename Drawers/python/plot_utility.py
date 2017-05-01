@@ -7,6 +7,7 @@ from PandaCore.Tools.Misc import *
 from PandaCore.Tools.Load import Load
 from PandaCore.Tools.root_interface import read_files, draw_hist
 from os import getenv, system
+from pprint import pprint
 
 Load('HistogramDrawer')
 
@@ -127,7 +128,7 @@ class Systematic():
         else:
             shift = str(central)
             for k, v in replacement.iteritems():
-                shift.replace(k, v)
+                shift = shift.replace(k, v)
             return shift
 
 class PlotUtility():
@@ -219,7 +220,7 @@ class PlotUtility():
                     weight_map['%s_Down'%(syst.name)] = down_weight
                     weights.append(up_weight)
                     weights.append(down_weight)
-
+            
             xarr = proc.read(variables, weights, final_cut)
 
             for dist in self.__distributions:
@@ -244,7 +245,7 @@ class PlotUtility():
                         draw_hist(hist = dist.systs[syst.name][1], 
                                   xarr = xarr, 
                                   fields = (dist.name, ), 
-                                  weight = weights_up)
+                                  weight = weights_down)
 
         # everything is filled,  now draw the histograms!
         for dist in self.__distributions:

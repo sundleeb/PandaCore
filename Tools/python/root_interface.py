@@ -17,7 +17,7 @@ def rename_dtypes(xarr, repl, old_names = None):
     xarr.dtype.names = new_names
 
 # FILE INPUT ------------------------------------------------------------
-def read_branches(filenames, tree, branches, cut, treename = "events", xargs = ()):
+def read_branches(filenames, tree, branches, cut, treename = "events", xkwargs = {}):
     if not(filenames or treename) or (filenames and tree):
         PError("root_interface.read_branches", "Exactly one of filenames and tree should be specified!")
         return None
@@ -27,37 +27,37 @@ def read_branches(filenames, tree, branches, cut, treename = "events", xargs = (
                               treename = treename, 
                               branches = branches_, 
                               selection = cut, 
-                              *xargs)
+                              **xkwargs)
     else:
         return rnp.tree2array(tree = tree, 
                               branches = branches_, 
                               selection = cut, 
-                              *xargs)
+                              **xkwargs)
 
 
-def read_files(filenames, branches, cut = None, treename = 'events', xargs = ()):
+def read_files(filenames, branches, cut = None, treename = 'events', xkwargs = {}):
     return read_branches(filenames = filenames, 
                          tree = None, 
                          branches = branches, 
                          cut = cut, 
                          treename = treename, 
-                         xargs = xargs)
+                         xkwargs = xkwargs)
 
-def read_tree(tree, branches, cut = None, xargs = ()):
+def read_tree(tree, branches, cut = None, xkwargs = {}):
     return read_branches(filenames = None, 
                          tree = tree,  
                          branches = branches,  
                          cut = cut, 
-                         xargs = xargs)
+                         xkwargs = xkwargs)
 
 
 # FILE OUTPUT --------------------------------------------------------------
-def array_as_tree(xarr, treename = None, fcontext = None, xargs = ()):
+def array_as_tree(xarr, treename = None, fcontext = None, xkwargs = {}):
     # combines array2tree and array2root but leaves TFile manipulation for the user
     context = None
     if fcontext:
         context = root.TDirectory.TContext(fcontext)
-    tree = rnp.array2tree(xarr, treename, *xargs)
+    tree = rnp.array2tree(xarr, treename, **xkwargs)
     if fcontext:
         fcontext.WriteTObject(tree, treename)
     if context:

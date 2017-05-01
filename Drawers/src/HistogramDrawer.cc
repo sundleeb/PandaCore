@@ -49,9 +49,12 @@ void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int c
       w.cc = PlotColors[w.pt];
     else
       w.cc = cc;
-    if (opt=="")
-      w.opt = drawOption;
-    else
+    if (opt=="") {
+      if (pt==kData)
+        w.opt = "elp";
+      else
+        w.opt = drawOption;
+    } else
       w.opt = opt;
 
     internalHists.push_back(w);
@@ -172,9 +175,11 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     } else if (pt==kData) {
       // if it's data
       hData = h;
-      hData->SetMarkerColor(PlotColors[pt]);
-      hData->SetMarkerStyle(20);
-      hData->SetMarkerSize(1);
+      if (w.opt.Contains("p")) {
+        hData->SetMarkerColor(PlotColors[pt]);
+        hData->SetMarkerStyle(20);
+        hData->SetMarkerSize(1);
+      }
       if (doSetNormFactor) {
         /*
         for (int iB=0; iB!=nBins; ++iB) {
@@ -199,7 +204,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       legOption = "EL";
     if (doStack || w.opt.Contains("e2"))
       legOption = "F";
-    if (w.pt==kData)
+    if (w.pt==kData && w.opt=="elp")
       legOption = "ELP";
     if (legend && w.label!="")
       legend->AddEntry(w.h,w.label,legOption);

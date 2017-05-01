@@ -302,11 +302,37 @@ processes =	{
 '/ZprimeToA0hToA0chichihbb_2HDM_MZp-1000_MA0-300_13TeV-madgraph':('ZpA0h_med-1000_dm-300','MC',1),
 
 
+'ST_tch_DM-scalar_LO-100_1-13_TeV':('ST_tch_DM-scalar_LO-100_1-13_TeV','MC',0.293*0.68),
+'ST_tch_DM-scalar_LO-300_1-13_TeV':('ST_tch_DM-scalar_LO-300_1-13_TeV','MC',0.03202*0.68),
+'ST_tch_DM-scalar_LO-500_1-13_TeV':('ST_tch_DM-scalar_LO-500_1-13_TeV','MC',0.004996*0.68),
+'ST_tch_DM-scalar_LO-1000_1-13_TeV':('ST_tch_DM-scalar_LO-1000_1-13_TeV','MC',0.0003009*0.68),
 
+'TT_DM-scalar_LO-300_1-13_TeV':('TT_DM-scalar_LO-300_1-13_TeV','MC',0.03045),
+'TT_DM-scalar_LO-500_1-13_TeV':('TT_DM-scalar_LO-500_1-13_TeV','MC',0.004947),
+'TT_DM-scalar_LO-1000_1-13_TeV':('TT_DM-scalar_LO-1000_1-13_TeV','MC',0.000736),
 
 'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZHbb_mH125','MC',0.1),
 'ggZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ggZHbb_mH125','MC',0.012),
 'WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WmLNuHbb','MC',0.100),
 'WplusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WpLNuHbb','MC',0.159),
+
+'TTbarDMJets_scalar_Mchi-10_Mphi-100' : ('TTbarDMJets_scalar_Mchi-10_Mphi-100','MC',1),
+'TTbarDMJets_scalar_Mchi-10_Mphi-10' : ('TTbarDMJets_scalar_Mchi-10_Mphi-10','MC',1),
+'TTbarDMJets_scalar_Mchi-10_Mphi-15' : ('TTbarDMJets_scalar_Mchi-10_Mphi-15','MC',1),
+'TTbarDMJets_scalar_Mchi-10_Mphi-50' : ('TTbarDMJets_scalar_Mchi-10_Mphi-50','MC',1),
+'TTbarDMJets_scalar_Mchi-1_Mphi-10000' : ('TTbarDMJets_scalar_Mchi-1_Mphi-10000','MC',1),
+'TTbarDMJets_scalar_Mchi-1_Mphi-100' : ('TTbarDMJets_scalar_Mchi-1_Mphi-100','MC',1),
+'TTbarDMJets_scalar_Mchi-1_Mphi-10' : ('TTbarDMJets_scalar_Mchi-1_Mphi-10','MC',1),
+'TTbarDMJets_scalar_Mchi-1_Mphi-200' : ('TTbarDMJets_scalar_Mchi-1_Mphi-200','MC',1),
+'TTbarDMJets_scalar_Mchi-1_Mphi-20' : ('TTbarDMJets_scalar_Mchi-1_Mphi-20','MC',1),
+'TTbarDMJets_scalar_Mchi-1_Mphi-300' : ('TTbarDMJets_scalar_Mchi-1_Mphi-300','MC',1),
+'TTbarDMJets_scalar_Mchi-1_Mphi-500' : ('TTbarDMJets_scalar_Mchi-1_Mphi-500','MC',1),
+'TTbarDMJets_scalar_Mchi-1_Mphi-50' : ('TTbarDMJets_scalar_Mchi-1_Mphi-50','MC',1),
+'TTbarDMJets_scalar_Mchi-50_Mphi-10' : ('TTbarDMJets_scalar_Mchi-50_Mphi-10','MC',1),
+'TTbarDMJets_scalar_Mchi-50_Mphi-200' : ('TTbarDMJets_scalar_Mchi-50_Mphi-200','MC',1),
+'TTbarDMJets_scalar_Mchi-50_Mphi-300' : ('TTbarDMJets_scalar_Mchi-50_Mphi-300','MC',1),
+'TTbarDMJets_scalar_Mchi-50_Mphi-50' : ('TTbarDMJets_scalar_Mchi-50_Mphi-50','MC',1),
+'TTbarDMJets_scalar_Mchi-50_Mphi-95' : ('TTbarDMJets_scalar_Mchi-50_Mphi-95','MC',1),
+
 
 						}

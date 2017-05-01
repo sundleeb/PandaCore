@@ -5,9 +5,10 @@ from re import sub
 from condor import classad,htcondor
 import cPickle as pickle
 import time
-from os import getenv,getuid
+from os import getenv,getuid,system,path
 from Misc import PInfo,PDebug,PWarning,PError
 from collections import namedtuple
+from sys import exit 
 
 #############################################################
 # DataSample and associated functions
@@ -129,10 +130,10 @@ job_status = {
            7:'suspended',
         }
 
-class Submission:
-    def __init__(self,sample_configpath,cache_filepath):
-        self.sample_config = read_sample_config(sample_configpath)
-        self.configpath = sample_configpath
+schedd_server ='t3home000.mit.edu'
+
+class _BaseSubmission(object):
+    def __init__(self, cache_filepath):
         self.cache_filepath = cache_filepath
         try: # figure out which (re-)submission attempt this is
             with open(cache_filepath,'rb') as fcache:
@@ -141,12 +142,162 @@ class Submission:
             self.sub_id = 0
         self.submission_time = -1
         self.cluster_id = None # HTCondor ClusterID
-        self.proc_ids = None # ProcID of each sample
+        self.proc_ids = None # ProcID of each job
         self.coll = htcondor.Collector()
         self.schedd = htcondor.Schedd(self.coll.locate(htcondor.DaemonTypes.Schedd,
-                                                       "t3home000.mit.edu"))
+                                                       schedd_server))
         self.custom_job_properties = {}
 
+
+    def query_status(self):
+        if not self.cluster_id:
+            PError(self.__name__+".status",
+                   "This submission has not been executed yet (ClusterId not set)")
+        results = self.schedd.query(
+            'Owner =?= "%s" && ClusterId =?= %i'%(getenv('USER'),self.cluster_id))
+        jobs = {x:[] for x in ['running','idle','held','other']}
+        for job in results:
+            proc_id = job['ProcId']
+            status = job['JobStatus']
+            sample = self.arguments[self.proc_ids[proc_id]]
+            if job_status[status] in jobs:
+                jobs[job_status[status]].append(sample)
+            else:
+                jobs['other'].append(sample)
+        return jobs
+
+
+    def __getstate__(self):
+        odict = self.__dict__.copy()
+        del odict['coll']
+        del odict['schedd']
+        return odict
+
+
+    def __setstate__(self,odict):
+        self.__dict__.update(odict)
+        self.coll = htcondor.Collector()
+        self.schedd = htcondor.Schedd(self.coll.locate(htcondor.DaemonTypes.Schedd,
+                                                       schedd_server))
+
+
+    def save(self):
+        try: 
+            with open(self.cache_filepath,'rb') as fcache:
+                cache = pickle.load(fcache)
+        except:
+            cache = []
+        cache.append(self)
+        with open(self.cache_filepath,'wb') as fcache:
+            pickle.dump(cache,fcache,2)
+
+
+class SimpleSubmission(_BaseSubmission):
+    def __init__(self,cache_dir,executable=None,arguments=None):
+        super(SimpleSubmission,self).__init__(cache_dir+'/cache.pkl')
+        self.__name__='SimpleSubmission'
+        self.cache_dir = cache_dir
+        if executable and arguments:
+            self.executable = executable
+            self.arguments = arguments
+        else:
+            try:
+                pkl = pickle.load(open(self.cache_filepath))
+                last_sub = pkl[-1]
+                self.executable = last_sub.executable
+                self.arguments = last_sub.arguments
+            except:
+                PError(self.__name__+'.__init__',
+                       'Must provide a valid cache or arguments!')
+                exit(1)
+        self.cmssw = getenv('CMSSW_BASE')
+        self.workdir = cache_dir + '/workdir/'
+        self.logdir = cache_dir + '/logdir/'
+        for d in [self.workdir,self.logdir]:
+            system('mkdir -p '+d)
+    def execute(self,njobs=None):
+        self.submission_time = time.time()
+        runner = '''
+#!/bin/bash
+cd {0} 
+cmsenv 
+{1} $@ && echo $@ >> {2}'''.format(self.cmssw,self.executable,self.workdir+'/progress.log')
+        with open(self.workdir+'exec.sh','w') as frunner:
+            frunner.write(runner)
+        repl = {'WORKDIR' : self.workdir,
+                'LOGDIR' : self.logdir,
+                'SUBMIT_ID' : str(self.sub_id)}
+        cluster_ad = classad.ClassAd()
+
+        job_properties = base_job_properties.copy()
+        for k in ['X509UserProxy','TransferInput']:
+            del job_properties[k]
+        for key,value in job_properties.iteritems():
+            if type(value)==str:
+                for pattern,target in repl.iteritems():
+                    value = value.replace(pattern,target)
+            cluster_ad[key] = value
+        print cluster_ad 
+
+        proc_properties = {
+            'UserLog' : 'LOGDIR/SUBMITID.log',
+            'Out' : 'LOGDIR/SUBMITID_PROCID.out',
+            'Err' : 'LOGDIR/SUBMITID_PROCID.err',
+        }
+        proc_id=0
+        procs = []
+        for idx in sorted(self.arguments):
+            args = self.arguments[idx]
+            repl['PROCID'] = '%i'%idx
+            proc_ad = classad.ClassAd()
+            for key,value in proc_properties.iteritems():
+                if type(value)==str:
+                    for pattern,target in repl.iteritems():
+                        value = value.replace(pattern,target)
+                proc_ad[key] = value
+            proc_ad['Arguments'] = args 
+            procs.append((proc_ad,1))
+            proc_id += 1
+            if njobs and proc_id>=njobs:
+                break
+
+        PInfo(self.__name__+'.execute','Submitting %i jobs!'%(len(procs)))
+        self.submission_time = time.time()
+        results = []
+        self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
+        self.proc_ids = {}
+        for result,idx in zip(results,sorted(self.arguments)):
+            self.proc_ids[result['ProcId']] = idx
+        PInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
+
+    def check_missing(only_failed=True):
+        finished = map(lambda x : x.strip(), open(self.workdir+'/progress.log').readlines())
+        status = self.query_status()
+        missing = {}
+        for idx,args in self.arguments.iteritems():
+            if args in finished:
+                continue 
+            if only_failed and any([args in status[x] for x in ['running','idle']]):
+                continue 
+            missing[idx] = args 
+        return missing 
+
+
+class Submission(_BaseSubmission):
+    '''Submission 
+    
+    This class is used specifically for heavy analysis-specific submission
+    with robust re-packaging and re-submission of failures.
+    
+    Extends:
+        _BaseSubmission
+    '''
+    def __init__(self,sample_configpath,cache_filepath):
+        super(Submission,self).__init__(cache_filepath)
+        self.__name__='Submission'
+        self.arguments = read_sample_config(sample_configpath)
+        self.configpath = sample_configpath
+        
 
     def execute(self,njobs=None):
         logdir = getenv('SUBMIT_LOGDIR')
@@ -179,8 +330,8 @@ class Submission:
         }
         proc_id=0
         procs = []
-        for name in sorted(self.sample_config):
-            sample = self.sample_config[name]
+        for name in sorted(self.arguments):
+            sample = self.arguments[name]
             repl['PROCID'] = '%i'%sample.get_id() #name.split('_')[-1] 
             proc_ad = classad.ClassAd()
             for key,value in proc_properties.iteritems():
@@ -198,48 +349,8 @@ class Submission:
         results = []
         self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
         self.proc_ids = {}
-        for result,name in zip(results,sorted(self.sample_config)):
+        for result,name in zip(results,sorted(self.arguments)):
             self.proc_ids[result['ProcId']] = name
 #            print 'Mapping %i->%s'%(result['ProcId'],name)
         PInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
 
-
-    def query_status(self):
-        if not self.cluster_id:
-            PError("Submission.status",
-                   "This submission has not been executed yet (ClusterId not set)")
-        results = self.schedd.query(
-            'Owner =?= "%s" && ClusterId =?= %i'%(getenv('USER'),self.cluster_id))
-        jobs = {x:[] for x in ['running','idle','held','other']}
-        for job in results:
-            proc_id = job['ProcId']
-            status = job['JobStatus']
-            sample = self.sample_config[self.proc_ids[proc_id]]
-            if job_status[status] in jobs:
-                jobs[job_status[status]].append(sample)
-            else:
-                jobs['other'].append(sample)
-        return jobs
-
-    def __getstate__(self):
-        odict = self.__dict__.copy()
-        del odict['coll']
-        del odict['schedd']
-        return odict
-
-
-    def __setstate__(self,odict):
-        self.__dict__.update(odict)
-        self.coll = htcondor.Collector()
-        self.schedd = htcondor.Schedd(self.coll.locate(htcondor.DaemonTypes.Schedd,
-                                                       "t3home000.mit.edu"))
-
-    def save(self):
-        try: 
-            with open(self.cache_filepath,'rb') as fcache:
-                cache = pickle.load(fcache)
-        except:
-            cache = []
-        cache.append(self)
-        with open(self.cache_filepath,'wb') as fcache:
-            pickle.dump(cache,fcache,2)

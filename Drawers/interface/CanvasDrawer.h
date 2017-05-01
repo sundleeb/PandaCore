@@ -100,7 +100,7 @@ public:
    */
   void AddPlotLabel(const char *s, double x, double y, bool drawImmediately=true, int font=42, float textSize=-1, int textAlign=11); 
   void SetSignalScale(double d) { signalScale = d; } //!< Scale the signal by a factor
-  void InitLegend(double x0=0.6, double y0=0.55, double x1=0.88, double y1=0.9); //!< Initialize a TLegend
+  void InitLegend(double x0=0.6, double y0=0.55, double x1=0.88, double y1=0.9, int ncolumns=1); //!< Initialize a TLegend
 
   /**
    * \brief Draw the TCanvas and save it

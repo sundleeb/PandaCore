@@ -208,9 +208,10 @@ void CanvasDrawer::AddLumiLabel(bool fb, double customLumi) {
   AddPlotLabel(TString::Format("%.3g %s^{-1} (13 TeV)",(float)lumi,units.Data()).Data(),0.9,0.94,false,42,0.8*textsize,31);
 }
 
-void CanvasDrawer::InitLegend(double x0, double y0, double x1, double y1) { 
+void CanvasDrawer::InitLegend(double x0, double y0, double x1, double y1, int ncolumns) { 
   delete legend;
   legend = new TLegend(x0,y0,x1,y1);
+  legend->SetNColumns(ncolumns);
   legend->SetFillStyle(0);
   legend->SetBorderSize(0);
 }

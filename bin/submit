@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+import PandaCore.Tools.job_management as jm
+from PandaCore.Tools.Misc import PError
+import argparse
+from os import path,getenv
+from sys import exit
+
+parser = argparse.ArgumentParser(description='simple condor submission')
+parser.add_argument('--exec',dest='executable',help='executable',type=str)
+parser.add_argument('--njobs',type=int)
+parser.add_argument('--arglist',type=str,default=None)
+parser.add_argument('--args',type=str,nargs='+',default=None)
+parser.add_argument('--cache',type=str,default=None)
+args = parser.parse_args()
+
+if not args.cache:
+    args.cache = '/tmp/{0}/{1}/'.format(getenv('USER'),
+                                        args.executable.split('/')[-1])
+
+if path.isfile(args.executable):
+    args.executable = path.abspath(args.executable)
+
+job_arguments = {}
+counter=0
+if args.arglist:
+    with open(args.arglist) as fargs:
+        for l in fargs:
+            l = l.strip()
+            if len(l)==0:
+                continue
+            job_arguments[counter] = l
+            counter += 1
+elif args.args:
+    job_arguments = {idx:args.args[idx] for idx in xrange(len(args.args))}
+else:
+    PError('submit','Please specify arguments!')
+    exit(1)
+
+
+sub = jm.SimpleSubmission(args.cache,args.executable,job_arguments)
+sub.execute(args.njobs)
