@@ -138,6 +138,7 @@ def environ_to_condor():
         s += '%s=%s '%(k,v)
     return s 
 
+
 class _BaseSubmission(object):
     def __init__(self, cache_filepath):
         self.cache_filepath = cache_filepath
@@ -200,7 +201,7 @@ class _BaseSubmission(object):
 
 class SimpleSubmission(_BaseSubmission):
     def __init__(self,cache_dir,executable=None,arguments=None):
-        super(SimpleSubmission,self).__init__(cache_dir+'/cache.pkl')
+        super(SimpleSubmission,self).__init__(cache_dir+'/submission.pkl')
         self.__name__='SimpleSubmission'
         self.cache_dir = cache_dir
         if executable and arguments:
@@ -238,7 +239,7 @@ cmsenv
         job_properties = base_job_properties.copy()
         for k in ['X509UserProxy','TransferInput']:
             del job_properties[k]
-        job_properties['Environment'] = environ_to_condor()
+        # job_properties['Environment'] = environ_to_condor()
         for key,value in job_properties.iteritems():
             if type(value)==str:
                 for pattern,target in repl.iteritems():
@@ -277,17 +278,25 @@ cmsenv
             self.proc_ids[result['ProcId']] = idx
         PInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
 
-    def check_missing(only_failed=True):
-        finished = map(lambda x : x.strip(), open(self.workdir+'/progress.log').readlines())
+    def check_missing(self, only_failed=True):
+        try:
+            finished = map(lambda x : x.strip(), open(self.workdir+'/progress.log').readlines())
+        except IOError:
+            finished = []
         status = self.query_status()
-        missing = {}
+        missing = {}; done = {}; running = {}; idle = {}
         for idx,args in self.arguments.iteritems():
             if args in finished:
+                done[idx] = args 
                 continue 
-            if only_failed and any([args in status[x] for x in ['running','idle']]):
+            if only_failed and (args in status['running']):
+                running[idx] = args
+                continue 
+            if only_failed and (args in status['idle']):
+                idle[idx] = args
                 continue 
             missing[idx] = args 
-        return missing 
+        return missing, done, running, idle
 
 
 class Submission(_BaseSubmission):

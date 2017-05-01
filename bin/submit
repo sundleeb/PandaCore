@@ -17,6 +17,7 @@ args = parser.parse_args()
 if not args.cache:
     args.cache = '/tmp/{0}/{1}/'.format(getenv('USER'),
                                         args.executable.split('/')[-1])
+system('rm -rf %s/*'%(args.cache))
 
 if path.isfile(args.executable):
     args.executable = path.abspath(args.executable)
