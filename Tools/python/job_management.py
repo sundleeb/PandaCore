@@ -5,7 +5,7 @@ from re import sub
 from condor import classad,htcondor
 import cPickle as pickle
 import time
-from os import getenv,getuid,system,path
+from os import getenv,getuid,system,path,environ
 from Misc import PInfo,PDebug,PWarning,PError
 from collections import namedtuple
 from sys import exit 
@@ -132,6 +132,12 @@ job_status = {
 
 schedd_server ='t3home000.mit.edu'
 
+def environ_to_condor():
+    s = '' 
+    for k,v in environ.iteritems():
+        s += '%s=%s'%(k,v)
+    return s 
+
 class _BaseSubmission(object):
     def __init__(self, cache_filepath):
         self.cache_filepath = cache_filepath
@@ -232,6 +238,7 @@ cmsenv
         job_properties = base_job_properties.copy()
         for k in ['X509UserProxy','TransferInput']:
             del job_properties[k]
+        job_properties['Environment'] = environ_to_condor()
         for key,value in job_properties.iteritems():
             if type(value)==str:
                 for pattern,target in repl.iteritems():
