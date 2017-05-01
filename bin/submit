@@ -40,3 +40,4 @@ else:
 
 sub = jm.SimpleSubmission(args.cache,args.executable,job_arguments)
 sub.execute(args.njobs)
+sub.save()
