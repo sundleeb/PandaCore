@@ -135,7 +135,7 @@ schedd_server ='t3home000.mit.edu'
 def environ_to_condor():
     s = '' 
     for k,v in environ.iteritems():
-        s += '%s=%s'%(k,v)
+        s += '%s=%s '%(k,v)
     return s 
 
 class _BaseSubmission(object):
