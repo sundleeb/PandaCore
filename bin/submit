@@ -16,30 +16,37 @@ args = parser.parse_args()
 
 if not args.cache:
     args.cache = '/data/t3serv014/{0}/submit/{1}/'.format(getenv('USER'),
-                                           args.executable.split('/')[-1])
-    PInfo('submit','Placing cache in '+args.cache)
+                                           args.executable.split('/')[-1].replace('.',''))
+PInfo('submit','Placing cache in '+args.cache)
 system('rm -rf %s/*'%(args.cache))
 
 if path.isfile(args.executable):
     args.executable = path.abspath(args.executable)
 
-job_arguments = {}
-counter=0
+job_arguments = []
 if args.arglist:
     with open(args.arglist) as fargs:
         for l in fargs:
             l = l.strip()
             if len(l)==0:
                 continue
-            job_arguments[counter] = l
-            counter += 1
+            job_arguments.append(l)
 elif args.args:
-    job_arguments = {idx:args.args[idx] for idx in xrange(len(args.args))}
+    job_arguments = args.args 
 else:
     PError('submit','Please specify arguments!')
     exit(1)
 
 
-sub = jm.SimpleSubmission(args.cache,args.executable,job_arguments)
-sub.execute(args.njobs)
+if args.njobs:
+    nper = int(float(len(job_arguments))/args.njobs)
+else:
+    nper = 1
+
+sub = jm.SimpleSubmission(cache_dir=args.cache,
+                          executable=args.executable,
+                          arglist=job_arguments,
+                          arguments=None,
+                          nper=nper)
+sub.execute()
 sub.save()

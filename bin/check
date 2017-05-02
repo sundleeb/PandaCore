@@ -12,6 +12,7 @@ parser.add_argument('--resubmit_all',action='store_true')
 parser.add_argument('--resubmit_failed',action='store_true')
 parser.add_argument('--kill',action='store_true')
 parser.add_argument('--cache',type=str)
+parser.add_argument('--njobs',type=int,default=None)
 args = parser.parse_args()
 
 with open(args.cache+'/submission.pkl') as fpkl:
@@ -73,9 +74,13 @@ if args.kill:
         print 'Killing ClusterId %i'%s.cluster_id
         system('condor_rm %i'%(s.cluster_id))
 
-if args.resubmit_all or args.resubmit_failed:
+
+if args.resubmit_all or args.resubmit_failed and len(statii['missing']):
     s = submissions[0]
-    new_sub = jm.SimpleSubmission(s.cache_dir, s.executable, statii['missing'])
+    nper = s.nper
+    if args.njobs:
+        nper = int(float(len(statii['missing']))/args.njobs)
+    new_sub = jm.SimpleSubmission(s.cache_dir, s.executable, s.arglist, statii['missing'], nper)
     new_sub.execute()
     new_sub.save()
 
