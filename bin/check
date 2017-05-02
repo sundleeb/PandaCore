@@ -28,7 +28,7 @@ for s in submissions:
     statii['running'].update(r)
     statii['idle'].update(i)
 
-for i in statii['missing']:
+for i in statii['missing'].values():
     if any([i in statii[x] for x in ['running','idle','done']]):
         del statii['missing'][i]
 

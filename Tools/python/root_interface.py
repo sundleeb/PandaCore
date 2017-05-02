@@ -68,6 +68,8 @@ def array_as_tree(xarr, treename = None, fcontext = None, xkwargs = {}):
 # HISTOGRAM MANIPULATION ---------------------------------------------------
 def draw_hist(hist, xarr, fields, weight = None):
     warr = xarr[weight] if weight else None
+    if len(warr.shape)>1:
+        warr = warr[:,0]
     if len(fields) == 1:
         return rnp.fill_hist(hist = hist, array = xarr[fields[0]], weights = warr)
     else:

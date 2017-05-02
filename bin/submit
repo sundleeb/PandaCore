@@ -43,6 +43,7 @@ if args.njobs:
 else:
     nper = 1
 
+system('voms-proxy-init -voms cms --valid 168:00')
 sub = jm.SimpleSubmission(cache_dir=args.cache,
                           executable=args.executable,
                           arglist=job_arguments,

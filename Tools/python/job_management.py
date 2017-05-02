@@ -241,9 +241,10 @@ class SimpleSubmission(_BaseSubmission):
         self.submission_time = time.time()
         runner = '''
 #!/bin/bash
-cd {0} 
 env
+cd {0} 
 eval `/cvmfs/cms.cern.ch/common/scramv1 runtime -sh`
+cd -
 for i in $@; do
     arg=$(sed "${{i}}q;d" {3}) # get the ith line
     {1} $arg && echo $i >> {2};
@@ -252,11 +253,13 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             frunner.write(runner)
         repl = {'WORKDIR' : self.workdir,
                 'LOGDIR' : self.logdir,
+                'UID':str(getuid()),
                 'SUBMITID' : str(self.sub_id)}
         cluster_ad = classad.ClassAd()
 
         job_properties = base_job_properties.copy()
-        for k in ['X509UserProxy','TransferInput']:
+        #for k in ['X509UserProxy','TransferInput']:
+        for k in ['TransferInput','ShouldTransferFiles','WhenToTransferOutput']:
             del job_properties[k]
         # job_properties['Environment'] = 'A=B C=D'
         job_properties['Environment'] = environ_to_condor()
