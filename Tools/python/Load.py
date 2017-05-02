@@ -49,6 +49,7 @@ libraries = [
                                                 'BTagTreeBuilder',
                                                ],
             ), 
+    Library(name='RedPandaCluster',objects = ['Clusterer',] ),
 ]
 # TODO: refactor SCRAMJet to have dictionary interface, will need following libs:
 # 'libfastjet.so','libfastjetcontribfragile.so','libfastjetplugins.so','libfastjettools.so'
