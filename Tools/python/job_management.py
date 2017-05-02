@@ -204,7 +204,7 @@ class SimpleSubmission(_BaseSubmission):
         super(SimpleSubmission,self).__init__(cache_dir+'/submission.pkl')
         self.__name__='SimpleSubmission'
         self.cache_dir = cache_dir
-        if executable and arguments:
+        if executable!=None and arguments!=None:
             self.executable = executable
             self.arguments = arguments
         else:
@@ -227,7 +227,7 @@ class SimpleSubmission(_BaseSubmission):
         runner = '''
 #!/bin/bash
 cd {0} 
-cmsenv 
+eval `scramv1 runtime -sh`
 {1} $@ && echo $@ >> {2}'''.format(self.cmssw,self.executable,self.workdir+'/progress.log')
         with open(self.workdir+'exec.sh','w') as frunner:
             frunner.write(runner)
@@ -272,11 +272,14 @@ cmsenv
         PInfo(self.__name__+'.execute','Submitting %i jobs!'%(len(procs)))
         self.submission_time = time.time()
         results = []
-        self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
         self.proc_ids = {}
-        for result,idx in zip(results,sorted(self.arguments)):
-            self.proc_ids[result['ProcId']] = idx
-        PInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
+        if len(procs):
+            self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
+            for result,idx in zip(results,sorted(self.arguments)):
+                self.proc_ids[result['ProcId']] = idx
+            PInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
+        else:
+            self.cluster_id = -1
 
     def check_missing(self, only_failed=True):
         try:

@@ -27,6 +27,10 @@ for s in submissions:
     statii['running'].update(r)
     statii['idle'].update(i)
 
+for i in statii['missing']:
+    if any([i in statii[x] for x in ['running','idle','done']]):
+        del statii['missing'][i]
+
 WIDTH=25
 header = ''
 header += ('%%-%is'%(WIDTH+2))%('Progress')

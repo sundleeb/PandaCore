@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import PandaCore.Tools.job_management as jm
-from PandaCore.Tools.Misc import PError
+from PandaCore.Tools.Misc import PError, PInfo
 import argparse
-from os import path,getenv
+from os import path,getenv,system
 from sys import exit
 
 parser = argparse.ArgumentParser(description='simple condor submission')
@@ -15,8 +15,9 @@ parser.add_argument('--cache',type=str,default=None)
 args = parser.parse_args()
 
 if not args.cache:
-    args.cache = '/tmp/{0}/{1}/'.format(getenv('USER'),
-                                        args.executable.split('/')[-1])
+    args.cache = '/data/t3serv014/{0}/submit/{1}/'.format(getenv('USER'),
+                                           args.executable.split('/')[-1])
+    PInfo('submit','Placing cache in '+args.cache)
 system('rm -rf %s/*'%(args.cache))
 
 if path.isfile(args.executable):
