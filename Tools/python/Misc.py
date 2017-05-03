@@ -8,21 +8,36 @@ from sys import stdout,stderr
 from os import getenv
 from collections import namedtuple
 
+_atty_out = stdout.isatty()
+_atty_err = stderr.isatty()
+
 def PInfo(module,msg,newline="\n"):
     ''' function to write to stdout'''
-    stdout.write('\033[0;32mINFO\033[0m    [%-40s]: %s%s'%(module,msg,newline))
+    if _atty_out:
+        stdout.write('\033[0;32mINFO\033[0m    [%-40s]: %s%s'%(module,msg,newline))
+    else:
+        stderr.write('INFO    [%-40s]: %s%s'%(module,msg,newline)) # redirect color-less output to stderr to maintain stream in log files
 
 def PWarning(module,msg,newline="\n"):
     ''' function to write to stdout'''
-    stdout.write('\033[0;91mWARNING\033[0m [%-40s]: %s%s'%(module,msg,newline))
+    if _atty_out:
+        stdout.write('\033[0;91mWARNING\033[0m [%-40s]: %s%s'%(module,msg,newline))
+    else:
+        stderr.write('WARNING [%-40s]: %s%s'%(module,msg,newline))
 
 def PDebug(module,msg,newline="\n"):
     ''' function to write to stdout'''
-    stderr.write('\033[0;36mDEBUG\033[0m   [%-40s]: %s%s'%(module,msg,newline))
+    if _atty_err:
+        stderr.write('\033[0;36mDEBUG\033[0m   [%-40s]: %s%s'%(module,msg,newline))
+    else:
+        stderr.write('DEBUG   [%-40s]: %s%s'%(module,msg,newline))
 
 def PError(module,msg,newline="\n"):
     ''' function to write to stdout'''
-    stderr.write('\033[0;41m\033[1;37mERROR\033[0m   [%-40s]: %s%s'%(module,msg,newline))
+    if _atty_err:
+        stderr.write('\033[0;41m\033[1;37mERROR\033[0m   [%-40s]: %s%s'%(module,msg,newline))
+    else:
+        stderr.write('ERROR   [%-40s]: %s%s'%(module,msg,newline))
 
 
 ModelParams = namedtuple('ModelParams',['m_V','m_DM','gV_DM','gA_DM','gV_q','gA_q','sigma','delta'])
