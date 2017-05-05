@@ -166,16 +166,19 @@ class _BaseSubmission(object):
             'Owner =?= "%s" && ClusterId =?= %i'%(getenv('USER'),self.cluster_id))
         jobs = {x:[] for x in ['running','idle','held','other']}
         for job in results:
-            proc_id = job['ProcId']
+            proc_id = int(job['ProcId'])
             status = job['JobStatus']
-            if type(self.arguments)==dict:
-                sample = self.arguments[self.proc_ids[proc_id]]
-            else:
-                sample = self.proc_ids[proc_id]
+            try:
+                if type(self.arguments)==dict:
+                    samples = [self.arguments[self.proc_ids[proc_id]]]
+                else:
+                    samples = self.proc_ids[proc_id].split()
+            except KeyError:
+                continue # sometimes one extra dummy job is created and not tracked, oh well
             if job_status[status] in jobs:
-                jobs[job_status[status]].append(sample)
+                jobs[job_status[status]] += samples
             else:
-                jobs['other'].append(sample)
+                jobs['other'] += samples
         return jobs
 
 
@@ -278,7 +281,10 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
         procs = []
         self.arguments = sorted(self.arguments)
         n_to_run = len(self.arguments)/self.nper+1
+        arg_mapping = {} # condor arg -> job args
         for idx in xrange(n_to_run):
+            if njobs and proc_id>=njobs:
+                break
             repl['PROCID'] = '%i'%idx
             proc_ad = classad.ClassAd()
             for key,value in proc_properties.iteritems():
@@ -289,10 +295,9 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             proc_ad['Arguments'] = ' '.join(
                     [str(x) for x in self.arguments[self.nper*idx:min(self.nper*(idx+1),len(self.arguments))]]
                     )
+            arg_mapping[idx] = proc_ad['Arguments']
             procs.append((proc_ad,1))
             proc_id += 1
-            if njobs and proc_id>=njobs:
-                break
 
         PInfo(self.__name__+'.execute','Submitting %i jobs!'%(len(procs)))
         self.submission_time = time.time()
@@ -302,21 +307,21 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             PInfo(self.__name__+'.execute','Cluster ClassAd:','')
             print cluster_ad 
             self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
-            for result,idx in zip(results,self.arguments):
-                self.proc_ids[result['ProcId']] = idx
+            for result,idx in zip(results,range(n_to_run)):
+                self.proc_ids[int(result['ProcId'])] = arg_mapping[idx]
             PInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
         else:
             self.cluster_id = -1
 
     def check_missing(self, only_failed=True):
         try:
-            finished = map(lambda x : int(x.strip()), open(self.workdir+'/progress.log').readlines())
+            finished = map(lambda x : x.strip(), [x for x in  open(self.workdir+'/progress.log').readlines() if len(x.strip())])
         except IOError:
             finished = []
         status = self.query_status()
         missing = {}; done = {}; running = {}; idle = {}
         for idx in self.arguments:
-            args = idx
+            args = str(idx)
             if args in finished:
                 done[idx] = args 
                 continue 
@@ -397,7 +402,7 @@ class Submission(_BaseSubmission):
         self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
         self.proc_ids = {}
         for result,name in zip(results,sorted(self.arguments)):
-            self.proc_ids[result['ProcId']] = name
+            self.proc_ids[int(result['ProcId'])] = name
 #            print 'Mapping %i->%s'%(result['ProcId'],name)
         PInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
 
