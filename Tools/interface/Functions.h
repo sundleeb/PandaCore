@@ -6,7 +6,7 @@
 
 #define PI 3.141592654
 
-/** \file NumericalFunctions.h
+/** \file Functions.h
  * \brief Some numerical functions
  * \author S. Narayanan
  */

@@ -27,4 +27,15 @@
 #pragma link C++ class TimeReporter;
 #pragma link C++ class Binner;
 
+// numerical functions not bound to a class
+#pragma link C++ function bound;
+#pragma link C++ function clean;
+#pragma link C++ function sign;
+#pragma link C++ function dsign;
+#pragma link C++ function Mxx;
+#pragma link C++ function MT;
+#pragma link C++ function SignedDeltaPhi;
+#pragma link C++ function DeltaR2;
+#pragma link C++ function ExpErf;
+
 #endif 
