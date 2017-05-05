@@ -215,6 +215,8 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     if (doSetNormFactor) {
       for (HistWrapper ww : hOthers) 
         ww.h->Scale(1./stackIntegral);
+      for (auto w : internalSysts)
+        w.h->Scale(1./stackIntegral);
     }
     if (doDrawMCErrors||doRatio) {
       std::vector<float> vals,errs;
