@@ -8,4 +8,4 @@ from Load import Load
 from ROOT import gROOT
 
 Load('Functions')
-gROOT.LoadMacro(getenv('CMSSW_BASE')+'/src/PandaCore/Tools/interface/Functions.h')
+#gROOT.LoadMacro(getenv('CMSSW_BASE')+'/src/PandaCore/Tools/interface/Functions.h')
