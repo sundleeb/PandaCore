@@ -41,12 +41,13 @@ check-update () {
 }
 
 usage () {
-  echo "Usage: genDict [-c] [-f] PACKAGES"
+  echo "Usage: genDict [-c] [-f] [-j NPROC] PACKAGES"
   echo "Generate ROOT dictionary source code. PACKAGE is e.g. PandaCore/Tools."
   echo ""
   echo "  -c  Clear generated source code."
   echo "  -f  Force generation. Otherwise dictionaries are written only if"
   echo "      header files are updated."
+  echo "  -j  Specify number of processes to spawn."
 
   exit $1
 }
@@ -118,7 +119,6 @@ cd $CMSSW_BASE/src
 
 generate_dict() {
   PACKAGE=$1
-  echo $1
   LINKDEF=$PACKAGE/LinkDef.h
   SRCDIR=$PACKAGE/src
   INCDIR=$PACKAGE/interface 
@@ -159,7 +159,7 @@ generate_dict() {
     # figure out what the LinkDef depends on
     INCLUDES=$(makedepend -I. -f- $LINKDEF 2>/dev/null | awk '/Panda/ {print $2}' | tr '\n' ' ')
     # generate dictionary if $OUTPUT.cc does not exist or is older than one of the source files
-    if $genFORCE || $(check-update $SRCDIR/$OUTPUT.cc $INCLUDES $LINKDEF) || [ -e $genLIBDIR/${OUTPUT}_rdict.pcm ]
+    if $genFORCE || $(check-update $SRCDIR/$OUTPUT.cc $INCLUDES $LINKDEF) || ! [ -e $genLIBDIR/${OUTPUT}_rdict.pcm ]
     then 
       HEADERS=$(sed -n 's|#include *"\([^"]*\)"|\1|p' $LINKDEF | tr '\n' ' ')
 
@@ -180,10 +180,4 @@ generate_dict() {
 export -f check-update
 export -f generate_dict 
 echo $PACKAGES | sed "s? \+?\n?g" | xargs -n 1 -P $NCORES -I {} bash -c 'generate_dict "{}"'
-
-# for PACKAGE in $PACKAGES:
-# do
-
-# done   
-
 
