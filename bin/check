@@ -29,8 +29,12 @@ for s in submissions:
     statii['idle'].update(i)
 
 for i in statii['missing'].values():
-    if any([i in statii[x] for x in ['running','idle','done']]):
-        del statii['missing'][i]
+    for x in ['running','idle','done']:
+        for k,v in statii[x].iteritems():
+            if i==v:
+                del statii['missing'][k]
+#    if any([i in statii[x].values() for x in ['running','idle','done']]):
+#        del statii['missing'][i]
 
 WIDTH=25
 header = ''
