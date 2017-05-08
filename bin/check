@@ -13,6 +13,7 @@ parser.add_argument('--resubmit_failed',action='store_true')
 parser.add_argument('--kill',action='store_true')
 parser.add_argument('--cache',type=str)
 parser.add_argument('--njobs',type=int,default=None)
+parser.add_argument('--verbose',action='store_true')
 args = parser.parse_args()
 
 with open(args.cache+'/submission.pkl') as fpkl:
@@ -72,6 +73,13 @@ s += '(done=%.2f%%)'%(d_frac*100./WIDTH)
 
 print header 
 print s 
+
+if args.verbose:
+    if len(statii['missing']):
+        farglist = open(submissions[0].arglist).readlines()
+        print 'Missing:'
+        for arg in statii['missing']:
+            print '   ',farglist[int(arg)-1].strip()
 
 if args.kill:
     for s in submissions:
