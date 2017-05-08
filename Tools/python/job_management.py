@@ -116,26 +116,14 @@ job_status = {
            7:'suspended',
         }
 
-base_job_properties = {
-    "Cmd" : "WORKDIR/exec.sh",
-    "WhenToTransferOutput" : "ON_EXIT",
-    "ShouldTransferFiles" : "YES",
-    "Requirements" : classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
-    "AcctGroup" : "group_t3mit.urgent",
-    "AccountingGroup" : "group_t3mit.urgent.snarayan",
-    "X509UserProxy" : "/tmp/x509up_uUID",
-    "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
-    "In" : "/dev/null",
-    "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
-}
-
-#pool_server = 't3home000.mit.edu:9620'
+base_job_properties = None 
 pool_server = None 
 schedd_server ='t3home000.mit.edu'
-
+should_spool = False
+query_owner = getenv('USER')
 
 def setup_schedd(config='T3'):
-    global pool_server, schedd_server, base_job_properties
+    global pool_server, schedd_server, base_job_properties, should_spool
     if config=='T3':
         base_job_properties = {
             "Cmd" : "WORKDIR/exec.sh",
@@ -153,6 +141,8 @@ def setup_schedd(config='T3'):
 
         pool_server = None
         schedd_server ='t3home000.mit.edu'
+        should_spool = False
+        query_owner = getenv('USER')
     elif config=='SubMIT':
         base_job_properties = {
             "Cmd" : "WORKDIR/exec.sh",
@@ -168,14 +158,18 @@ def setup_schedd(config='T3'):
             "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
             "ProjectName" : "CpDarkMatterSimulation",
             "Rank" : "Mips",
+            'SubMITOwner' : 'snarayan',
         }
 
         pool_server = 'submit.mit.edu:9615'
         schedd_server ='submit.mit.edu'
+        query_owner = 'anonymous'
+        should_spool = True
     else:
         PError('job_management.setup_schedd','Unknown config %s'%config)
         raise ValueError
 
+setup_schedd() # set the defaults for T3
 
 def environ_to_condor():
     s = '' 
@@ -196,7 +190,10 @@ class _BaseSubmission(object):
         self.submission_time = -1
         self.cluster_id = None # HTCondor ClusterID
         self.proc_ids = None # ProcID of each job
-        self.coll = htcondor.Collector(pool_server)
+        if pool_server:
+            self.coll = htcondor.Collector(pool_server)
+        else:
+            self.coll = htcondor.Collector()
         self.schedd = htcondor.Schedd(self.coll.locate(htcondor.DaemonTypes.Schedd,
                                                        schedd_server))
         self.custom_job_properties = {}
@@ -208,7 +205,7 @@ class _BaseSubmission(object):
                    "This submission has not been executed yet (ClusterId not set)")
             raise RuntimeError
         results = self.schedd.query(
-            'Owner =?= "%s" && ClusterId =?= %i'%(getenv('USER'),self.cluster_id))
+            'Owner =?= "%s" && ClusterId =?= %i'%(query_owner,self.cluster_id))
         jobs = {x:[] for x in ['running','idle','held','other']}
         for job in results:
             proc_id = int(job['ProcId'])
@@ -351,7 +348,9 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
         if len(procs):
             PInfo(self.__name__+'.execute','Cluster ClassAd:','')
             print cluster_ad 
-            self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
+            self.cluster_id = self.schedd.submitMany(cluster_ad, procs, spool=should_spool, ad_results=results)
+            if should_spool:
+                self.schedd.spool(results)
             for result,idx in zip(results,range(n_to_run)):
                 self.proc_ids[int(result['ProcId'])] = arg_mapping[idx]
             PInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
@@ -444,7 +443,9 @@ class Submission(_BaseSubmission):
         PInfo('Submission.execute','Submitting %i jobs!'%(len(procs)))
         self.submission_time = time.time()
         results = []
-        self.cluster_id = self.schedd.submitMany(cluster_ad,procs,ad_results=results)
+        self.cluster_id = self.schedd.submitMany(cluster_ad, procs, spool=should_spool, ad_results=results)
+        if should_spool:
+            self.schedd.spool(results)
         self.proc_ids = {}
         for result,name in zip(results,sorted(self.arguments)):
             self.proc_ids[int(result['ProcId'])] = name
