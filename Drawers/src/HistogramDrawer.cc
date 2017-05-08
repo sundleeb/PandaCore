@@ -295,7 +295,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
 
   // set up canvases
   c->cd();
-  if (doRatio) {
+  if (doRatio && hData) {
     SplitCanvas();
     if (doLogy)
       pad1->SetLogy();
@@ -410,7 +410,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
 
   TGraphErrors *gRatioErrors=0;
   double *xVals=0, *yVals=0, *xErrors=0, *yErrors=0;
-  if (doRatio) {
+  if (doRatio && hData) {
     pad2->cd();
     pad2->SetGridy();
     hRatio = (TH1D*)hData->Clone("ratio");
@@ -524,7 +524,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     }
     gRatioErrors->Draw("pe0");
   }
-  if (doRatio)
+  if (doRatio && hData)
     pad1->cd();
 
   CanvasDrawer::Draw(outDir,baseName);

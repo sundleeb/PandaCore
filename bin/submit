@@ -12,6 +12,7 @@ parser.add_argument('--njobs',type=int)
 parser.add_argument('--arglist',type=str,default=None)
 parser.add_argument('--args',type=str,nargs='+',default=None)
 parser.add_argument('--cache',type=str,default=None)
+parser.add_argument('--dryrun',action='store_true')
 args = parser.parse_args()
 
 if not args.cache:
@@ -43,11 +44,13 @@ if args.njobs:
 else:
     nper = 1
 
+max_njobs = -1 if args.dryrun else None
+
 system('voms-proxy-init -voms cms --valid 168:00')
 sub = jm.SimpleSubmission(cache_dir=args.cache,
                           executable=args.executable,
                           arglist=job_arguments,
                           arguments=None,
                           nper=nper)
-sub.execute()
+sub.execute(max_njobs)
 sub.save()
