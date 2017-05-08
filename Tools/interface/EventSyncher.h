@@ -16,7 +16,7 @@ public:
 
 	void RunFiles(std::string fpath1, std::string fpath2, std::string treeName="events", int maxEntries=-1);
 	void RunTrees(TTree *t1, TTree *t2, int maxEntries=-1);
-	void AddFormula(std::string f, float lo, float hi, std::string n="") {
+	void AddFormula(std::string f, float lo, float hi, std::string n="", bool relative=true) {
 		formulae.push_back(f);
 		if (n.size()==0)
 			names.push_back(f);
@@ -24,9 +24,9 @@ public:
 			names.push_back(n);
 		los.push_back(lo);
 		his.push_back(hi);
+		relatives.push_back(relative);
 	}
 	std::vector<TH2D*> PlayViolin(float range=1);
-//	void Dump(std::string outdir, bool plots=false, bool csv=false, bool screen=false);
 
 	std::string runName="runNumber";
 	std::string lumiName="lumiNumber";
@@ -43,5 +43,7 @@ private:
 	std::vector<std::string> names;
 
 	std::vector<float> los, his;
+
+	std::vector<float> relatives;
 };
 #endif

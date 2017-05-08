@@ -120,7 +120,9 @@ std::vector<TH2D*> EventSyncher::PlayViolin(float range)
 		std::vector<float> &v2 = e2->second;
 		for (unsigned iF=0; iF!=nF; ++iF) {
 			float val1 = v1[iF], val2 = v2[iF];
-			float pull = (val1-val2)/val1;
+			float pull = val1 - val2;
+			if (relatives[iF])
+				pull /= val1;
 			hists[iF]->Fill(val1,pull);
 		}
 	}
