@@ -4,7 +4,7 @@ import PandaCore.Tools.job_management as jm
 from PandaCore.Tools.Misc import PError
 import argparse
 from os import path,getenv,system
-from sys import exit
+from sys import exit,stdout
 import pickle
 
 parser = argparse.ArgumentParser(description='simple condor resubmission')
@@ -39,7 +39,8 @@ for i in statii['missing'].values():
 
 WIDTH=25
 header = ''
-header += ('%%-%is'%(WIDTH+2))%('Progress')
+if stdout.isatty():
+    header += ('%%-%is'%(WIDTH+2))%('Progress')
 header += ' %10s %10s %10s %10s %10s'%('Total','Running','Idle','Missing','Done')
 
 colors = {
@@ -54,16 +55,19 @@ n_total = sum(n.values())
 d_frac = float(WIDTH)*n['done']/n_total
 r_frac = float(WIDTH)*(n['done']+n['running'])/n_total
 i_frac = float(WIDTH)*(n['done']+n['running']+n['idle'])/n_total
-s = '[\033[0;%im'%colors['green']
-for i in xrange(WIDTH):
-    if i>=d_frac:
-        s += '\033[0;%im'%colors['blue']
-    if i>=r_frac:
-        s += '\033[0;%im'%colors['grey']
-    if i>=i_frac:
-        s += '\033[0;%im'%colors['red']
-    s += ' '
-s += '\033[0m] '
+if stdout.isatty():
+    s = '[\033[0;%im'%colors['green']
+    for i in xrange(WIDTH):
+        if i>=d_frac:
+            s += '\033[0;%im'%colors['blue']
+        if i>=r_frac:
+            s += '\033[0;%im'%colors['grey']
+        if i>=i_frac:
+            s += '\033[0;%im'%colors['red']
+        s += ' '
+    s += '\033[0m] '
+else:
+    s = ''
 s += '%10i '%n_total
 s += '%10i '%n['running']
 s += '%10i '%n['idle']

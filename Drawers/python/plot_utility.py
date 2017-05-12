@@ -200,7 +200,7 @@ class PlotUtility():
             if (proc.process_type<=root.kSignal3 and proc.process_type!=root.kData):
                 final_weight = tTIMES(final_weight, str(self.signal_scale))
             if self.eventmod:
-                if (p.process_type==root.kData):
+                if (proc.process_type==root.kData):
                     final_cut = tAND(final_cut, '(%s%%%i)==0'%(self.eventnumber, self.eventmod))
                 else:
                     final_weight = tTIMES(final_weight, str(1./self.eventmod))
