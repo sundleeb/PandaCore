@@ -9,6 +9,9 @@ import root_numpy as rnp
 import ROOT as root
 from Misc import PInfo,  PWarning,  PError
 
+_hcounter = 0 
+
+# MISC -----------------------------------------------------------------
 def rename_dtypes(xarr, repl, old_names = None):
     if old_names:
         for n in xarr.dtype.names:
@@ -76,3 +79,50 @@ def draw_hist(hist, xarr, fields, weight = None):
         varr = np.array([xarr[f] for f in fields])
         varr = varr.transpose()
         return rnp.fill_hist(hist = hist, array = varr, weights = warr)
+
+# Put everything into a class ---------------------------------------------
+class Selector(object):
+    def __init__(self):
+        self.data = None 
+        self._nicknames = None
+    def read_files(self, filenames, branches, cut = None, treename = 'events'):
+        self.data = read_branches(filenames, branches, cut, treename)
+    def read_tree(self, tree, branches, cut = None):
+        self.data = read_tree(tree, branches, cut)
+    def rename(self, a, b=None):
+        if b :
+            self._nicknames[a] = b 
+        else:
+            self._nicknames.update(a)
+    def __getitem__(self, k):
+        if type(k)==list:
+            keys = [self._nicknames[kk] if kk in self._nicknames else kk for kk in k]
+        elif type(k)==str and k in self._nicknames:
+            keys = self._nicknames[k]
+        else:
+            keys = k 
+        return self.data[k]
+    def clone(self, copy = False):
+        other = Selector()
+        other.rename(self._nicknames)
+        if copy:
+            other.data = np.copy(self.data)
+        else:
+            other.data = self.data 
+       return other 
+    def save(self, fpath, treename, opts = 'RECREATE'):
+        f = root.TFile(fpath, opts)
+        array_as_tree(self.data, treename, f)
+        f.Close()
+    def draw(self, fields, weight = None, hbase = None, vbins = None, fbins = None):
+        if hbase:
+            h = hbase.Clone()
+        elif vbinning:
+            h = root.TH1D('hSelector%i'%_hcounter, '', len(vbinning), vbinning)
+            _hcounter += 1 
+        else:
+            h = root.TH1D('hSelector%i'%_hcounter, '', *fbinning)
+            _hcounter += 1 
+        draw_hist(h, self.data, fields, weight)
+        return h 
+       
