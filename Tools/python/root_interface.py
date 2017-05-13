@@ -109,7 +109,7 @@ class Selector(object):
             other.data = np.copy(self.data)
         else:
             other.data = self.data 
-       return other 
+        return other 
     def save(self, fpath, treename, opts = 'RECREATE'):
         f = root.TFile(fpath, opts)
         array_as_tree(self.data, treename, f)

@@ -27,10 +27,8 @@
  * \param v2  vector to add to v1
  * \brief Function to concatenate two vectors
  */
-template <typename T> inline
-void concat(std::vector<T> &v1,std::vector<T> v2) {
-  v1.insert(v1.end(),v2.begin(),v2.end());
-}
+template <typename T> 
+void concat(std::vector<T> &v1,std::vector<T> v2);
 
 /**
  * \param t  input tree
@@ -38,10 +36,7 @@ void concat(std::vector<T> &v1,std::vector<T> v2) {
  * \param address  address of branch
  * \brief Turns on a branch in a TTree and sets the address to a specified location
  */
-inline void activateBranch(TTree *t, const char *bname, void *address) {
-  t->SetBranchStatus(bname,1);
-  t->SetBranchAddress(bname,address);
-}
+void activateBranch(TTree *t, const char *bname, void *address);
 
 /**
  * \param module  name of caller
@@ -49,12 +44,7 @@ inline void activateBranch(TTree *t, const char *bname, void *address) {
  * \param newline  newline to use at end of message
  * \brief Prints to info stdout
  */
-inline void PInfo(const char *module, const char *msg, const char *newline="\n") {
-  if (isatty(fileno(stdout)))
-    fprintf(stdout,"\033[0;32mINFO\033[0m    [%-40s]: %s%s",module,msg,newline);
-  else
-    fprintf(stderr,"INFO    [%-40s]: %s%s",module,msg,newline); // redirect colorless output to stderr to preserve stream in log
-}
+void PInfo(const char *module, const char *msg, const char *newline="\n");
 
 /**
  * \param module  name of caller
@@ -62,12 +52,7 @@ inline void PInfo(const char *module, const char *msg, const char *newline="\n")
  * \param newline  newline to use at end of message
  * \brief Prints debug to  stderr
  */
-inline void PDebug(const char *module, const char *msg, const char *newline="\n") {
-  if (isatty(fileno(stderr)))
-    fprintf(stderr,"\033[0;36mDEBUG\033[0m   [%-40s]: %s%s",module,msg,newline);
-  else
-    fprintf(stderr,"DEBUG   [%-40s]: %s%s",module,msg,newline);
-}
+void PDebug(const char *module, const char *msg, const char *newline="\n");
 
 /**
  * \param module  name of caller
@@ -75,12 +60,7 @@ inline void PDebug(const char *module, const char *msg, const char *newline="\n"
  * \param newline  newline to use at end of message
  * \brief Prints warning to  stderr
  */
-inline void PWarning(const char *module, const char *msg, const char *newline="\n") {
-  if (isatty(fileno(stdout)))
-    fprintf(stdout,"\033[0;91mWARNING\033[0m [%-40s]: %s%s",module,msg,newline);
-  else
-    fprintf(stderr,"WARNING [%-40s]: %s%s",module,msg,newline);
-}
+void PWarning(const char *module, const char *msg, const char *newline="\n");
 
 /**
  * \param module  name of caller
@@ -88,21 +68,14 @@ inline void PWarning(const char *module, const char *msg, const char *newline="\
  * \param newline  newline to use at end of message
  * \brief Prints error to  stderr
  */
-inline void PError(const char *module, const char *msg, const char *newline="\n") {
-  if (isatty(fileno(stderr)))
-    fprintf(stderr,"\033[0;41m\033[1;37mERROR\033[0m   [%-40s]: %s%s",module,msg,newline);
-  else
-    fprintf(stderr,"ERROR   [%-40s]: %s%s",module,msg,newline);
-}
+void PError(const char *module, const char *msg, const char *newline="\n");
 
 /**
  * \param h  histogram to read
  * \param val  x-value
  * \brief Returns the value of a 1D histogram given an x-val
  */
-inline double getVal(TH1D*h,double val) {
-  return h->GetBinContent(h->FindBin(val));
-}
+double getVal(TH1D*h,double val);
 
 /**
  * \param h  histogram to read
@@ -110,41 +83,13 @@ inline double getVal(TH1D*h,double val) {
  * \param val2  y-value
  * \brief Returns the value of a 2D histogram given an x-val,y-val
  */
-inline double getVal(TH2D*h,double val1, double val2) {
-  return h->GetBinContent(h->FindBin(val1,val2));
-}
+double getVal(TH2D*h,double val1, double val2);
 
 /**
  * \param cut  string to parse
  * \brief Finds all substrings in a string that might be branch dependencies
  */
-inline std::vector<TString> getDependencies(TString cut) {
-  std::vector<TString> deps;
-  int nChars = cut.Length();
-  TString tmpString="";
-  for (int iC=0; iC!=nChars; ++iC) {
-    const char c = cut[iC];
-    if ( c==' ' || c=='&' || c=='|' || c=='(' || c==')'
-        || c=='*' || c=='+' || c=='-' || c=='/' || c=='!'
-        || c=='<' || c=='>' || c=='=' || c=='.' || c==','
-        || c=='[' || c==']') {
-      if (tmpString != "" && !tmpString.IsDigit() &&
-          // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
-          !(tmpString.Contains("TMath")) && !(tmpString=="fabs")) {
-        deps.push_back(tmpString);
-      }
-      tmpString = "";
-    } else {
-        tmpString.Append(c);
-    }
-  }
-  if (tmpString != "" && !tmpString.IsDigit() &&
-      // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
-      !tmpString.Contains("TMath")) {
-    deps.push_back(tmpString);
-  }
-  return deps;
-}
+std::vector<TString> getDependencies(TString cut);
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -163,12 +108,7 @@ class ProgressReporter {
      * \param nR  number of reports desired
      * \brief Constructor
      */
-    ProgressReporter(const char *n, unsigned int *iE, unsigned int *nE, unsigned int nR=100) {
-      name = n; name+="::Progress";
-      idx = iE;
-      N = nE;
-      frequency = nR;
-    }
+    ProgressReporter(const char *n, unsigned int *iE, unsigned int *nE, unsigned int nR=100);
     /**
      * \brief Destrucctor
      */
@@ -176,16 +116,7 @@ class ProgressReporter {
     /**
      * \brief Reports if threshold has been reached
      */
-    void Report() {
-      float progress = 1.*(*idx)/(*N);
-      if ( progress >= threshold) {
-        PInfo(name.Data(),
-            TString::Format("%-40s",TString::Format("%5.2f%% (%u/%u)      ",progress*100,*idx,*N).Data()).Data(),
-            // "\r");
-             "\n");
-        threshold += 1./frequency;
-      }
-    }
+    void Report();
   private:
     unsigned int *idx, *N; /**< addresses of progress trackers */
     unsigned int frequency; /**< how often to print */
