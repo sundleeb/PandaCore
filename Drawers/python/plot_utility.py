@@ -174,7 +174,7 @@ class PlotUtility():
 
         f_out = root.TFile(outdir+'hists.root', 'UPDATE')
         if f_out.IsZombie():
-            f_out.close()
+            f_out.Close()
             f_out = root.TFile(outdir+'hists.root', 'RECREATE')
         f_buffer_path = '/tmp/%s/buffer_%i.root'%(getenv('USER'), root.gSystem.GetPid())
         f_buffer = root.TFile(f_buffer_path, 'RECREATE')
