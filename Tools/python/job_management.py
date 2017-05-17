@@ -292,6 +292,7 @@ eval `/cvmfs/cms.cern.ch/common/scramv1 runtime -sh`
 cd -
 for i in $@; do
     arg=$(sed "${{i}}q;d" {3}) # get the ith line
+    echo $arg
     {1} $arg && echo $i >> {2};
 done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.arglist)
         with open(self.workdir+'exec.sh','w') as frunner:
@@ -363,19 +364,19 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
         except IOError:
             finished = []
         status = self.query_status()
-        missing = {}; done = {}; running = {}; idle = {}
+        missing = set([]); done = set([]); running = set([]); idle = set([])
         for idx in self.arguments:
             args = str(idx)
             if args in finished:
-                done[idx] = args 
+                done.add(idx)
                 continue 
             if only_failed and (args in status['running']):
-                running[idx] = args
+                running.add(idx)
                 continue 
             if only_failed and (args in status['idle']):
-                idle[idx] = args
+                idle.add(idx)
                 continue 
-            missing[idx] = args 
+            missing.add(idx)
         return missing, done, running, idle
 
 

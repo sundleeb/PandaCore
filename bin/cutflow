@@ -2,6 +2,7 @@
 
 from PandaCore.Tools.Misc import PInfo, PError, tTIMES
 from sys import argv, exit
+from re import sub
 import argparse
 
 parser = argparse.ArgumentParser(description='cutflow')
@@ -22,9 +23,11 @@ class Cutflow(object):
         self.nicknames = {'1==1':'Full'}
         self.weight = None
     def register(self,cut,nickname=None):
+        cut = cut.strip()
         if cut not in self.cuts:
             self.cuts.append(cut)
             if nickname:
+                nickname = nickname.strip()
                 self.nicknames[cut] = nickname
             else:
                 self.nicknames[cut] = cut
@@ -33,8 +36,8 @@ class Cutflow(object):
         if self.weight:
             branches.append(self.weight)
         xarr = rnp.root2array([fpath], 
-                               branches = branches,
-                               treename = treename)
+                              branches = branches,
+                              treename = treename)
         if self.weight:
             weights = xarr[self.weight]
         else:
@@ -47,12 +50,12 @@ class Cutflow(object):
             xpass = (xslice.sum(axis=1) == (ic+1))
             npass = xpass.sum()
             nyield = (xpass * weights).sum()
-            print '%-20s : %15f %15i'%(self.nicknames[self.cuts[ic]],nyield,npass)
+            print '%-20s : %15f %15i'%(self.nicknames[self.cuts[ic]][:20],nyield,npass)
 
 infile = args.infile
 
 with open(args.cutlist) as fcuts:
-    cuts = [x.strip() for x in fcuts.readlines()]
+    cuts = filter(lambda x : len(x)>0, [sub(r'#.*', '', x.strip())for x in fcuts.readlines()])
 
 c = Cutflow()
 if args.weight:

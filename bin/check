@@ -6,9 +6,11 @@ import argparse
 from os import path,getenv,system
 from sys import exit,stdout
 import pickle
+from time import time
 
 parser = argparse.ArgumentParser(description='simple condor resubmission')
 parser.add_argument('--resubmit_all',action='store_true')
+parser.add_argument('--resubmit_incomplete',action='store_true')
 parser.add_argument('--resubmit_failed',action='store_true')
 parser.add_argument('--kill',action='store_true')
 parser.add_argument('--cache',type=str)
@@ -20,22 +22,25 @@ with open(args.cache+'/submission.pkl') as fpkl:
     submissions = pickle.load(fpkl)
 
 
-only_failed = not(args.resubmit_all)
-statii = {'missing':{}, 'done':{}, 'running':{}, 'idle':{}}
+only_failed = not(args.resubmit_incomplete)
+statii = {'missing':set([]), 'done':set([]), 'running':set([]), 'idle':set([])}
 for s in submissions:
     m, d, r, i = s.check_missing(only_failed)
-    statii['missing'].update(m)
-    statii['done'].update(d)
-    statii['running'].update(r)
-    statii['idle'].update(i)
+    statii['missing'] |= m
+    statii['done'] |= d
+    statii['running'] |= r
+    statii['idle'] |= i
 
-for i in statii['missing'].values():
+if args.resubmit_all:
     for x in ['running','idle','done']:
-        for k,v in statii[x].iteritems():
-            if i==v:
-                del statii['missing'][k]
-#    if any([i in statii[x].values() for x in ['running','idle','done']]):
-#        del statii['missing'][i]
+        statii['missing'] |= statii[x]
+        statii[x] = set([])
+else:
+    statii['idle'] -= statii['running'] # it's not idle if it's running
+    statii['idle'] -= statii['done'] 
+    statii['running'] -= statii['done'] 
+    for x in ['running','idle','done']:
+        statii['missing'] -= statii[x]
 
 WIDTH=25
 header = ''
@@ -73,7 +78,9 @@ s += '%10i '%n['running']
 s += '%10i '%n['idle']
 s += '%10i '%n['missing']
 s += '%10i '%n['done']
-s += '(done=%.2f%%)'%(d_frac*100./WIDTH)
+
+o_sub_time = submissions[0].submission_time
+s += '(done=%.2f%% in %is)'%(d_frac*100./WIDTH,int(time()-o_sub_time))
 
 print header 
 print s 
@@ -91,11 +98,12 @@ if args.kill:
         system('condor_rm %i'%(s.cluster_id))
 
 
-if args.resubmit_all or args.resubmit_failed and len(statii['missing']):
+resubmit = any([args.resubmit_incomplete, args.resubmit_failed, args.resubmit_all])
+if resubmit and len(statii['missing']):
     s = submissions[0]
     nper = s.nper
     if args.njobs:
-        nper = int(float(len(statii['missing']))/args.njobs)
+        nper = max(1,int(float(len(statii['missing']))/args.njobs))
     new_sub = jm.SimpleSubmission(s.cache_dir, s.executable, s.arglist, statii['missing'], nper)
     new_sub.execute()
     new_sub.save()

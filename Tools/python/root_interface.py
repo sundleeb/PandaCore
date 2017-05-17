@@ -19,6 +19,7 @@ def rename_dtypes(xarr, repl, old_names = None):
     new_names = tuple((repl[x] for x in xarr.dtype.names))
     xarr.dtype.names = new_names
 
+
 # FILE INPUT ------------------------------------------------------------
 def read_branches(filenames, tree, branches, cut, treename = "events", xkwargs = {}):
     if not(filenames or treename) or (filenames and tree):
@@ -80,16 +81,17 @@ def draw_hist(hist, xarr, fields, weight = None):
         varr = varr.transpose()
         return rnp.fill_hist(hist = hist, array = varr, weights = warr)
 
+
 # Put everything into a class ---------------------------------------------
 class Selector(object):
     def __init__(self):
         self.data = None 
         self._nicknames = None
-    def read_files(self, filenames, branches, cut = None, treename = 'events'):
-        self.data = read_branches(filenames, branches, cut, treename)
-    def read_tree(self, tree, branches, cut = None):
-        self.data = read_tree(tree, branches, cut)
-    def rename(self, a, b=None):
+    def read_files(self, *args, **kwargs):
+        self.data = read_branches(*args, **kwargs)
+    def read_tree(self, *args, **kwargs):
+        self.data = read_tree(*args, **kwargs)
+    def rename(self, a, b = None):
         if b :
             self._nicknames[a] = b 
         else:
@@ -115,14 +117,16 @@ class Selector(object):
         array_as_tree(self.data, treename, f)
         f.Close()
     def draw(self, fields, weight = None, hbase = None, vbins = None, fbins = None):
+        global _hcounter
         if hbase:
             h = hbase.Clone()
-        elif vbinning:
-            h = root.TH1D('hSelector%i'%_hcounter, '', len(vbinning), vbinning)
+        elif vbins:
+            h = root.TH1D('hSelector%i'%_hcounter, '', len(vbins), vbins)
             _hcounter += 1 
         else:
-            h = root.TH1D('hSelector%i'%_hcounter, '', *fbinning)
+            h = root.TH1D('hSelector%i'%_hcounter, '', *fbins)
             _hcounter += 1 
+        if type(fields)==str:
+            fields = [fields]
         draw_hist(h, self.data, fields, weight)
-        return h 
-       
+        return h  
