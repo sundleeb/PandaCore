@@ -103,7 +103,7 @@ class Selector(object):
             keys = self._nicknames[k]
         else:
             keys = k 
-        return self.data[k]
+        return self.data[keys]
     def clone(self, copy = False):
         other = Selector()
         other.rename(self._nicknames)
