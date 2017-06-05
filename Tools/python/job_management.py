@@ -118,7 +118,7 @@ job_status = {
 
 base_job_properties = None 
 pool_server = None 
-schedd_server ='t3home000.mit.edu'
+schedd_server = getenv('HOSTNAME')
 should_spool = False
 query_owner = getenv('USER')
 
@@ -140,7 +140,7 @@ def setup_schedd(config='T3'):
         }
 
         pool_server = None
-        schedd_server ='t3home000.mit.edu'
+        schedd_server = getenv('HOSTNAME')
         should_spool = False
         query_owner = getenv('USER')
     elif config=='SubMIT':
