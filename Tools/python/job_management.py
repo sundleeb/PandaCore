@@ -129,12 +129,9 @@ def setup_schedd(config='T3'):
             "Cmd" : "WORKDIR/exec.sh",
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
-            "Requirements" : 
-                classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
-            "AcctGroup" : "group_t3mit.urgent",
-            "AccountingGroup" : "group_t3mit.urgent.snarayan",
+            "Requirements" : classad.ExprTree('OpSys == "LINUX" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
             "X509UserProxy" : "/tmp/x509up_uUID",
-            "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
+            #"OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",
             "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
         }
@@ -143,28 +140,6 @@ def setup_schedd(config='T3'):
         schedd_server = getenv('HOSTNAME')
         should_spool = False
         query_owner = getenv('USER')
-    elif config=='SubMIT':
-        base_job_properties = {
-            "Cmd" : "WORKDIR/exec.sh",
-            "WhenToTransferOutput" : "ON_EXIT",
-            "ShouldTransferFiles" : "YES",
-            "Requirements" : 
-                classad.ExprTree('( ( ( OSGVO_OS_STRING == "RHEL 6" && HAS_CVMFS_cms_cern_ch ) || GLIDEIN_REQUIRED_OS == "rhel6" || ( GLIDEIN_Site == "MIT_CampusFactory" && ( BOSCOGroup == "bosco_cms" ) && HAS_CVMFS_cms_cern_ch ) ) && ( isUndefined(GLIDEIN_Entry_Name) ||  !stringListMember(GLIDEIN_Entry_Name,"CMS_T2_US_Nebraska_Red_op,CMS_T2_US_Nebraska_Red_gw1_op,CMS_T2_US_Nebraska_Red_gw2_op,CMS_T3_MX_Cinvestav_proton_work,CMS_T3_US_Omaha_tusker,CMSHTPC_T3_US_Omaha_tusker,Glow_US_Syracuse_condor,Glow_US_Syracuse_condor-ce01,Gluex_US_NUMEP_grid1,HCC_US_BNL_gk01,HCC_US_BNL_gk02,HCC_US_BU_atlas-net2,OSG_US_FIU_HPCOSGCE,OSG_US_Hyak_osg,OSG_US_UConn_gluskap,OSG_US_SMU_mfosgce",",") ) && ( isUndefined(GLIDEIN_Site) ||  !stringListMember(GLIDEIN_Site,"SU-OG,HOSTED_BOSCO_CE",",") ) ) && ( ( Arch == "INTEL" || Arch == "X86_64" ) ) && ( TARGET.OpSys == "LINUX" ) && ( TARGET.Disk >= RequestDisk ) && ( TARGET.Memory >= RequestMemory ) && ( TARGET.HasFileTransfer )'),
-            "AcctGroup" : "analysis",
-            "AccountingGroup" : "analysis.snarayan",
-            "X509UserProxy" : "/tmp/x509up_uUID",
-            "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
-            "In" : "/dev/null",
-            "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
-            "ProjectName" : "CpDarkMatterSimulation",
-            "Rank" : "Mips",
-            'SubMITOwner' : 'snarayan',
-        }
-
-        pool_server = 'submit.mit.edu:9615'
-        schedd_server ='submit.mit.edu'
-        query_owner = 'anonymous'
-        should_spool = True
     else:
         PError('job_management.setup_schedd','Unknown config %s'%config)
         raise ValueError
