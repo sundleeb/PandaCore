@@ -25,7 +25,10 @@ def read_branches(filenames, tree, branches, cut, treename = "events", xkwargs =
     if not(filenames or treename) or (filenames and tree):
         PError("root_interface.read_branches", "Exactly one of filenames and tree should be specified!")
         return None
-    branches_ = list(set(branches)) # remove duplicates
+    if branches:
+        branches_ = list(set(branches)) # remove duplicates
+    else:
+        branches_ = None
     if filenames:
         return rnp.root2array(filenames = filenames, 
                               treename = treename, 

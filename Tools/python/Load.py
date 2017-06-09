@@ -50,6 +50,8 @@ libraries = [
                                                   ]
            ), 
     Library(name='RedPandaCluster',     objects = ['Clusterer',
+                                                    'Camera',
+                                                    'PFAnalyzer',
                                                    ] 
            ),
 ]
