@@ -307,7 +307,8 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             frunner.write(runner)
         repl = {'WORKDIR' : self.workdir,
                 'LOGDIR' : self.logdir,
-                'UID':str(getuid()),
+                'UID' : str(getuid()),
+                'USER' : getenv('USER'),
                 'SUBMITID' : str(self.sub_id)}
         cluster_ad = classad.ClassAd()
 
