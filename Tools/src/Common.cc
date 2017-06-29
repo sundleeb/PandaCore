@@ -48,6 +48,14 @@ double getVal(TH2D*h,double val1, double val2) {
   return h->GetBinContent(h->FindBin(val1,val2));
 }
 
+double getError(TH1D*h,double val) {
+  return h->GetBinError(h->FindBin(val));
+}
+
+double getError(TH2D*h,double val1, double val2) {
+  return h->GetBinError(h->FindBin(val1,val2));
+}
+
 std::vector<TString> getDependencies(TString cut) {
   std::vector<TString> deps;
   int nChars = cut.Length();
