@@ -126,12 +126,12 @@ def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
     if config=='T3':
         base_job_properties = {
-            "Cmd" : "WORKDIR/exec.sh",
+   "Cmd" : "WORKDIR/exec.sh",
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
-            "Requirements" : classad.ExprTree('OpSys == "LINUX" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
             "X509UserProxy" : "/tmp/x509up_uUID",
             #"OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
+            "RequestMemory" : 2100,
             "In" : "/dev/null",
             "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
         }
