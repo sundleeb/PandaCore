@@ -27,37 +27,7 @@ public:
 	 *
 	 * formula should be set before this is called
 	 */
-	void AddBranchFromFormula(TTree *t) {
-		float newBranchVal=0;
-		
-		t->SetBranchStatus("*",0);
-		turnOnBranches(t,formula);
-		turnOnBranches(t,cut);
-
-		TBranch *b = t->Branch(newBranchName.Data(),&newBranchVal,TString::Format("%s/F",newBranchName.Data()));
-
-		TTreeFormula tformula(newBranchName.Data(),formula.Data(),t);
-		tformula.SetQuickLoad(true);
-
-		TTreeFormula tcut("cut",cut.Data(),t);
-		tcut.SetQuickLoad(true);
-
-		unsigned int nEntries = t->GetEntries();
-		unsigned int iE=0;
-		ProgressReporter pr("PandaCore::BranchAdder",&iE,&nEntries,10);
-		for (iE=0; iE!=nEntries; ++iE) {
-			if (verbose)
-				pr.Report();
-			t->GetEntry(iE);
-			if (tcut.EvalInstance()) {
-				newBranchVal = tformula.EvalInstance();
-			} else {
-				newBranchVal = defaultValue;
-			}
-			b->Fill();
-		}
-		t->SetBranchStatus("*",1);
-	}
+	void AddBranchFromFormula(TTree *t);
 
 	/**
 	 * \param f path to file containing tree to modify
@@ -65,80 +35,38 @@ public:
 	 *
 	 * formula should be set before this is called
 	 */
-	void AddBranchFromFormula(TString fpath) {
-		TFile *fIn = TFile::Open(fpath,"UPDATE");
-		TTree *t = (TTree*)fIn->Get(treeName.Data());
-		if (t==NULL) {
-			PError("MitPanda::Tools::AddBranch",TString::Format("Could not normalize %s because tree=%p and\n",fpath.Data(),t));
-			return; 
-		}
-		AddBranchFromFormula(t);
-		fIn->WriteTObject(t,treeName,"Overwrite");
-		fIn->Close();
-	}
+	void AddBranchFromFormula(TString fpath);
 
 	/**
 	 * \param t tree to modify
 	 * \param h histogram containing binned values
 	 * \brief Adds a branch based on a histogram
 	 */
-	void AddBranchFromHistogram(TTree *t, TH1 *h) {
-		TH1D hd;
-		h->Copy(hd);
-		float newBranchVal=0;
-		
-		t->SetBranchStatus("*",0);
-		turnOnBranches(t,formula);
-		turnOnBranches(t,cut);
-
-		TBranch *b = t->Branch(newBranchName.Data(),&newBranchVal,TString::Format("%s/F",newBranchName.Data()));
-
-		TTreeFormula tformula(newBranchName.Data(),formula.Data(),t);
-		tformula.SetQuickLoad(true);
-
-		TTreeFormula tcut("cut",cut.Data(),t);
-		tcut.SetQuickLoad(true);
-
-		double lo = hd.GetBinCenter(1);
-		double hi = hd.GetBinCenter(hd.GetNbinsX());
-
-		unsigned int nEntries = t->GetEntries();
-		unsigned int iE=0;
-		ProgressReporter pr("PandaCore::BranchAdder",&iE,&nEntries,10);
-		for (iE=0; iE!=nEntries; ++iE) {
-			if (verbose)
-				pr.Report();
-			t->GetEntry(iE);
-			if (tcut.EvalInstance()) {
-				double xval = tformula.EvalInstance();
-				xval = bound(xval,lo,hi);
-				newBranchVal = hd.GetBinContent(hd.FindBin(xval));
-			} else {
-				newBranchVal = defaultValue;
-			}
-			b->Fill();
-		}
-		t->SetBranchStatus("*",1);
-	}
+	void AddBranchFromHistogram(TTree *t, TH1 *h);
 
 	/**
 	 * \param f path to file containing tree to modify
 	 * \param h histogram containing binned values
 	 * \brief Adds a branch based on a histogram
 	 */
-	void AddBranchFromHistogram(TString fpath, TH1 *h) {
-		TFile *fIn = TFile::Open(fpath,"UPDATE");
-		TTree *t = (TTree*)fIn->Get(treeName.Data());
-		if (t==NULL) {
-			PError("MitPanda::Tools::AddBranch",TString::Format("Could not normalize %s because tree=%p and\n",fpath.Data(),t));
-			return; 
-		}
-		AddBranchFromHistogram(t,h);
-		fIn->WriteTObject(t,treeName,"Overwrite");
-		fIn->Close();
-	}
+	void AddBranchFromHistogram(TString fpath, TH1 *h);
+
+	/**
+	 * \param t tree to modify
+	 * \param h histogram containing binned values
+	 * \brief Adds a branch based on a histogram
+	 */
+	void AddBranchFromHistogram2D(TTree *t, TH2 *h);
+
+	/**
+	 * \param f path to file containing tree to modify
+	 * \param h histogram containing binned values
+	 * \brief Adds a branch based on a histogram
+	 */
+	void AddBranchFromHistogram2D(TString fpath, TH2 *h);
 
 	TString formula = ""; /**< formula to be compiled on input tree */
+	TString formulaY = ""; /**< formula to be compiled on input tree if 2D */
 	TString newBranchName = ""; /**< name of output branch */
 	TString treeName = "events"; /**< name of input tree, if file path is provided */
 	double defaultValue = 1; /**< Default value */

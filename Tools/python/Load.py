@@ -16,43 +16,45 @@ class Library():
 loaded = []
 
 libraries = [
-    Library(name='PandaCoreTools', objects = [ 'Functions',
-                                               'Common',
-                                               'TreeTools',
-                                               'DuplicateRemover',
-                                               'Normalizer',
-                                               'Cutter',
-                                               'BranchAdder',
-                                               'EventSyncher', 
-                                             ]
+    Library(name='PandaCoreTools',      objects = [ 'Functions',
+                                                    'Common',
+                                                    'TreeTools',
+                                                    'DuplicateRemover',
+                                                    'Normalizer',
+                                                    'Cutter',
+                                                    'BranchAdder',
+                                                    'EventSyncher', 
+                                                  ]
            ),
-    Library(name='PandaCoreLearning', objects = [ 'TMVATrainer',
-                                                  'TMVABranchAdder',
-                                                ]
+    Library(name='PandaCoreLearning',   objects = [ 'TMVATrainer',
+                                                    'TMVABranchAdder',
+                                                  ]
            ),
     Library(name='PandaCoreStatistics', objects = [ 'RooExpErf',
                                                   ]
            ),
-    Library(name='PandaCoreDrawers',objects = ['CanvasDrawer',
-                                               'GraphDrawer',
-                                               'GraphErrDrawer',
-                                               'GraphAsymmErrDrawer',
-                                               'HistogramDrawer',
-                                               'PlotUtility',
-                                               'ROCTool',
-                                              ]
+    Library(name='PandaCoreDrawers',    objects = ['CanvasDrawer',
+                                                   'GraphDrawer',
+                                                   'GraphErrDrawer',
+                                                   'GraphAsymmErrDrawer',
+                                                   'HistogramDrawer',
+                                                   'PlotUtility',
+                                                   'ROCTool',
+                                                  ]
            ),
-    Library(name='PandaAnalysisFlat',objects = ['PandaAnalyzer',
-                                                'GenAnalyzer',
-                                                'LimitTreeBuilder',
-                                                'SFTreeBuilder',
-                                                'BTagTreeBuilder',
-                                               ],
-            ), 
-    Library(name='RedPandaCluster',objects = ['Clusterer',] ),
+    Library(name='PandaAnalysisFlat',   objects = ['PandaAnalyzer',
+                                                   'GenAnalyzer',
+                                                   'LimitTreeBuilder',
+                                                   'SFTreeBuilder',
+                                                   'BTagTreeBuilder',
+                                                  ]
+           ), 
+    Library(name='RedPandaCluster',     objects = ['Clusterer',
+                                                    'Camera',
+                                                    'PFAnalyzer',
+                                                   ] 
+           ),
 ]
-# TODO: refactor SCRAMJet to have dictionary interface, will need following libs:
-# 'libfastjet.so','libfastjetcontribfragile.so','libfastjetplugins.so','libfastjettools.so'
 
 from ROOT import gROOT, gSystem, gInterpreter
 import ROOT as root
@@ -78,11 +80,12 @@ def Load(request):
             break
 
     if requested_lib in loaded:
-        PWarning('PandaCore.Tools.Load','Requested %s has already been loaded'%(request))
+        PWarning('PandaCore.Tools.Load','Requested %s has already been loaded in %s'%(request, requested_lib.name))
         return
 
     if not requested_lib:
         PError('PandaCore.Tools.Load','Could not load lib %s'%request)
+        raise Exception('LoadError')
 
     for d in requested_lib.deps:
         if 'CMSSW' in d:
@@ -90,4 +93,5 @@ def Load(request):
         else:
             load_lib('lib'+d+'.so')
 
+    loaded.append(requested_lib)
     load_lib('lib'+requested_lib.name+'.so')

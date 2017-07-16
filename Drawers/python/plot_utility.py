@@ -176,7 +176,7 @@ class PlotUtility():
 
         f_out = root.TFile(outdir+'hists.root', 'UPDATE')
         if f_out.IsZombie():
-            f_out.close()
+            f_out.Close()
             f_out = root.TFile(outdir+'hists.root', 'RECREATE')
         f_buffer_path = '/tmp/%s/buffer_%i.root'%(getenv('USER'), root.gSystem.GetPid())
         f_buffer = root.TFile(f_buffer_path, 'RECREATE')
@@ -202,7 +202,7 @@ class PlotUtility():
             if (proc.process_type<=root.kSignal3 and proc.process_type!=root.kData):
                 final_weight = tTIMES(final_weight, str(self.signal_scale))
             if self.eventmod:
-                if (p.process_type==root.kData):
+                if (proc.process_type==root.kData):
                     final_cut = tAND(final_cut, '(%s%%%i)==0'%(self.eventnumber, self.eventmod))
                 else:
                     final_weight = tTIMES(final_weight, str(1./self.eventmod))

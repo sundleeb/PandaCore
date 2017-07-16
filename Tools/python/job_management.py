@@ -118,9 +118,17 @@ job_status = {
 
 base_job_properties = None 
 pool_server = None 
-schedd_server ='t3home000.mit.edu'
+schedd_server = getenv('HOSTNAME')
 should_spool = False
 query_owner = getenv('USER')
+try:
+    urgent = int(getenv('SUBMIT_URGENT'))
+    if urgent:
+        acct_grp_t3 = 'group_t3mit.urgent'
+    else:
+        acct_grp_t3 = 'group_t3mit'
+except:
+    acct_grp_t3 = 'group_t3mit'
 
 def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
@@ -131,8 +139,8 @@ def setup_schedd(config='T3'):
             "ShouldTransferFiles" : "YES",
             "Requirements" : 
                 classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
-            "AcctGroup" : "group_t3mit.urgent",
-            "AccountingGroup" : "group_t3mit.urgent.snarayan",
+            "AcctGroup" : acct_grp_t3,
+            "AccountingGroup" : '%s.USER'%(acct_grp_t3),
             "X509UserProxy" : "/tmp/x509up_uUID",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",
@@ -140,7 +148,7 @@ def setup_schedd(config='T3'):
         }
 
         pool_server = None
-        schedd_server ='t3home000.mit.edu'
+        schedd_server = getenv('HOSTNAME')
         should_spool = False
         query_owner = getenv('USER')
     elif config=='SubMIT':
@@ -151,14 +159,14 @@ def setup_schedd(config='T3'):
             "Requirements" : 
                 classad.ExprTree('( ( ( OSGVO_OS_STRING == "RHEL 6" && HAS_CVMFS_cms_cern_ch ) || GLIDEIN_REQUIRED_OS == "rhel6" || ( GLIDEIN_Site == "MIT_CampusFactory" && ( BOSCOGroup == "bosco_cms" ) && HAS_CVMFS_cms_cern_ch ) ) && ( isUndefined(GLIDEIN_Entry_Name) ||  !stringListMember(GLIDEIN_Entry_Name,"CMS_T2_US_Nebraska_Red_op,CMS_T2_US_Nebraska_Red_gw1_op,CMS_T2_US_Nebraska_Red_gw2_op,CMS_T3_MX_Cinvestav_proton_work,CMS_T3_US_Omaha_tusker,CMSHTPC_T3_US_Omaha_tusker,Glow_US_Syracuse_condor,Glow_US_Syracuse_condor-ce01,Gluex_US_NUMEP_grid1,HCC_US_BNL_gk01,HCC_US_BNL_gk02,HCC_US_BU_atlas-net2,OSG_US_FIU_HPCOSGCE,OSG_US_Hyak_osg,OSG_US_UConn_gluskap,OSG_US_SMU_mfosgce",",") ) && ( isUndefined(GLIDEIN_Site) ||  !stringListMember(GLIDEIN_Site,"SU-OG,HOSTED_BOSCO_CE",",") ) ) && ( ( Arch == "INTEL" || Arch == "X86_64" ) ) && ( TARGET.OpSys == "LINUX" ) && ( TARGET.Disk >= RequestDisk ) && ( TARGET.Memory >= RequestMemory ) && ( TARGET.HasFileTransfer )'),
             "AcctGroup" : "analysis",
-            "AccountingGroup" : "analysis.snarayan",
+            "AccountingGroup" : "analysis.USER",
             "X509UserProxy" : "/tmp/x509up_uUID",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",
             "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
             "ProjectName" : "CpDarkMatterSimulation",
             "Rank" : "Mips",
-            'SubMITOwner' : 'snarayan',
+            'SubMITOwner' : 'USER',
         }
 
         pool_server = 'submit.mit.edu:9615'
@@ -292,13 +300,15 @@ eval `/cvmfs/cms.cern.ch/common/scramv1 runtime -sh`
 cd -
 for i in $@; do
     arg=$(sed "${{i}}q;d" {3}) # get the ith line
+    echo $arg
     {1} $arg && echo $i >> {2};
 done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.arglist)
         with open(self.workdir+'exec.sh','w') as frunner:
             frunner.write(runner)
         repl = {'WORKDIR' : self.workdir,
                 'LOGDIR' : self.logdir,
-                'UID':str(getuid()),
+                'UID' : str(getuid()),
+                'USER' : getenv('USER'),
                 'SUBMITID' : str(self.sub_id)}
         cluster_ad = classad.ClassAd()
 
@@ -363,19 +373,19 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
         except IOError:
             finished = []
         status = self.query_status()
-        missing = {}; done = {}; running = {}; idle = {}
+        missing = set([]); done = set([]); running = set([]); idle = set([])
         for idx in self.arguments:
             args = str(idx)
             if args in finished:
-                done[idx] = args 
+                done.add(idx)
                 continue 
             if only_failed and (args in status['running']):
-                running[idx] = args
+                running.add(idx)
                 continue 
             if only_failed and (args in status['idle']):
-                idle[idx] = args
+                idle.add(idx)
                 continue 
-            missing[idx] = args 
+            missing.add(idx)
         return missing, done, running, idle
 
 
@@ -445,6 +455,7 @@ class Submission(_BaseSubmission):
         results = []
         self.cluster_id = self.schedd.submitMany(cluster_ad, procs, spool=should_spool, ad_results=results)
         if should_spool:
+            PInfo('Submission.execute','Spooling inputs...')
             self.schedd.spool(results)
         self.proc_ids = {}
         for result,name in zip(results,sorted(self.arguments)):
