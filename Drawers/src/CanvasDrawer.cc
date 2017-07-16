@@ -190,12 +190,12 @@ void CanvasDrawer::SetRatioStyle() {
 
 }
 
-void CanvasDrawer::AddCMSLabel(double x, double y) {
+void CanvasDrawer::AddCMSLabel(double x, double y, TString subhead) {
   float textsize = doRatio ? 0.06 : 0.05;
   if (whichstyle==2) textsize = 0.06;
   float xshift = (whichstyle==1) ? 0.1 : 0.055;
   AddPlotLabel("CMS",x,y,false,62,textsize);
-  AddPlotLabel("Preliminary",x+xshift,y,false,52,textsize); 
+  AddPlotLabel(subhead.Data(),x+xshift,y,false,52,textsize); 
   //AddPlotLabel("CMS",.18,.85,false,62,textsize);
   //AddPlotLabel("Preliminary",.28,.85,false,52,textsize); 
 }
@@ -205,7 +205,12 @@ void CanvasDrawer::AddLumiLabel(bool fb, double customLumi) {
     lumi = customLumi;
   float textsize = doRatio ? 0.05 : 0.05;
   TString units = (fb) ? "fb" : "pb";
-  AddPlotLabel(TString::Format("%.3g %s^{-1} (13 TeV)",(float)lumi,units.Data()).Data(),0.9,0.94,false,42,0.8*textsize,31);
+  AddPlotLabel(TString::Format("%i %s^{-1} (13 TeV)",(int)lumi,units.Data()).Data(),0.95,0.94,false,42,0.8*textsize,31);
+}
+
+void CanvasDrawer::AddSqrtSLabel() {
+  float textsize = doRatio ? 0.05 : 0.05;
+  AddPlotLabel("(13 TeV)",0.95,0.94,false,42,0.8*textsize,31);
 }
 
 void CanvasDrawer::InitLegend(double x0, double y0, double x1, double y1, int ncolumns) { 

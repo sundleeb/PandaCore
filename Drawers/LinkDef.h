@@ -2,6 +2,7 @@
 #include "PandaCore/Drawers/interface/GraphDrawer.h"
 #include "PandaCore/Drawers/interface/HistogramDrawer.h"
 #include "PandaCore/Drawers/interface/PlotUtility.h"
+#include "PandaCore/Drawers/interface/ROCTool.h"
 
 #ifdef __CLING__
 #pragma link off all globals;
