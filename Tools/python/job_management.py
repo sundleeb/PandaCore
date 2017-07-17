@@ -426,6 +426,7 @@ class Submission(_BaseSubmission):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
+        PInfo(self.__name__+'.execute','Cluster ClassAd:','')
         print cluster_ad
 
         proc_properties = {
