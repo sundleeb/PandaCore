@@ -13,6 +13,7 @@ processes =	{
 'DY2JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('DY2JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8','MC',334.717838),
 'DY3JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('DY3JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8','MC',102.462800),
 'DY4JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('DY4JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8','MC',54.481360),
+'DYJetsToLL_Zpt-0To50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8' :('DYJetsToLL_Zpt-0To50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8','MC',5387.789), 
 'DYJetsToLL_Pt-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8' :('DYJetsToLL_Pt-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8','MC',357.200), 
 'DYJetsToLL_Pt-100To250_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('DYJetsToLL_Pt-100To250_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8','MC',81.2000),
 'DYJetsToLL_Pt-250To400_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('DYJetsToLL_Pt-250To400_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8','MC',3.06200),
