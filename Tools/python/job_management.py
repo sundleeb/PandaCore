@@ -121,6 +121,14 @@ pool_server = None
 schedd_server = getenv('HOSTNAME')
 should_spool = False
 query_owner = getenv('USER')
+try:
+    urgent = int(getenv('SUBMIT_URGENT'))
+    if urgent:
+        acct_grp_t3 = 'group_t3mit.urgent'
+    else:
+        acct_grp_t3 = 'group_t3mit'
+except:
+    acct_grp_t3 = 'group_t3mit'
 
 def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
@@ -131,8 +139,8 @@ def setup_schedd(config='T3'):
             "ShouldTransferFiles" : "YES",
             "Requirements" : 
                 classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
-            "AcctGroup" : "group_t3mit.urgent",
-            "AccountingGroup" : "group_t3mit.urgent.snarayan",
+            "AcctGroup" : acct_grp_t3,
+            "AccountingGroup" : '%s.USER'%(acct_grp_t3),
             "X509UserProxy" : "/tmp/x509up_uUID",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",
@@ -151,14 +159,14 @@ def setup_schedd(config='T3'):
             "Requirements" : 
                 classad.ExprTree('( ( ( OSGVO_OS_STRING == "RHEL 6" && HAS_CVMFS_cms_cern_ch ) || GLIDEIN_REQUIRED_OS == "rhel6" || ( GLIDEIN_Site == "MIT_CampusFactory" && ( BOSCOGroup == "bosco_cms" ) && HAS_CVMFS_cms_cern_ch ) ) && ( isUndefined(GLIDEIN_Entry_Name) ||  !stringListMember(GLIDEIN_Entry_Name,"CMS_T2_US_Nebraska_Red_op,CMS_T2_US_Nebraska_Red_gw1_op,CMS_T2_US_Nebraska_Red_gw2_op,CMS_T3_MX_Cinvestav_proton_work,CMS_T3_US_Omaha_tusker,CMSHTPC_T3_US_Omaha_tusker,Glow_US_Syracuse_condor,Glow_US_Syracuse_condor-ce01,Gluex_US_NUMEP_grid1,HCC_US_BNL_gk01,HCC_US_BNL_gk02,HCC_US_BU_atlas-net2,OSG_US_FIU_HPCOSGCE,OSG_US_Hyak_osg,OSG_US_UConn_gluskap,OSG_US_SMU_mfosgce",",") ) && ( isUndefined(GLIDEIN_Site) ||  !stringListMember(GLIDEIN_Site,"SU-OG,HOSTED_BOSCO_CE",",") ) ) && ( ( Arch == "INTEL" || Arch == "X86_64" ) ) && ( TARGET.OpSys == "LINUX" ) && ( TARGET.Disk >= RequestDisk ) && ( TARGET.Memory >= RequestMemory ) && ( TARGET.HasFileTransfer )'),
             "AcctGroup" : "analysis",
-            "AccountingGroup" : "analysis.snarayan",
+            "AccountingGroup" : "analysis.USER",
             "X509UserProxy" : "/tmp/x509up_uUID",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",
             "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
             "ProjectName" : "CpDarkMatterSimulation",
             "Rank" : "Mips",
-            'SubMITOwner' : 'snarayan',
+            'SubMITOwner' : 'USER',
         }
 
         pool_server = 'submit.mit.edu:9615'
@@ -299,7 +307,8 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             frunner.write(runner)
         repl = {'WORKDIR' : self.workdir,
                 'LOGDIR' : self.logdir,
-                'UID':str(getuid()),
+                'UID' : str(getuid()),
+                'USER' : getenv('USER'),
                 'SUBMITID' : str(self.sub_id)}
         cluster_ad = classad.ClassAd()
 
@@ -419,6 +428,7 @@ class Submission(_BaseSubmission):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
+        PInfo(self.__name__+'.execute','Cluster ClassAd:','')
         print cluster_ad
 
         proc_properties = {

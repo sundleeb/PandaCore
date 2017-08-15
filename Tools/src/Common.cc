@@ -57,7 +57,7 @@ std::vector<TString> getDependencies(TString cut) {
     if ( c==' ' || c=='&' || c=='|' || c=='(' || c==')'
         || c=='*' || c=='+' || c=='-' || c=='/' || c=='!'
         || c=='<' || c=='>' || c=='=' || c=='.' || c==','
-        || c=='[' || c==']') {
+        || c=='[' || c==']' || c==':') {
       if (tmpString != "" && !tmpString.IsDigit() &&
           // tmpString!="Pt" && tmpString!="Eta" && tmpString!="Phi" &&
           !(tmpString.Contains("TMath")) && !(tmpString=="fabs")) {

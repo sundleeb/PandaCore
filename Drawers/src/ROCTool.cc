@@ -7,11 +7,15 @@ ROCTool::~ROCTool() {
   delete c; c=0; 
 }
 
-void ROCTool::InitCanvas(double x1, double y1, double x2, double y2) {
+void ROCTool::InitCanvas(double x1, double y1, double x2, double y2, bool isPrelim) {
   c = new GraphDrawer();
   c->SetTDRStyle();
   c->SetGrid();
-  c->AddCMSLabel();
+  if (isPrelim)
+    c->AddCMSLabel(0.15,0.94,"Simulation Preliminary"); 
+  else
+    c->AddCMSLabel(0.15,0.94,"Simulation"); 
+  c->AddSqrtSLabel();
   if (doLogy)
     c->Logy();
   if (x1>0)
