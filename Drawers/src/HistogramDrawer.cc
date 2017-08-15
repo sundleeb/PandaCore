@@ -154,7 +154,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       h->SetLineColor(1);
     } else {
       h->SetLineColor(w.cc);
-      h->SetLineWidth(2);
+      h->SetLineWidth(3);
     }
     if (pt!=kData && (pt==kData || pt>kSignal3 || doStackSignal)) {
       if (doStack) {
