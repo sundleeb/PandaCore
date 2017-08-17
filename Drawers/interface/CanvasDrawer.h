@@ -19,6 +19,7 @@
 #include "TLegend.h"
 #include  <vector>
 #include "TStyle.h"
+#include "TColor.h"
 #include "algorithm"
 #include "PandaCore/Tools/interface/Common.h"
 
@@ -113,7 +114,7 @@ public:
   void SetEvtNum(const char *s) { eventnumber=s; } //!< Set name for event number
   void SetEvtMod(int i) { eventmod=i; } //!< Set number of events to mod by
 
-  void SetTDRStyle(); //!< Set some plotting options to be CMS-friendly
+  void SetTDRStyle(TString opt="default"); //!< Set some plotting options to be CMS-friendly
   void SetAutoRange(bool b) { doAutoRange=b; } //!< Automatically calculate ranges as plotting
   void SetRatioStyle(); //!< Some predefined options nice for drawing some ratio plots
   void AddCMSLabel(double x=0.18, double y=0.85, TString subhead="Preliminary"); //!< Add a CMS label
@@ -180,6 +181,27 @@ protected:
                         kViolet,
                         kAzure,
                         kSpring+8};
+
+int VBFColors[20] = {1,
+                      kBlack, // signal
+                      kBlue, // signal1
+                      kRed, // signal2
+                      kGreen+3, // signal3
+                      TColor::GetColor("#F1F1F2"),  // qcd
+                      TColor::GetColor("#CF3721"), //ttbar
+                      TColor::GetColor("#FAAF08"), // w
+                      TColor::GetColor("#4D975D"), // z(vv)
+                      kRed-5, // st
+                      TColor::GetColor("#4897D8"), // dibos
+                      kCyan-2, // gjets
+                      TColor::GetColor("#9A9EAB"), // zll
+                      kGreen-2, // wewk
+                      kCyan+3, // zewk
+                      kOrange+8,
+                      kBlue+2,
+                      kViolet,
+                      kAzure,
+                      kSpring+8};
   /**
    * \brief Colors of graphs
    */
@@ -229,5 +251,7 @@ protected:
   double maxScale=1.5;                  //!< factor by which to scale the y-axis relative to the largest histogram
   bool drawEmpty=false;                 //!< for stacks, do not fill in the histograms
   TString ratioLabel="#frac{Data-Exp}{Exp}"; //!< y-axis label for ratio pad
+
+  int *Colors = NULL; // !< colors used for plotting
 };
 #endif
