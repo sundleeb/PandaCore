@@ -304,20 +304,22 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
 
     def check_missing(self, only_failed=True):
         try:
-            finished = map(lambda x : x.strip(), [x for x in  open(self.workdir+'/progress.log').readlines() if len(x.strip())])
+            finished = map(lambda x : int(x.strip()), [x for x in  open(self.workdir+'/progress.log').readlines() if len(x.strip())])
         except IOError:
             finished = []
         status = self.query_status()
+        for k,v in status.iteritems():
+            status[k] = [int(x) for x in v]
         missing = set([]); done = set([]); running = set([]); idle = set([])
         for idx in self.arguments:
             args = str(idx)
-            if args in finished:
+            if idx in finished:
                 done.add(idx)
                 continue 
-            if only_failed and (args in status['running']):
+            if only_failed and (idx in status['running']):
                 running.add(idx)
                 continue 
-            if only_failed and (args in status['idle']):
+            if only_failed and (idx in status['idle']):
                 idle.add(idx)
                 continue 
             missing.add(idx)
