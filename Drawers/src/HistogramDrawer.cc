@@ -46,12 +46,12 @@ void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int c
     else
       w.pt = pt;
     if (cc<0) 
-      w.cc = PlotColors[w.pt];
+      w.cc = Colors[w.pt];
     else
       w.cc = cc;
     if (opt=="") {
       if (pt==kData)
-        w.opt = "elp";
+        w.opt = "e0lp";
       else
         w.opt = drawOption;
     } else
@@ -154,7 +154,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       h->SetLineColor(1);
     } else {
       h->SetLineColor(w.cc);
-      h->SetLineWidth(2);
+      h->SetLineWidth(3);
     }
     if (pt!=kData && (pt==kData || pt>kSignal3 || doStackSignal)) {
       if (doStack) {
@@ -176,9 +176,12 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       // if it's data
       hData = h;
       if (w.opt.Contains("p")) {
-        hData->SetMarkerColor(PlotColors[pt]);
+        hData->SetMarkerColor(Colors[pt]);
         hData->SetMarkerStyle(20);
-        hData->SetMarkerSize(1);
+        if (whichstyle==3)
+          hData->SetMarkerSize(1.2);
+        else
+          hData->SetMarkerSize(1);
       }
       if (doSetNormFactor) {
         /*
@@ -331,7 +334,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     }
     if (firstHist==hData)
       firstHist->Draw("elp");
-    else if (firstHist==hOthers[0].h)
+    else if (hOthers.size()>0 && firstHist==hOthers[0].h)
       firstHist->Draw(hOthers[0].opt);
     else
       firstHist->Draw(drawOption);

@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+
+from PandaCore.Tools.Misc import PInfo, PError, tTIMES
+from sys import argv, exit
+from re import sub
+import argparse
+from os.path import isfile 
+
+parser = argparse.ArgumentParser(description='treedump')
+parser.add_argument('--treename',help='input TTree name',type=str,default='events')
+parser.add_argument('--dump',help='file containing list of dump',type=str)
+parser.add_argument('--events',help='event expression',type=str,default=None)
+parser.add_argument('infile',metavar='input',type=str,help='input file to process')
+args = parser.parse_args()
+
+argv = []
+
+from PandaCore.Tools.root_interface import read_tree 
+from ROOT import TFile 
+
+fmt_string = ' %12s |'
+
+to_dump = [x.strip() for x in open(args.dump).readlines()] if isfile(args.dump) else args.dump.split(',')
+for x in ['eventNumber','lumiNumber','runNumber']:
+    to_dump.insert(0,x)
+
+events = [x.strip() for x in open(args.events).readlines()] if isfile(args.events) else args.events.split(',')
+event_cutstring = '||'.join(['eventNumber==%s'%x for x in events])
+
+f = TFile(args.infile)
+t = f.FindObjectAny(args.treename)
+
+arr = read_tree(t, branches=to_dump, cut=event_cutstring)
+out_str = ''
+for d in to_dump:
+    out_str += fmt_string%d
+out_str += '\n'
+for d in to_dump:
+    out_str += fmt_string%('-'*12)
+out_str += '\n'
+
+# N = arr.shape[0] 
+# for i in xrange(N):
+for e in events:
+    mask = arr['eventNumber']==long(e)
+    row = arr[mask]
+    for d in to_dump:
+        out_str += fmt_string%(row[d][0])
+    out_str += '\n'
+
+print out_str 
