@@ -40,7 +40,7 @@ else:
 
 
 if args.njobs:
-    nper = int(float(len(job_arguments))/args.njobs)
+    nper = max(1,int(float(len(job_arguments))/args.njobs))
 else:
     nper = 1
 

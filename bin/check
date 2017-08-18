@@ -100,6 +100,7 @@ if args.kill:
 
 resubmit = any([args.resubmit_incomplete, args.resubmit_failed, args.resubmit_all])
 if resubmit and len(statii['missing']):
+    system('voms-proxy-init -voms cms --valid 168:00')
     s = submissions[0]
     nper = s.nper
     if args.njobs:

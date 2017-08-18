@@ -325,7 +325,7 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             cluster_ad[key] = value
 
         proc_properties = {
-            'UserLog' : 'LOGDIR/SUBMITID.log',
+            'UserLog' : 'LOGDIR/SUBMITID_PROCID.log',
             'Out' : 'LOGDIR/SUBMITID_PROCID.out',
             'Err' : 'LOGDIR/SUBMITID_PROCID.err',
         }
