@@ -73,17 +73,25 @@ void PError(const char *module, const char *msg, const char *newline="\n");
 /**
  * \param h  histogram to read
  * \param val  x-value
- * \brief Returns the value of a 1D histogram given an x-val
+ * \brief Returns the value/error of a 1D histogram given an x-val
  */
 double getVal(TH1D*h,double val);
 
 /**
  * \param h  histogram to read
+ * \param val  x-value
+ * \brief Returns the value/error of a 1D histogram given an x-val
+ */
+double getError(TH1D*h,double val);
+
+/**
+ * \param h  histogram to read
  * \param val1  x-value
  * \param val2  y-value
- * \brief Returns the value of a 2D histogram given an x-val,y-val
+ * \brief Returns the value/error of a 2D histogram given an x-val,y-val
  */
 double getVal(TH2D*h,double val1, double val2);
+double getError(TH2D*h,double val1, double val2);
 
 /**
  * \param cut  string to parse

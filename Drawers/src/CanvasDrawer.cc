@@ -9,6 +9,7 @@ CanvasDrawer::CanvasDrawer(double x, double y) {
   label = new TLatex();
   label->SetNDC(); 
   gErrorIgnoreLevel=kWarning;
+  Colors = PlotColors;
 }
 
 CanvasDrawer::CanvasDrawer(TCanvas *c0) {
@@ -17,6 +18,7 @@ CanvasDrawer::CanvasDrawer(TCanvas *c0) {
   label = new TLatex();
   label->SetNDC();
   gErrorIgnoreLevel=kWarning;
+  Colors = PlotColors;
 }
 
 CanvasDrawer::~CanvasDrawer() {
@@ -44,9 +46,17 @@ void CanvasDrawer::SplitCanvas(TCanvas *c_) {
   pad1->SetBottomMargin(0);
   pad1->Draw();
 
-  pad2 = new TPad("pad2","pad2",0,0.05,1,0.3);
-  pad2->SetTopMargin(0);
-  pad2->SetBottomMargin(0.3);
+  if (whichstyle==1) {
+    pad2 = new TPad("pad2","pad2",0,0.05,1,0.3);
+    pad2->SetTopMargin(0);
+    pad2->SetBottomMargin(0.3);
+  } else {
+    pad2 = new TPad("pad2","pad2",0,0,1,0.3);
+    pad2->SetTopMargin(0);
+    pad2->SetBottomMargin(0.3);
+    pad2->SetGridy(1);
+
+  }
   pad2->Draw();
 }
 
@@ -64,11 +74,12 @@ void CanvasDrawer::AddPlotLabel(const char *s, double x, double y, bool drawImme
   }
 }
 
-void CanvasDrawer::SetTDRStyle() {
+void CanvasDrawer::SetTDRStyle(TString opt) {
     whichstyle=1;
     gStyle->SetCanvasBorderMode(0);
     gStyle->SetCanvasColor(0); 
-    gStyle->SetCanvasDefH(doRatio ? 720 : 600); 
+    double ratioHeight = (opt=="vbf") ? 700 : 720;
+    gStyle->SetCanvasDefH(doRatio ? ratioHeight : 600); 
     gStyle->SetCanvasDefW(600); 
     gStyle->SetCanvasDefX(0);  
     gStyle->SetCanvasDefY(0);
@@ -117,6 +128,36 @@ void CanvasDrawer::SetTDRStyle() {
     gStyle->SetOptLogy(0);
     gStyle->SetOptLogz(0);
 
+    if (opt=="vbf") {
+        whichstyle=3;
+        gStyle->SetHistLineColor(1);
+        gStyle->SetHistLineStyle(0);
+        gStyle->SetHistLineWidth(1);
+        gStyle->SetEndErrorSize(2);
+        gStyle->SetFuncColor(2);
+        gStyle->SetFuncStyle(1);
+        gStyle->SetFuncWidth(1);
+        gStyle->SetOptDate(0);
+        gStyle->SetOptFile(0);
+        gStyle->SetOptStat(0);
+        gStyle->SetStatColor(0); 
+        gStyle->SetStatFont(42);
+        gStyle->SetStatFontSize(0.04);
+        gStyle->SetStatTextColor(1);
+        gStyle->SetStatFormat("6.4g");
+        gStyle->SetStatBorderSize(1);
+        gStyle->SetStatH(0.1);
+        gStyle->SetStatW(0.15);
+        gStyle->SetOptTitle(0);
+        gStyle->SetTitleFont(42);
+        gStyle->SetTitleColor(1);
+        gStyle->SetTitleTextColor(1);
+        gStyle->SetTitleFillColor(10);
+        gStyle->SetTitleFontSize(0.05);
+        gStyle->SetPaperSize(20.,20.);
+        gStyle->SetPaintTextFormat(".2f");
+    }
+
     TGaxis::SetMaxDigits(4);
 
     if (canvasIsOwned)
@@ -124,6 +165,15 @@ void CanvasDrawer::SetTDRStyle() {
 
     c = new TCanvas();
     canvasIsOwned=true;
+
+    if (opt=="vbf") {
+      c->SetTickx(1);
+      c->SetTicky(1);
+      c->SetBottomMargin(0.3);
+      c->SetRightMargin(0.06);
+
+      Colors = VBFColors;
+    }
 
 }
 
@@ -190,12 +240,12 @@ void CanvasDrawer::SetRatioStyle() {
 
 }
 
-void CanvasDrawer::AddCMSLabel(double x, double y) {
+void CanvasDrawer::AddCMSLabel(double x, double y, TString subhead) {
   float textsize = doRatio ? 0.06 : 0.05;
   if (whichstyle==2) textsize = 0.06;
-  float xshift = (whichstyle==1) ? 0.1 : 0.055;
+  float xshift = (whichstyle==2) ? 0.055 : 0.1;
   AddPlotLabel("CMS",x,y,false,62,textsize);
-  AddPlotLabel("Preliminary",x+xshift,y,false,52,textsize); 
+  AddPlotLabel(subhead.Data(),x+xshift,y,false,52,textsize); 
   //AddPlotLabel("CMS",.18,.85,false,62,textsize);
   //AddPlotLabel("Preliminary",.28,.85,false,52,textsize); 
 }
@@ -205,7 +255,12 @@ void CanvasDrawer::AddLumiLabel(bool fb, double customLumi) {
     lumi = customLumi;
   float textsize = doRatio ? 0.05 : 0.05;
   TString units = (fb) ? "fb" : "pb";
-  AddPlotLabel(TString::Format("%.3g %s^{-1} (13 TeV)",(float)lumi,units.Data()).Data(),0.9,0.94,false,42,0.8*textsize,31);
+  AddPlotLabel(TString::Format("%i %s^{-1} (13 TeV)",(int)lumi,units.Data()).Data(),0.95,0.94,false,42,0.8*textsize,31);
+}
+
+void CanvasDrawer::AddSqrtSLabel() {
+  float textsize = doRatio ? 0.05 : 0.05;
+  AddPlotLabel("(13 TeV)",0.95,0.94,false,42,0.8*textsize,31);
 }
 
 void CanvasDrawer::InitLegend(double x0, double y0, double x1, double y1, int ncolumns) { 
