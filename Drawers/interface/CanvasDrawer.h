@@ -124,6 +124,7 @@ public:
   void cd() { c->cd(); } //!< cd
   void SetGrid() { gStyle->SetGridColor(16); c->SetGrid(); } //!< Set a grid
   void SetRatioLabel(TString s) { ratioLabel = s; }
+  void SetLineWidth(int i) { emptyLineWidth = i; }
 
   bool HasLegend() { return legend!=0; }
   void ClearLegend() { if (legend) legend->Clear(); }
@@ -250,6 +251,7 @@ int VBFColors[20] = {1,
   int whichstyle=0;                     //!< for different styles of plotting
   double maxScale=1.5;                  //!< factor by which to scale the y-axis relative to the largest histogram
   bool drawEmpty=false;                 //!< for stacks, do not fill in the histograms
+  int emptyLineWidth=3;                 //!< line width if not stacked
   TString ratioLabel="#frac{Data-Exp}{Exp}"; //!< y-axis label for ratio pad
 
   int *Colors = NULL; // !< colors used for plotting
