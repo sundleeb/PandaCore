@@ -92,7 +92,7 @@ class Selector(object):
         self.data = None 
         self._nicknames = None
     def read_files(self, *args, **kwargs):
-        self.data = read_branches(*args, **kwargs)
+        self.data = read_files(*args, **kwargs)
     def read_tree(self, *args, **kwargs):
         self.data = read_tree(*args, **kwargs)
     def rename(self, a, b = None):
@@ -135,5 +135,5 @@ class Selector(object):
         masked_data = self.data if mask is None else self.data[mask]
         draw_hist(h, masked_data, fields, weight)
         return h  
-    def __getitem__(self, arg):
-        return self.data[arg]
+    # def __getitem__(self, arg):
+    #     return self.data[arg]
