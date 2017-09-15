@@ -47,34 +47,12 @@ def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
     if config=='T3':
         base_job_properties = {
-            "Cmd" : "WORKDIR/exec.sh",
+   "Cmd" : "WORKDIR/exec.sh",
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
-            "Requirements" : 
-                classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
-            "AcctGroup" : acct_grp_t3,
-            "AccountingGroup" : '%s.USER'%(acct_grp_t3),
             "X509UserProxy" : "/tmp/x509up_uUID",
-            "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
-            "In" : "/dev/null",
-            "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
-        }
-
-        pool_server = None
-        schedd_server = getenv('HOSTNAME')
-        should_spool = False
-        query_owner = getenv('USER')
-    elif config=='T2':
-        base_job_properties = {
-            "Cmd" : "WORKDIR/exec.sh",
-            "WhenToTransferOutput" : "ON_EXIT",
-            "ShouldTransferFiles" : "YES",
-            "Requirements" : 
-                classad.ExprTree('Arch == "X86_64" && OpSysAndVer == "SL6"'),
-            "AcctGroup" : 'group_cmsuser',
-            "AccountingGroup" : 'group_cmsuser.USER',
-            "X509UserProxy" : "/tmp/x509up_uUID",
-            "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
+            #"OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
+            "RequestMemory" : 2100,
             "In" : "/dev/null",
             "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
         }
@@ -105,6 +83,8 @@ def setup_schedd(config='T3'):
         schedd_server ='submit.mit.edu'
         query_owner = 'anonymous'
         should_spool = True
+=======
+>>>>>>> 99eaf5b02aa87543010d1296164b62feca4bf750
     else:
         PError('job_management.setup_schedd','Unknown config %s'%config)
         raise ValueError
