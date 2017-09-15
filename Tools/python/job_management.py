@@ -83,8 +83,6 @@ def setup_schedd(config='T3'):
         schedd_server ='submit.mit.edu'
         query_owner = 'anonymous'
         should_spool = True
-=======
->>>>>>> 99eaf5b02aa87543010d1296164b62feca4bf750
     else:
         PError('job_management.setup_schedd','Unknown config %s'%config)
         raise ValueError
