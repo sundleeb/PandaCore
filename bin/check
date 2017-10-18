@@ -19,7 +19,8 @@ parser.add_argument('--verbose',action='store_true')
 args = parser.parse_args()
 
 for cache in args.cache:
-    print 'Cache:',cache 
+    if len(args.cache) > 1:
+        print 'Cache:',cache    
     with open(cache+'/submission.pkl') as fpkl:
         submissions = pickle.load(fpkl)
 
