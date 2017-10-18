@@ -13,110 +13,112 @@ parser.add_argument('--resubmit_all',action='store_true')
 parser.add_argument('--resubmit_incomplete',action='store_true')
 parser.add_argument('--resubmit_failed',action='store_true')
 parser.add_argument('--kill',action='store_true')
-parser.add_argument('--cache',type=str)
+parser.add_argument('--cache',type=str,nargs='+')
 parser.add_argument('--njobs',type=int,default=None)
 parser.add_argument('--verbose',action='store_true')
 args = parser.parse_args()
 
-with open(args.cache+'/submission.pkl') as fpkl:
-    submissions = pickle.load(fpkl)
+for cache in args.cache:
+    print 'Cache:',cache 
+    with open(cache+'/submission.pkl') as fpkl:
+        submissions = pickle.load(fpkl)
 
 
-only_failed = not(args.resubmit_incomplete)
-statii = {'missing':set([]), 'done':set([]), 'running':set([]), 'idle':set([])}
-for s in submissions:
-    m, d, r, i = s.check_missing(only_failed)
-    statii['missing'] |= m
-    statii['done'] |= d
-    statii['running'] |= r
-    statii['idle'] |= i
-
-if args.resubmit_all:
-    for x in ['running','idle','done']:
-        statii['missing'] |= statii[x]
-        statii[x] = set([])
-else:
-    statii['idle'] -= statii['running'] # it's not idle if it's running
-    statii['idle'] -= statii['done'] 
-    statii['running'] -= statii['done'] 
-    for x in ['running','idle','done']:
-        statii['missing'] -= statii[x]
-
-WIDTH=25
-header = ''
-if stdout.isatty():
-    header += ('%%-%is'%(WIDTH+2))%('Progress')
-header += ' %10s %10s %10s %10s %10s'%('Total','Running','Idle','Missing','Done')
-
-colors = {
-    'green' : 42,
-    'blue' : 44,
-    'grey' : 47, 
-    'red' : 41,
-    }
-
-n = {k:len(statii[k]) for k in statii}
-n_total = sum(n.values())
-d_frac = float(WIDTH)*n['done']/n_total
-r_frac = float(WIDTH)*(n['done']+n['running'])/n_total
-i_frac = float(WIDTH)*(n['done']+n['running']+n['idle'])/n_total
-if stdout.isatty():
-    s = '[\033[0;%im'%colors['green']
-    for i in xrange(WIDTH):
-        if i>=d_frac:
-            s += '\033[0;%im'%colors['blue']
-        if i>=r_frac:
-            s += '\033[0;%im'%colors['grey']
-        if i>=i_frac:
-            s += '\033[0;%im'%colors['red']
-        s += ' '
-    s += '\033[0m] '
-else:
-    s = ''
-s += '%10i '%n_total
-s += '%10i '%n['running']
-s += '%10i '%n['idle']
-s += '%10i '%n['missing']
-s += '%10i '%n['done']
-
-o_sub_time = submissions[0].submission_time
-s += '(done=%.2f%% in %is)'%(d_frac*100./WIDTH,int(time()-o_sub_time))
-
-print header 
-print s 
-
-if args.verbose:
-    if len(statii['idle']):
-        farglist = open(submissions[0].arglist).readlines()
-        print 'Idle:'
-        for arg in statii['idle']:
-            print '   ',arg,'=>',farglist[int(arg)-1].strip()
-    if len(statii['running']):
-        farglist = open(submissions[0].arglist).readlines()
-        print 'Running:'
-        for arg in statii['running']:
-            print '   ',arg,'=>',farglist[int(arg)-1].strip()
-    if len(statii['missing']):
-        farglist = open(submissions[0].arglist).readlines()
-        print 'Missing:'
-        for arg in statii['missing']:
-            print '   ',arg,'=>',farglist[int(arg)-1].strip()
-
-if args.kill:
+    only_failed = not(args.resubmit_incomplete)
+    statii = {'missing':set([]), 'done':set([]), 'running':set([]), 'idle':set([])}
     for s in submissions:
-        # this should be moved to the htcondor lib interface
-        print 'Killing ClusterId %i'%s.cluster_id
-        system('condor_rm %i'%(s.cluster_id))
+        m, d, r, i = s.check_missing(only_failed)
+        statii['missing'] |= m
+        statii['done'] |= d
+        statii['running'] |= r
+        statii['idle'] |= i
+
+    if args.resubmit_all:
+        for x in ['running','idle','done']:
+            statii['missing'] |= statii[x]
+            statii[x] = set([])
+    else:
+        statii['idle'] -= statii['running'] # it's not idle if it's running
+        statii['idle'] -= statii['done'] 
+        statii['running'] -= statii['done'] 
+        for x in ['running','idle','done']:
+            statii['missing'] -= statii[x]
+
+    WIDTH=25
+    header = ''
+    if stdout.isatty():
+        header += ('%%-%is'%(WIDTH+2))%('Progress')
+    header += ' %10s %10s %10s %10s %10s'%('Total','Running','Idle','Missing','Done')
+
+    colors = {
+        'green' : 42,
+        'blue' : 44,
+        'grey' : 47, 
+        'red' : 41,
+        }
+
+    n = {k:len(statii[k]) for k in statii}
+    n_total = sum(n.values())
+    d_frac = float(WIDTH)*n['done']/n_total
+    r_frac = float(WIDTH)*(n['done']+n['running'])/n_total
+    i_frac = float(WIDTH)*(n['done']+n['running']+n['idle'])/n_total
+    if stdout.isatty():
+        s = '[\033[0;%im'%colors['green']
+        for i in xrange(WIDTH):
+            if i>=d_frac:
+                s += '\033[0;%im'%colors['blue']
+            if i>=r_frac:
+                s += '\033[0;%im'%colors['grey']
+            if i>=i_frac:
+                s += '\033[0;%im'%colors['red']
+            s += ' '
+        s += '\033[0m] '
+    else:
+        s = ''
+    s += '%10i '%n_total
+    s += '%10i '%n['running']
+    s += '%10i '%n['idle']
+    s += '%10i '%n['missing']
+    s += '%10i '%n['done']
+
+    o_sub_time = submissions[0].submission_time
+    s += '(done=%.2f%% in %is)'%(d_frac*100./WIDTH,int(time()-o_sub_time))
+
+    print header 
+    print s 
+
+    if args.verbose:
+        if len(statii['idle']):
+            farglist = open(submissions[0].arglist).readlines()
+            print 'Idle:'
+            for arg in statii['idle']:
+                print '   ',arg,'=>',farglist[int(arg)-1].strip()
+        if len(statii['running']):
+            farglist = open(submissions[0].arglist).readlines()
+            print 'Running:'
+            for arg in statii['running']:
+                print '   ',arg,'=>',farglist[int(arg)-1].strip()
+        if len(statii['missing']):
+            farglist = open(submissions[0].arglist).readlines()
+            print 'Missing:'
+            for arg in statii['missing']:
+                print '   ',arg,'=>',farglist[int(arg)-1].strip()
+
+    if args.kill:
+        for s in submissions:
+            # this should be moved to the htcondor lib interface
+            print 'Killing ClusterId %i'%s.cluster_id
+            system('condor_rm %i'%(s.cluster_id))
 
 
-resubmit = any([args.resubmit_incomplete, args.resubmit_failed, args.resubmit_all])
-if resubmit and len(statii['missing']):
-    system('voms-proxy-init -voms cms --valid 168:00')
-    s = submissions[0]
-    nper = s.nper
-    if args.njobs:
-        nper = max(1,int(float(len(statii['missing']))/args.njobs))
-    new_sub = jm.SimpleSubmission(s.cache_dir, s.executable, s.arglist, statii['missing'], nper)
-    new_sub.execute()
-    new_sub.save()
+    resubmit = any([args.resubmit_incomplete, args.resubmit_failed, args.resubmit_all])
+    if resubmit and len(statii['missing']):
+        system('voms-proxy-init -voms cms --valid 168:00')
+        s = submissions[0]
+        nper = s.nper
+        if args.njobs:
+            nper = max(1,int(float(len(statii['missing']))/args.njobs))
+        new_sub = jm.SimpleSubmission(s.cache_dir, s.executable, s.arglist, statii['missing'], nper)
+        new_sub.execute()
+        new_sub.save()
 

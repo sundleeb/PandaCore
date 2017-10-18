@@ -33,6 +33,11 @@ void CanvasDrawer::SetCanvas(TCanvas *c0) {
   canvasIsOwned=false;
 }
 
+void CanvasDrawer::Reset() {
+  internalAdds.clear();
+  addsDrawn = false;
+}
+
 void CanvasDrawer::SplitCanvas(TCanvas *c_) {
   if (!c_ && !c) {
     c = new TCanvas();
@@ -271,7 +276,40 @@ void CanvasDrawer::InitLegend(double x0, double y0, double x1, double y1, int nc
   legend->SetBorderSize(0);
 }
 
+void CanvasDrawer::AddAdditional(TObject *o, TString opt, TString aname) {
+  ObjWrapper w;
+  w.o = o;
+  w.opt = opt;
+  w.label = aname;
+  internalAdds.push_back(w);
+}
+
 void CanvasDrawer::Draw(TString outDir, TString baseName) {
+  if (!addsDrawn) {
+    unsigned int nAdd = internalAdds.size();
+    for (unsigned int iA=0; iA!=nAdd; ++iA) {
+      ObjWrapper w = internalAdds[iA];
+      TObject *o = w.o;
+      TString opt = w.opt;
+      TString className(o->ClassName());    
+      if (className.Contains("TH1") || className.Contains("TProfile"))
+        o->Draw(opt+" same");
+      else if (className.Contains("TGraph"))
+        o->Draw(opt+" same");
+      else if (className.Contains("TF1"))
+        o->Draw(opt+" same");
+      else {
+        PWarning("CanvasDrawer::Draw",TString::Format("Don't know what to do with %s",className.Data()));
+        continue;
+      }
+
+      TString label = w.label;
+      if (label.Length()>0 && legend) {
+        legend->AddEntry(o,label,"l");
+      }
+    }
+    addsDrawn = true;
+  }
   if (legend) {
     //legend->SetTextSize(std::min((double)legend->GetTextSize(),0.05));
     //legend->SetTextSize(0.05);

@@ -72,6 +72,7 @@ public:
   virtual ~CanvasDrawer(); //!< Destructor
 
   void SetCanvas(TCanvas *c0); //!< Set externally-defined TCanvas
+  void Reset(); //!< Reset canvas
   TCanvas *GetCanvas() { return c; } //!< Return canvas
   TPad *GetPad1() { return pad1; } //!< Return top plot pad (or NULL)
   TPad *GetPad2() { return pad2; } //!< Return bottom ratio pad (or NULL)
@@ -128,8 +129,26 @@ public:
 
   bool HasLegend() { return legend!=0; }
   void ClearLegend() { if (legend) legend->Clear(); }
+  /**
+   * \brief Adds a drawable TObject to be drawn after all histograms are drawn 
+   * \param o a TObject to draw
+   * \param opt option to use when drawing
+   * \param aname if provided and legend is created, this label is used in the legend
+   */
+  void AddAdditional(TObject *o, TString opt="", TString aname="");
 
 protected:
+  /**
+   * \brief Internal class for managing TObjects and their properties
+   */
+  class ObjWrapper {
+    public:
+      ObjWrapper() {}
+      ~ObjWrapper() {}
+      TObject *o;
+      TString label;
+      TString opt;
+  };
   /**
    * \brief Internal class used for managing labels 
    */
@@ -143,16 +162,16 @@ protected:
        * \param s0 text size
        * \param a0 ROOT text align index
        */
-      Label(const char *n, double x0, double y0, int f0=42, float s0=-1, int a0=11) {
-        strcpy(name,n);
-        x = x0;
-        y = y0;
-        font = f0;
-        size = s0;
-        align = a0;
-      }
+      Label(const char *n, double x0, double y0, int f0=42, float s0=-1, int a0=11):
+        name(n),
+        x(x0),
+        y(y0),
+        font(f0),
+        align(a0),
+        size(s0)
+      {  }
       ~Label() { };
-    char name[500];
+    TString name;
     double x;
     double y;
     int font,align;
@@ -183,7 +202,7 @@ protected:
                         kAzure,
                         kSpring+8};
 
-int VBFColors[20] = {1,
+  int VBFColors[20] = {1,
                       kBlack, // signal
                       kBlue, // signal1
                       kRed, // signal2
@@ -255,5 +274,7 @@ int VBFColors[20] = {1,
   TString ratioLabel="#frac{Data-Exp}{Exp}"; //!< y-axis label for ratio pad
 
   int *Colors = NULL; // !< colors used for plotting
+  std::vector<ObjWrapper> internalAdds; //!< collection of TObjects to plot
+  bool addsDrawn = false;
 };
 #endif

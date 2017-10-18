@@ -75,14 +75,14 @@ void PError(const char *module, const char *msg, const char *newline="\n");
  * \param val  x-value
  * \brief Returns the value/error of a 1D histogram given an x-val
  */
-double getVal(TH1D*h,double val);
+double getVal(TH1*h,double val);
 
 /**
  * \param h  histogram to read
  * \param val  x-value
  * \brief Returns the value/error of a 1D histogram given an x-val
  */
-double getError(TH1D*h,double val);
+double getError(TH1*h,double val);
 
 /**
  * \param h  histogram to read

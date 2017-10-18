@@ -75,8 +75,8 @@ def array_as_tree(xarr, treename = None, fcontext = None, xkwargs = {}):
 
 # HISTOGRAM MANIPULATION ---------------------------------------------------
 def draw_hist(hist, xarr, fields, weight = None):
-    warr = xarr[weight] if weight else None
-    if len(warr.shape)>1:
+    warr = xarr[weight] if (weight is not None) else None
+    if (warr is not None) and len(warr.shape)>1:
         warr = warr[:,0]
     if len(fields) == 1:
         return rnp.fill_hist(hist = hist, array = xarr[fields[0]], weights = warr)
@@ -90,7 +90,7 @@ def draw_hist(hist, xarr, fields, weight = None):
 class Selector(object):
     def __init__(self):
         self.data = None 
-        self._nicknames = None
+        self._nicknames = {} 
     def read_files(self, *args, **kwargs):
         self.data = read_files(*args, **kwargs)
     def read_tree(self, *args, **kwargs):

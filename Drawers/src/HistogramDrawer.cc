@@ -14,14 +14,6 @@ HistogramDrawer::~HistogramDrawer() {
     delete centralFile;
 }
 
-void HistogramDrawer::AddAdditional(TObject *o, TString opt, TString aname) {
-  ObjWrapper w;
-  w.o = o;
-  w.opt = opt;
-  w.label = aname;
-  internalAdds.push_back(w);
-}
-
 void HistogramDrawer::AddSystematic(TH1D *o, TString opt, TString aname) {
   ObjWrapper w;
   w.o = o;
@@ -83,7 +75,6 @@ void HistogramDrawer::SetInputFile(TString fname) {
 
 void HistogramDrawer::Reset(bool clearPlotLabels) {
   internalHists.clear();
-  internalAdds.clear();
   internalSysts.clear();
   if (clearPlotLabels)
     plotLabels.clear();
@@ -95,6 +86,7 @@ void HistogramDrawer::Reset(bool clearPlotLabels) {
     pad1->Clear();
   if (pad2!=NULL)
     pad2->Clear();
+  CanvasDrawer::Reset();
 }
 
 double getHistMin(TH1D *h, bool ignoreZero=false) {
@@ -401,6 +393,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       legend->AddEntry(o,label,"l");
     }
   }
+  addsDrawn = true;
 
   if (hData!=NULL && firstHist!=hData) {
     hData->Draw("elp same"); 
