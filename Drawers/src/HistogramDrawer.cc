@@ -3,6 +3,9 @@
 #include <math.h>
 #include "THStack.h"
 #include "TGraphErrors.h"
+#include "TLine.h"
+
+#define FILLSTYLE 3254
 
 HistogramDrawer::HistogramDrawer(double x, double y):
   CanvasDrawer(x,y) {
@@ -154,7 +157,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       h->SetLineColor(1);
     } else {
       h->SetLineColor(w.cc);
-      h->SetLineWidth(2);
+      h->SetLineWidth(3);
     }
     if (pt!=kData && (pt==kData || pt>kSignal3 || doStackSignal)) {
       if (doStack) {
@@ -223,7 +226,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hSum = (TH1D*) (hOthers[0].h->Clone("hsum"));
       hSum->SetFillColorAlpha(kBlack,0.99);
       hSum->SetLineWidth(0);
-      hSum->SetFillStyle(3003);
+      hSum->SetFillStyle(FILLSTYLE);
       for (int iB=0; iB!=nBins; ++iB) {
         hSum->SetBinContent(iB+1,0); 
         vals.push_back(0);
@@ -420,13 +423,9 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hRatioErrorDown = (TH1D*)hSum->Clone("sumratiodown");
       hRatioErrorUp->SetMaximum(-1111); hRatioErrorUp->SetMinimum(-1111);
       hRatioErrorDown->SetMaximum(-1111); hRatioErrorDown->SetMinimum(-1111);
-      hRatioErrorUp->SetFillStyle(3003); hRatioErrorUp->SetLineWidth(1);
-      hRatioErrorDown->SetFillStyle(3003); hRatioErrorDown->SetLineWidth(1);
+      hRatioErrorUp->SetFillStyle(FILLSTYLE); hRatioErrorUp->SetLineWidth(1);
+      hRatioErrorDown->SetFillStyle(FILLSTYLE); hRatioErrorDown->SetLineWidth(1);
     }
-    hZero = (TH1D*)hData->Clone("zero"); 
-    hZero->SetMaximum(-1111); hZero->SetMinimum(-1111);
-    for (int iB=0; iB!=nBins; ++iB) 
-      hZero->SetBinContent(iB+1,0);
     
     float maxVal=0;
     xVals = new double[nBins];
@@ -470,7 +469,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
         val=0;
         errVal=0;
       } else {
-        val = dataVal/mcVal-1;
+        val = dataVal/mcVal;
         errVal = err/mcVal;
         mcErrValUp = mcErrUp/mcVal;
         mcErrValDown = mcErrDown/mcVal;
@@ -486,10 +485,18 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hRatio->SetBinContent(iB,val);
       hRatio->SetBinError(iB,0.0001);
       if (doDrawMCErrors) {
-        hRatioErrorUp->SetBinContent(iB,mcErrValUp);
-        hRatioErrorDown->SetBinContent(iB,mcErrValDown);
+        hRatioErrorUp->SetBinContent(iB,mcErrValUp+1);
+        hRatioErrorDown->SetBinContent(iB,mcErrValDown+1);
       }
     } 
+    TH1D *hRatioError = (TH1D*)hRatioErrorDown->Clone();
+    for (int iB=1; iB!=nBins+1; ++iB) {
+      double up = hRatioErrorUp->GetBinContent(iB);
+      double down = hRatioErrorDown->GetBinContent(iB);
+      hRatioError->SetBinContent(iB,(up+down)*0.5);
+      hRatioError->SetBinError(iB,(up-down)*0.5);
+    }
+
     gRatioErrors = new TGraphErrors(nBins,xVals,yVals,xErrors,yErrors);
     maxVal = std::min((double)maxVal,.5);
     if (fixRatio && ratioMax>0)
@@ -497,15 +504,15 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     maxVal = std::max(double(maxVal),0.1);
     hRatio->SetTitle("");
     hRatio->Draw("elp");
-    hRatio->SetMinimum(-1.2*maxVal);
-    hRatio->SetMaximum(maxVal*1.2);
+    hRatio->SetMinimum(-1.2*maxVal+1);
+    hRatio->SetMaximum(maxVal*1.2+1);
     hRatio->SetLineColor(1);
     hRatio->SetMarkerStyle(20);
     hRatio->SetMarkerSize(1);
     hRatio->GetXaxis()->SetTitle(xlabel);
     hRatio->GetYaxis()->SetTitle(ratioLabel);
     hRatio->GetYaxis()->SetNdivisions(5);
-    hRatio->GetYaxis()->SetTitleSize(15);
+    hRatio->GetYaxis()->SetTitleSize(20);
     hRatio->GetYaxis()->SetTitleFont(43);
     hRatio->GetYaxis()->SetTitleOffset(2.5);
     hRatio->GetYaxis()->SetLabelFont(43); 
@@ -515,12 +522,14 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     hRatio->GetXaxis()->SetTitleOffset(5);
     hRatio->GetXaxis()->SetLabelFont(43);
     hRatio->GetXaxis()->SetLabelSize(20);
+    TLine *zero = new TLine(hRatio->GetXaxis()->GetXmin(), 1,
+                            hRatio->GetXaxis()->GetXmax(), 1);
+    zero->SetLineColor(1);
+    zero->SetLineWidth(2);
+    zero->Draw("same");
     gRatioErrors->SetLineWidth(2);
-    hZero->SetLineColor(1);
-    hZero->Draw("hist same");
     if (doDrawMCErrors) {
-      hRatioErrorUp->Draw("hist same");
-      hRatioErrorDown->Draw("hist same");
+      hRatioError->Draw("e2 same");
     }
     gRatioErrors->Draw("pe0");
   }

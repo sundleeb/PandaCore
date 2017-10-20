@@ -228,6 +228,6 @@ protected:
   int whichstyle=0;                     //!< for different styles of plotting
   double maxScale=1.5;                  //!< factor by which to scale the y-axis relative to the largest histogram
   bool drawEmpty=false;                 //!< for stacks, do not fill in the histograms
-  TString ratioLabel="#frac{Data-Exp}{Exp}"; //!< y-axis label for ratio pad
+  TString ratioLabel="Data/Pred."; //!< y-axis label for ratio pad
 };
 #endif
