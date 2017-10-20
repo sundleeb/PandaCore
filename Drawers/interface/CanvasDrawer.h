@@ -271,10 +271,10 @@ protected:
   double maxScale=1.5;                  //!< factor by which to scale the y-axis relative to the largest histogram
   bool drawEmpty=false;                 //!< for stacks, do not fill in the histograms
   int emptyLineWidth=3;                 //!< line width if not stacked
-  TString ratioLabel="#frac{Data-Exp}{Exp}"; //!< y-axis label for ratio pad
 
   int *Colors = NULL; // !< colors used for plotting
   std::vector<ObjWrapper> internalAdds; //!< collection of TObjects to plot
   bool addsDrawn = false;
+  TString ratioLabel="Data/Pred."; //!< y-axis label for ratio pad
 };
 #endif
