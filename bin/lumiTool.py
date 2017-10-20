@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
-from ROOT import TFile, TTree
 from sys import argv
+fpath = argv[1]
+argv = []
 
-fIn = TFile(argv[1])
+from ROOT import TFile, TTree
+
+fIn = TFile(fpath)
 events = fIn.Get('events')
 
 class lumi(object):

@@ -57,7 +57,7 @@ template <typename T> class BaseGraphDrawer : public CanvasDrawer {
    * \brief Reset the object
    */
   void Clear() { graphs.clear(); labels.clear(); colors.clear();
-                 styles.clear(); drawOptions.clear();            } 
+                 styles.clear(); drawOptions.clear();  Reset();    } 
 
   protected:
     bool fileIsOwned=false; 

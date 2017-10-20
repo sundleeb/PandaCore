@@ -19,6 +19,7 @@
 #include "TLegend.h"
 #include  <vector>
 #include "TStyle.h"
+#include "TColor.h"
 #include "algorithm"
 #include "PandaCore/Tools/interface/Common.h"
 
@@ -71,6 +72,7 @@ public:
   virtual ~CanvasDrawer(); //!< Destructor
 
   void SetCanvas(TCanvas *c0); //!< Set externally-defined TCanvas
+  void Reset(); //!< Reset canvas
   TCanvas *GetCanvas() { return c; } //!< Return canvas
   TPad *GetPad1() { return pad1; } //!< Return top plot pad (or NULL)
   TPad *GetPad2() { return pad2; } //!< Return bottom ratio pad (or NULL)
@@ -100,7 +102,7 @@ public:
    */
   void AddPlotLabel(const char *s, double x, double y, bool drawImmediately=true, int font=42, float textSize=-1, int textAlign=11); 
   void SetSignalScale(double d) { signalScale = d; } //!< Scale the signal by a factor
-  void InitLegend(double x0=0.6, double y0=0.55, double x1=0.88, double y1=0.9); //!< Initialize a TLegend
+  void InitLegend(double x0=0.6, double y0=0.55, double x1=0.88, double y1=0.9, int ncolumns=1); //!< Initialize a TLegend
 
   /**
    * \brief Draw the TCanvas and save it
@@ -113,20 +115,40 @@ public:
   void SetEvtNum(const char *s) { eventnumber=s; } //!< Set name for event number
   void SetEvtMod(int i) { eventmod=i; } //!< Set number of events to mod by
 
-  void SetTDRStyle(); //!< Set some plotting options to be CMS-friendly
+  void SetTDRStyle(TString opt="default"); //!< Set some plotting options to be CMS-friendly
   void SetAutoRange(bool b) { doAutoRange=b; } //!< Automatically calculate ranges as plotting
   void SetRatioStyle(); //!< Some predefined options nice for drawing some ratio plots
-  void AddCMSLabel(double x=0.18, double y=0.85); //!< Add a CMS label
+  void AddCMSLabel(double x=0.18, double y=0.85, TString subhead="Preliminary"); //!< Add a CMS label
   void AddLumiLabel(bool fb=true, double customLumi=-1); //!< Add a luminosity label
+  void AddSqrtSLabel(); //!< Only add 13 TeV label
   void ClearCanvas() { c->Clear(); } //!< Clear
   void cd() { c->cd(); } //!< cd
   void SetGrid() { gStyle->SetGridColor(16); c->SetGrid(); } //!< Set a grid
   void SetRatioLabel(TString s) { ratioLabel = s; }
+  void SetLineWidth(int i) { emptyLineWidth = i; }
 
   bool HasLegend() { return legend!=0; }
   void ClearLegend() { if (legend) legend->Clear(); }
+  /**
+   * \brief Adds a drawable TObject to be drawn after all histograms are drawn 
+   * \param o a TObject to draw
+   * \param opt option to use when drawing
+   * \param aname if provided and legend is created, this label is used in the legend
+   */
+  void AddAdditional(TObject *o, TString opt="", TString aname="");
 
 protected:
+  /**
+   * \brief Internal class for managing TObjects and their properties
+   */
+  class ObjWrapper {
+    public:
+      ObjWrapper() {}
+      ~ObjWrapper() {}
+      TObject *o;
+      TString label;
+      TString opt;
+  };
   /**
    * \brief Internal class used for managing labels 
    */
@@ -140,16 +162,16 @@ protected:
        * \param s0 text size
        * \param a0 ROOT text align index
        */
-      Label(const char *n, double x0, double y0, int f0=42, float s0=-1, int a0=11) {
-        strcpy(name,n);
-        x = x0;
-        y = y0;
-        font = f0;
-        size = s0;
-        align = a0;
-      }
+      Label(const char *n, double x0, double y0, int f0=42, float s0=-1, int a0=11):
+        name(n),
+        x(x0),
+        y(y0),
+        font(f0),
+        align(a0),
+        size(s0)
+      {  }
       ~Label() { };
-    char name[500];
+    TString name;
     double x;
     double y;
     int font,align;
@@ -179,6 +201,27 @@ protected:
                         kViolet,
                         kAzure,
                         kSpring+8};
+
+  int VBFColors[20] = {1,
+                      kBlack, // signal
+                      kBlue, // signal1
+                      kRed, // signal2
+                      kGreen+3, // signal3
+                      TColor::GetColor("#F1F1F2"),  // qcd
+                      TColor::GetColor("#CF3721"), //ttbar
+                      TColor::GetColor("#FAAF08"), // w
+                      TColor::GetColor("#4D975D"), // z(vv)
+                      kRed-5, // st
+                      TColor::GetColor("#4897D8"), // dibos
+                      kCyan-2, // gjets
+                      TColor::GetColor("#9A9EAB"), // zll
+                      kGreen-2, // wewk
+                      kCyan+3, // zewk
+                      kOrange+8,
+                      kBlue+2,
+                      kViolet,
+                      kAzure,
+                      kSpring+8};
   /**
    * \brief Colors of graphs
    */
@@ -227,6 +270,11 @@ protected:
   int whichstyle=0;                     //!< for different styles of plotting
   double maxScale=1.5;                  //!< factor by which to scale the y-axis relative to the largest histogram
   bool drawEmpty=false;                 //!< for stacks, do not fill in the histograms
-  TString ratioLabel="#frac{Data-Exp}{Exp}"; //!< y-axis label for ratio pad
+  int emptyLineWidth=3;                 //!< line width if not stacked
+
+  int *Colors = NULL; // !< colors used for plotting
+  std::vector<ObjWrapper> internalAdds; //!< collection of TObjects to plot
+  bool addsDrawn = false;
+  TString ratioLabel="Data/Pred."; //!< y-axis label for ratio pad
 };
 #endif

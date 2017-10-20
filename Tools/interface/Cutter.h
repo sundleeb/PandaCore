@@ -22,24 +22,14 @@ public:
 	 * \param cut cut to apply
 	 * \brief Applies cut to a tree
 	 */
-	TTree *CutTree(TTree *t,TString cut) {
-		PInfo("PandaCore::Cutter::CutTree",
-				TString::Format("accepting %i/%i entries\n",(int)t->GetEntries(cut),(int)t->GetEntries()));
-		return (TTree*)t->CopyTree(cut);
-	}
+	TTree *CutTree(TTree *t,TString cut);
 	/**
 	 * \param finpath input file path
 	 * \param foutpath output file path
 	 * \param cut to apply
 	 * \brief Applies cut to a tree in a file
 	 */
-	void Cut(TString finpath, TString foutpath, TString cut) {
-		TFile *fin = TFile::Open(finpath);
-		TTree *t = (TTree*)fin->Get(treeName.Data());
-		TFile *fout = TFile::Open(foutpath,"RECREATE");
-		TTree *tout = CutTree(t,cut);
-		fout->WriteTObject(tout,treeName);
-	}
+	void Cut(TString finpath, TString foutpath, TString cut);
 
 	TString treeName = "events"; /**< name of tree if filepath is provided */
 };

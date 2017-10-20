@@ -7,11 +7,15 @@ ROCTool::~ROCTool() {
   delete c; c=0; 
 }
 
-void ROCTool::InitCanvas(double x1, double y1, double x2, double y2) {
+void ROCTool::InitCanvas(double x1, double y1, double x2, double y2, bool isPrelim) {
   c = new GraphDrawer();
   c->SetTDRStyle();
   c->SetGrid();
-  c->AddCMSLabel();
+  if (isPrelim)
+    c->AddCMSLabel(0.15,0.94," Simulation Preliminary"); 
+  else
+    c->AddCMSLabel(0.15,0.94," Simulation"); 
+  c->AddSqrtSLabel();
   if (doLogy)
     c->Logy();
   if (x1>0)
@@ -128,8 +132,8 @@ TGraph *ROCTool::CalcROC1Cut() {
   { effs[0]=0; rejs[0]=0; }
 
   TGraph *roc = new TGraph(nB+1,effs,rejs);
-  roc->GetXaxis()->SetTitle("signal efficiency");
-  roc->GetYaxis()->SetTitle("background acceptance"); 
+  roc->GetXaxis()->SetTitle("Signal efficiency");
+  roc->GetYaxis()->SetTitle("Background acceptance"); 
   roc->GetYaxis()->SetTitleOffset(1.5);
   roc->SetMinimum(minval); roc->SetMaximum(maxval);
   roc->GetXaxis()->SetLimits(0,1);

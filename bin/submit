@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+
+import PandaCore.Tools.job_management as jm
+from PandaCore.Tools.Misc import PError, PInfo
+import argparse
+from os import path,getenv,system
+from sys import exit
+
+parser = argparse.ArgumentParser(description='simple condor submission')
+parser.add_argument('--exec',dest='executable',help='executable',type=str)
+parser.add_argument('--njobs',type=int)
+parser.add_argument('--arglist',type=str,default=None)
+parser.add_argument('--args',type=str,nargs='+',default=None)
+parser.add_argument('--cache',type=str,default=None)
+parser.add_argument('--dryrun',action='store_true')
+args = parser.parse_args()
+
+if not args.cache:
+    args.cache = '/data/t3serv014/{0}/submit/{1}/'.format(getenv('USER'),
+                                           args.executable.split('/')[-1].replace('.',''))
+system('rm -rf %s/*'%(args.cache))
+
+if path.isfile(args.executable):
+    args.executable = path.abspath(args.executable)
+
+job_arguments = []
+if args.arglist:
+    with open(args.arglist) as fargs:
+        for l in fargs:
+            l = l.strip()
+            if len(l)==0:
+                continue
+            job_arguments.append(l)
+elif args.args:
+    job_arguments = args.args 
+else:
+    PError('submit','Please specify arguments!')
+    exit(1)
+
+
+if args.njobs:
+    nper = max(1,int(float(len(job_arguments))/args.njobs))
+else:
+    nper = 1
+
+max_njobs = -1 if args.dryrun else None
+
+system('voms-proxy-init -voms cms --valid 168:00')
+sub = jm.SimpleSubmission(cache_dir=args.cache,
+                          executable=args.executable,
+                          arglist=job_arguments,
+                          arguments=None,
+                          nper=nper)
+sub.execute(max_njobs)
+sub.save()
+PInfo('submit','Placed cache in '+args.cache)

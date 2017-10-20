@@ -3,6 +3,9 @@
 #include <math.h>
 #include "THStack.h"
 #include "TGraphErrors.h"
+#include "TLine.h"
+
+#define FILLSTYLE 3254
 
 HistogramDrawer::HistogramDrawer(double x, double y):
   CanvasDrawer(x,y) {
@@ -12,14 +15,6 @@ HistogramDrawer::HistogramDrawer(double x, double y):
 HistogramDrawer::~HistogramDrawer() {
   if (fileIsOwned)
     delete centralFile;
-}
-
-void HistogramDrawer::AddAdditional(TObject *o, TString opt, TString aname) {
-  ObjWrapper w;
-  w.o = o;
-  w.opt = opt;
-  w.label = aname;
-  internalAdds.push_back(w);
 }
 
 void HistogramDrawer::AddSystematic(TH1D *o, TString opt, TString aname) {
@@ -46,12 +41,15 @@ void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int c
     else
       w.pt = pt;
     if (cc<0) 
-      w.cc = PlotColors[w.pt];
+      w.cc = Colors[w.pt];
     else
       w.cc = cc;
-    if (opt=="")
-      w.opt = drawOption;
-    else
+    if (opt=="") {
+      if (pt==kData)
+        w.opt = "e0lp";
+      else
+        w.opt = drawOption;
+    } else
       w.opt = opt;
 
     internalHists.push_back(w);
@@ -80,7 +78,6 @@ void HistogramDrawer::SetInputFile(TString fname) {
 
 void HistogramDrawer::Reset(bool clearPlotLabels) {
   internalHists.clear();
-  internalAdds.clear();
   internalSysts.clear();
   if (clearPlotLabels)
     plotLabels.clear();
@@ -92,6 +89,7 @@ void HistogramDrawer::Reset(bool clearPlotLabels) {
     pad1->Clear();
   if (pad2!=NULL)
     pad2->Clear();
+  CanvasDrawer::Reset();
 }
 
 double getHistMin(TH1D *h, bool ignoreZero=false) {
@@ -151,7 +149,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       h->SetLineColor(1);
     } else {
       h->SetLineColor(w.cc);
-      h->SetLineWidth(2);
+      h->SetLineWidth(emptyLineWidth);
     }
     if (pt!=kData && (pt==kData || pt>kSignal3 || doStackSignal)) {
       if (doStack) {
@@ -172,9 +170,14 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     } else if (pt==kData) {
       // if it's data
       hData = h;
-      hData->SetMarkerColor(PlotColors[pt]);
-      hData->SetMarkerStyle(20);
-      hData->SetMarkerSize(1);
+      if (w.opt.Contains("p")) {
+        hData->SetMarkerColor(Colors[pt]);
+        hData->SetMarkerStyle(20);
+        if (whichstyle==3)
+          hData->SetMarkerSize(1.2);
+        else
+          hData->SetMarkerSize(1);
+      }
       if (doSetNormFactor) {
         /*
         for (int iB=0; iB!=nBins; ++iB) {
@@ -199,7 +202,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       legOption = "EL";
     if (doStack || w.opt.Contains("e2"))
       legOption = "F";
-    if (w.pt==kData)
+    if (w.pt==kData && w.opt=="elp")
       legOption = "ELP";
     if (legend && w.label!="")
       legend->AddEntry(w.h,w.label,legOption);
@@ -210,13 +213,15 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     if (doSetNormFactor) {
       for (HistWrapper ww : hOthers) 
         ww.h->Scale(1./stackIntegral);
+      for (auto w : internalSysts)
+        w.h->Scale(1./stackIntegral);
     }
     if (doDrawMCErrors||doRatio) {
       std::vector<float> vals,errs;
       hSum = (TH1D*) (hOthers[0].h->Clone("hsum"));
       hSum->SetFillColorAlpha(kBlack,0.99);
       hSum->SetLineWidth(0);
-      hSum->SetFillStyle(3003);
+      hSum->SetFillStyle(FILLSTYLE);
       for (int iB=0; iB!=nBins; ++iB) {
         hSum->SetBinContent(iB+1,0); 
         vals.push_back(0);
@@ -288,7 +293,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
 
   // set up canvases
   c->cd();
-  if (doRatio) {
+  if (doRatio && hData) {
     SplitCanvas();
     if (doLogy)
       pad1->SetLogy();
@@ -324,7 +329,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     }
     if (firstHist==hData)
       firstHist->Draw("elp");
-    else if (firstHist==hOthers[0].h)
+    else if (hOthers.size()>0 && firstHist==hOthers[0].h)
       firstHist->Draw(hOthers[0].opt);
     else
       firstHist->Draw(drawOption);
@@ -391,6 +396,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       legend->AddEntry(o,label,"l");
     }
   }
+  addsDrawn = true;
 
   if (hData!=NULL && firstHist!=hData) {
     hData->Draw("elp same"); 
@@ -403,7 +409,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
 
   TGraphErrors *gRatioErrors=0;
   double *xVals=0, *yVals=0, *xErrors=0, *yErrors=0;
-  if (doRatio) {
+  if (doRatio && hData) {
     pad2->cd();
     pad2->SetGridy();
     hRatio = (TH1D*)hData->Clone("ratio");
@@ -413,13 +419,9 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hRatioErrorDown = (TH1D*)hSum->Clone("sumratiodown");
       hRatioErrorUp->SetMaximum(-1111); hRatioErrorUp->SetMinimum(-1111);
       hRatioErrorDown->SetMaximum(-1111); hRatioErrorDown->SetMinimum(-1111);
-      hRatioErrorUp->SetFillStyle(3003); hRatioErrorUp->SetLineWidth(1);
-      hRatioErrorDown->SetFillStyle(3003); hRatioErrorDown->SetLineWidth(1);
+      hRatioErrorUp->SetFillStyle(FILLSTYLE); hRatioErrorUp->SetLineWidth(1);
+      hRatioErrorDown->SetFillStyle(FILLSTYLE); hRatioErrorDown->SetLineWidth(1);
     }
-    hZero = (TH1D*)hData->Clone("zero"); 
-    hZero->SetMaximum(-1111); hZero->SetMinimum(-1111);
-    for (int iB=0; iB!=nBins; ++iB) 
-      hZero->SetBinContent(iB+1,0);
     
     float maxVal=0;
     xVals = new double[nBins];
@@ -463,7 +465,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
         val=0;
         errVal=0;
       } else {
-        val = dataVal/mcVal-1;
+        val = dataVal/mcVal;
         errVal = err/mcVal;
         mcErrValUp = mcErrUp/mcVal;
         mcErrValDown = mcErrDown/mcVal;
@@ -479,10 +481,18 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hRatio->SetBinContent(iB,val);
       hRatio->SetBinError(iB,0.0001);
       if (doDrawMCErrors) {
-        hRatioErrorUp->SetBinContent(iB,mcErrValUp);
-        hRatioErrorDown->SetBinContent(iB,mcErrValDown);
+        hRatioErrorUp->SetBinContent(iB,mcErrValUp+1);
+        hRatioErrorDown->SetBinContent(iB,mcErrValDown+1);
       }
     } 
+    TH1D *hRatioError = (TH1D*)hRatioErrorDown->Clone();
+    for (int iB=1; iB!=nBins+1; ++iB) {
+      double up = hRatioErrorUp->GetBinContent(iB);
+      double down = hRatioErrorDown->GetBinContent(iB);
+      hRatioError->SetBinContent(iB,(up+down)*0.5);
+      hRatioError->SetBinError(iB,(up-down)*0.5);
+    }
+
     gRatioErrors = new TGraphErrors(nBins,xVals,yVals,xErrors,yErrors);
     maxVal = std::min((double)maxVal,.5);
     if (fixRatio && ratioMax>0)
@@ -490,15 +500,15 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     maxVal = std::max(double(maxVal),0.1);
     hRatio->SetTitle("");
     hRatio->Draw("elp");
-    hRatio->SetMinimum(-1.2*maxVal);
-    hRatio->SetMaximum(maxVal*1.2);
+    hRatio->SetMinimum(-1.2*maxVal+1);
+    hRatio->SetMaximum(maxVal*1.2+1);
     hRatio->SetLineColor(1);
     hRatio->SetMarkerStyle(20);
     hRatio->SetMarkerSize(1);
     hRatio->GetXaxis()->SetTitle(xlabel);
     hRatio->GetYaxis()->SetTitle(ratioLabel);
     hRatio->GetYaxis()->SetNdivisions(5);
-    hRatio->GetYaxis()->SetTitleSize(15);
+    hRatio->GetYaxis()->SetTitleSize(20);
     hRatio->GetYaxis()->SetTitleFont(43);
     hRatio->GetYaxis()->SetTitleOffset(2.5);
     hRatio->GetYaxis()->SetLabelFont(43); 
@@ -508,16 +518,18 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     hRatio->GetXaxis()->SetTitleOffset(5);
     hRatio->GetXaxis()->SetLabelFont(43);
     hRatio->GetXaxis()->SetLabelSize(20);
+    TLine *zero = new TLine(hRatio->GetXaxis()->GetXmin(), 1,
+                            hRatio->GetXaxis()->GetXmax(), 1);
+    zero->SetLineColor(1);
+    zero->SetLineWidth(2);
+    zero->Draw("same");
     gRatioErrors->SetLineWidth(2);
-    hZero->SetLineColor(1);
-    hZero->Draw("hist same");
     if (doDrawMCErrors) {
-      hRatioErrorUp->Draw("hist same");
-      hRatioErrorDown->Draw("hist same");
+      hRatioError->Draw("e2 same");
     }
     gRatioErrors->Draw("pe0");
   }
-  if (doRatio)
+  if (doRatio && hData)
     pad1->cd();
 
   CanvasDrawer::Draw(outDir,baseName);

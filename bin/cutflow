@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+
+from PandaCore.Tools.Misc import PInfo, PError, tTIMES
+from sys import argv, exit
+from re import sub
+import argparse
+
+parser = argparse.ArgumentParser(description='cutflow')
+parser.add_argument('--treename', help='input TTree name', type=str, default='events')
+parser.add_argument('--cutlist', help='file containing list of cuts', type=str)
+parser.add_argument('--weight', help='weight expression', type=str, default=None)
+parser.add_argument('--dumpEvents', action='store_true')
+parser.add_argument('infile', metavar='input', type=str, help='input file to process')
+args = parser.parse_args()
+
+argv = []
+
+import root_numpy as rnp
+import numpy as np
+
+class Cutflow(object):
+    def __init__(self):
+        self.cuts = ['1==1']
+        self.nicknames = {'1==1':'Full'}
+        self.weight = None
+        self.event = None
+    def register(self, cut, nickname=None):
+        cut = cut.strip()
+        if cut not in self.cuts:
+            self.cuts.append(cut)
+            if nickname:
+                nickname = nickname.strip()
+                self.nicknames[cut] = nickname
+            else:
+                self.nicknames[cut] = cut
+    def check(self, fpath, treename = 'events'):
+        branches = self.cuts[:]
+        if self.weight:
+            branches.append(self.weight)
+        if self.event:
+            branches.append(self.event)
+        xarr = rnp.root2array([fpath], 
+                              branches = branches, 
+                              treename = treename)
+        if self.event:
+            events = xarr[self.event]
+        if self.weight:
+            weights = xarr[self.weight]
+        else:
+            weights = 1
+        xarr = xarr.view(np.float64).reshape(xarr.shape+(-1, ))
+        print '%-20s : %15s %15s'%('SELECTION', 'YIELD', 'RAW')
+        print '---------------------------------------------------------'
+        for ic in xrange(len(self.cuts)): 
+            xslice = xarr[:, :(ic+1)]
+            xpass = (xslice.sum(axis=1) == (ic+1))
+            npass = xpass.sum()
+            nyield = (xpass * weights).sum()
+            print '%-20s : %15f %15i'%(self.nicknames[self.cuts[ic]][:20], nyield, npass)
+        if self.event:
+            ncuts = len(self.cuts)
+            pass_all = (xslice.sum(axis=1) == ncuts)
+            events_passing = events[pass_all]
+            print '---------------------------------------------------------'
+            print 'Passing events:'
+            for e in events_passing:
+                print '  ', e
+
+infile = args.infile
+
+with open(args.cutlist) as fcuts:
+    cuts = filter(lambda x : len(x)>0, [sub(r'#.*', '', x.strip())for x in fcuts.readlines()])
+
+c = Cutflow()
+if args.weight:
+    c.weight = tTIMES('1', args.weight)
+for cut in cuts:
+    c.register(*(cut.split(':')))
+if args.dumpEvents:
+    c.event = 'eventNumber'
+
+c.check(infile, args.treename)

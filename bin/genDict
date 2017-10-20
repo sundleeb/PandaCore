@@ -1,0 +1,183 @@
+#!/bin/bash
+
+###
+# This script generates code that can be compiled
+# using rootcling to build ROOT dictionaries.
+# This is pretty much a clone of the old Bambu
+# implementation of genDict.sh by Y. Iiyama.
+###
+
+# check if first arg is older than any of the other args
+check-update () {
+  local DEPENDANT=$1
+  local SOURCES="$@"
+
+  local UPDATED=false
+    
+  if ! [ -e $DEPENDANT ]
+  then
+    UPDATED=true
+  else
+    LASTUPDATE=$(stat -c %Z $DEPENDANT)
+    local SOURCE
+      
+    for SOURCE in $SOURCES
+    do
+      if ! [ -e $SOURCE ]
+      then
+        echo "$SOURCE does not exist"
+        exit 1
+      fi
+      
+      if [ $LASTUPDATE -lt $(stat -c %Z $SOURCE) ]
+      then
+        UPDATED=true
+        break
+      fi
+    done
+  fi
+
+  echo $UPDATED
+}
+
+usage () {
+  echo "Usage: genDict [-c] [-f] [-j NPROC] PACKAGES"
+  echo "Generate ROOT dictionary source code. PACKAGE is e.g. PandaCore/Tools."
+  echo ""
+  echo "  -c  Clear generated source code."
+  echo "  -f  Force generation. Otherwise dictionaries are written only if"
+  echo "      header files are updated."
+  echo "  -j  Specify number of processes to spawn."
+
+  exit $1
+}
+
+# parse flags
+genFORCE=false
+genCLEAR=false
+NCORES=1
+while getopts fchj: OPT; do
+  case $OPT in
+    c)
+      genCLEAR=true
+      ;;
+    f)
+      genFORCE=true
+      ;;
+    j)
+      NCORES=$OPTARG
+      ;;
+    h)
+      usage 0
+      ;;
+    \?)
+      echo " Invalid option: -$OPTARG" >& 2
+      usage 1
+      ;;
+  esac
+done
+export genCLEAR
+export genFORCE
+
+# remaining arguments are packages
+shift $((OPTIND-1))
+
+if ! [ $CMSSW_BASE ] || ! [ $SCRAM_ARCH ]
+then
+  echo "CMSSW_BASE and SCRAM_ARCH must be set."
+  exit 1
+fi
+
+PACKAGES="$@"
+
+if ! [ "$PACKAGES" ] # if no packages, pick up everything that has LinkDef.h
+then
+  for DIR in $(ls $CMSSW_BASE/src)
+  do
+    for SUBDIR in $(ls $CMSSW_BASE/src/$DIR)
+    do
+      [ -e $CMSSW_BASE/src/$DIR/$SUBDIR/LinkDef.h ] && PACKAGES="$PACKAGES $DIR/$SUBDIR"
+    done
+  done
+fi
+
+if $genCLEAR
+then
+  echo "Clearing ROOT dictionaries in:"
+else
+  echo "Generating ROOT dictionaries for:"
+fi
+echo " $PACKAGES"
+
+export genTMPDIR=$CMSSW_BASE/tmp/$SCRAM_ARCH
+mkdir -p $genTMPDIR
+
+export genLIBDIR=$CMSSW_BASE/lib/$SCRAM_ARCH
+mkdir -p $genLIBDIR
+
+cd $CMSSW_BASE/src
+
+generate_dict() {
+  PACKAGE=$1
+  LINKDEF=$PACKAGE/LinkDef.h
+  SRCDIR=$PACKAGE/src
+  INCDIR=$PACKAGE/interface 
+
+  if ! [ -e $LINKDEF ] || ! [ -d $SRCDIR ] || ! [ -d $INCDIR ]
+  then
+    echo "$PACKAGE does not appear to be a valid package."
+    return
+  fi
+
+
+  # parse the BuildFile to find additional include directories
+  INCDIRS="-I$CMSSW_BASE/src"
+  if [ -e $PACKAGE/BuildFile.xml ]
+  then
+    DEPS=$(sed -n 's|<use  *name="\([^/]*\)"/>|\1|p' $PACKAGE/BuildFile.xml)
+    for DEP in $DEPS
+    do
+      CONFIG=$CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/$DEP.xml
+      [ -e $CONFIG ] || continue
+      #read off all variables defined in xml
+      #everything placed within a subshell to avoid exporting uncontrollable environments
+      THISINCLUDE=$(eval $(sed -n 's|^ *<environment  *name="\(.*\)"  *default="\(.*\)"/>.*$|\1=\2|p' $CONFIG); echo $INCLUDE)
+      [ $THISINCLUDE ] && INCDIRS="$INCDIRS -I$THISINCLUDE"
+    done
+  fi
+  
+  # each package has one dictionary definition, 
+  # named Package/Subpackage/src/dictPackageSubpackage.cc
+  OUTPUT="dict"$(echo $PACKAGE | sed "s?/??g")
+  if $genCLEAR
+  then
+    echo "rm -f $SRCDIR/$OUTPUT.cc "
+    rm -f $SRCDIR/$OUTPUT.cc 
+    echo "rm -f $genLIBDIR/${OUTPUT}_rdict.pcm "
+    rm -f $genLIBDIR/${OUTPUT}_rdict.pcm 
+  else
+    # figure out what the LinkDef depends on
+    INCLUDES=$(makedepend -I. -f- $LINKDEF 2>/dev/null | awk '/Panda/ {print $2}' | tr '\n' ' ')
+    # generate dictionary if $OUTPUT.cc does not exist or is older than one of the source files
+    if $genFORCE || $(check-update $SRCDIR/$OUTPUT.cc $INCLUDES $LINKDEF) || ! [ -e $genLIBDIR/${OUTPUT}_rdict.pcm ]
+    then 
+      HEADERS=$(sed -n 's|#include *"\([^"]*\)"|\1|p' $LINKDEF | tr '\n' ' ')
+
+      echo rootcling -f $genTMPDIR/$OUTPUT.cc $INCDIRS $HEADERS $LINKDEF
+      rootcling -f $genTMPDIR/$OUTPUT.cc $INCDIRS $HEADERS $LINKDEF
+
+      [ $? -eq 0 ] || exit 1
+  
+      echo mv $genTMPDIR/${OUTPUT}.cc $SRCDIR/
+      mv $genTMPDIR/${OUTPUT}.cc $SRCDIR/
+      echo mv $genTMPDIR/${OUTPUT}_rdict.pcm $genLIBDIR/
+      mv $genTMPDIR/${OUTPUT}_rdict.pcm $genLIBDIR/
+    fi
+
+  fi
+}
+
+export -f check-update
+export -f generate_dict 
+echo $PACKAGES | sed "s? \+?\n?g" | xargs -n 1 -P $NCORES -I {} bash -c 'generate_dict "{}"'
+

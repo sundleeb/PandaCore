@@ -49,13 +49,6 @@ class HistogramDrawer : public CanvasDrawer {
    */
   void AddHistogram(TString hname, TString label, ProcessType pt=nProcesses, TString fname="");
   /**
-   * \brief Adds a drawable TObject to be drawn after all histograms are drawn 
-   * \param o a TObject to draw
-   * \param opt option to use when drawing
-   * \param aname if provided and legend is created, this label is used in the legend
-   */
-  void AddAdditional(TObject *o, TString opt="", TString aname="");
-  /**
    * \brief Similar to AddAdditional, but specifically for histograms to be treated as systematic errors
    * \param o a TH1D to draw
    * \param opt option to use when drawing
@@ -92,21 +85,9 @@ class HistogramDrawer : public CanvasDrawer {
         int cc;
         TString opt;
     };
-    /**
-     * \brief Internal class for managing TObjects and their properties
-     */
-    class ObjWrapper {
-      public:
-        ObjWrapper() {}
-        ~ObjWrapper() {}
-        TObject *o;
-        TString label;
-        TString opt;
-    };
     bool fileIsOwned=false; //!< if the input file is owned and needs to be deleted
     TFile *centralFile=0; //!< an input file from which to harvest histograms by key
     std::vector<HistWrapper> internalHists; //!< collection of histograms to plot
-    std::vector<ObjWrapper> internalAdds; //!< collection of TObjects to plot
     std::vector<HistWrapper> internalSysts; //!< Collection of systematic weights (subset of internalAdds)
     double absMin=-999; //!<absolute minimum of the plot
 };

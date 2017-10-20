@@ -7,8 +7,11 @@ from PandaCore.Tools.Misc import *
 from PandaCore.Tools.Load import Load
 from PandaCore.Tools.root_interface import read_files, draw_hist
 from os import getenv, system
+from pprint import pprint
 
 Load('HistogramDrawer')
+
+tree_name = 'events'
 
 class Process():
     def __init__(self, name, pt, custom_color=root.nProcesses):
@@ -25,7 +28,7 @@ class Process():
         self.use_common_cut = True
         self.additional_cut = '1==1'
         self.additional_weight = '1'
-        self.tree_name = 'events'
+        self.tree_name = tree_name
         # private stuff
         self.__files = []
         return
@@ -95,12 +98,12 @@ class Distribution():
                                    '', self.nbins, 
                                    self.xbounds[0], self.xbounds[1])
     def generate_hist(self, label):
-        self.histograms[label] = self.hbase.Clone('h_%s_%s'%(self.filename, label))
+        self.histograms[label] = self.hbase.Clone('h_%s_%s'%(self.filename, convert_name(label)))
         self.histograms[label].Sumw2()
         return self.histograms[label]
     def generate_syst(self, label):
-        hup = self.hbase.Clone('h_%s_%s_Up'%(self.filename, label))
-        hdown = self.hbase.Clone('h_%s_%s_Down'%(self.filename, label))
+        hup = self.hbase.Clone('h_%s_%s_Up'%(self.filename, convert_name(label)))
+        hdown = self.hbase.Clone('h_%s_%s_Down'%(self.filename, convert_name(label)))
         hup.Sumw2(); hdown.Sumw2()
         self.systs[label] = (hup, hdown)
         return (hup, hdown)
@@ -127,7 +130,7 @@ class Systematic():
         else:
             shift = str(central)
             for k, v in replacement.iteritems():
-                shift.replace(k, v)
+                shift = shift.replace(k, v)
             return shift
 
 class PlotUtility():
@@ -173,7 +176,7 @@ class PlotUtility():
 
         f_out = root.TFile(outdir+'hists.root', 'UPDATE')
         if f_out.IsZombie():
-            f_out.close()
+            f_out.Close()
             f_out = root.TFile(outdir+'hists.root', 'RECREATE')
         f_buffer_path = '/tmp/%s/buffer_%i.root'%(getenv('USER'), root.gSystem.GetPid())
         f_buffer = root.TFile(f_buffer_path, 'RECREATE')
@@ -199,7 +202,7 @@ class PlotUtility():
             if (proc.process_type<=root.kSignal3 and proc.process_type!=root.kData):
                 final_weight = tTIMES(final_weight, str(self.signal_scale))
             if self.eventmod:
-                if (p.process_type==root.kData):
+                if (proc.process_type==root.kData):
                     final_cut = tAND(final_cut, '(%s%%%i)==0'%(self.eventnumber, self.eventmod))
                 else:
                     final_weight = tTIMES(final_weight, str(1./self.eventmod))
@@ -219,7 +222,7 @@ class PlotUtility():
                     weight_map['%s_Down'%(syst.name)] = down_weight
                     weights.append(up_weight)
                     weights.append(down_weight)
-
+            
             xarr = proc.read(variables, weights, final_cut)
 
             for dist in self.__distributions:
@@ -244,7 +247,7 @@ class PlotUtility():
                         draw_hist(hist = dist.systs[syst.name][1], 
                                   xarr = xarr, 
                                   fields = (dist.name, ), 
-                                  weight = weights_up)
+                                  weight = weights_down)
 
         # everything is filled,  now draw the histograms!
         for dist in self.__distributions:
@@ -317,12 +320,19 @@ class PlotUtility():
                     h.SetLineStyle(2)
                 elif proc.dotted:
                     h.SetLineStyle(3)
+
+                add_hist_args = [h]
                 if (proc.process_type<=root.kSignal3 
                     and proc.process_type!=root.kData 
                     and self.signal_scale!=1):
-                    self.canvas.AddHistogram(h, '%.1f#times%s'%(self.signal_scale, proc.name), proc.process_type)
+                    add_hist_args.append( '%.1f#times%s'%(self.signal_scale, proc.name) )
                 else:
-                    self.canvas.AddHistogram(h, proc.name, proc.process_type)
+                    add_hist_args.append( proc.name )
+                add_hist_args.append( proc.process_type )
+                if proc.color != proc.process_type:
+                    add_hist_args.append( proc.color )
+                self.canvas.AddHistogram(*add_hist_args)
+
                 f_out.WriteTObject(h, h.GetName(), "overwrite")
             for syst in self.__systematics:
                 hup, hdown = dist.systs[syst.name]
