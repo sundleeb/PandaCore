@@ -45,6 +45,7 @@ libraries = [
     Library(name='PandaAnalysisFlat',   objects = ['PandaAnalyzer',
                                                    'GenAnalyzer',
                                                    'LimitTreeBuilder',
+                                                   'TagAnalyzer',
                                                    'SFTreeBuilder',
                                                    'BTagTreeBuilder',
                                                   ]

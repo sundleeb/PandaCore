@@ -73,6 +73,15 @@ void TMVATrainer::BookBDT(TString opt) {
   factory->BookMethod(TMVA::Types::kBDT,"BDT",opt);
 }
 
+void TMVATrainer::BookCuts(TString opt) {
+  if (opt=="") {
+    opt = "!H:!V:EffMethod=EffSel:FitMethod=GA";
+  }
+
+  PInfo("TMVATrainer::BookCuts",TString::Format("using options %s",opt.Data()));
+  factory->BookMethod(TMVA::Types::kCuts,"Cuts",opt);
+}
+
 void TMVATrainer::TrainAll() {
   factory->TrainAllMethods();
   factory->TestAllMethods();

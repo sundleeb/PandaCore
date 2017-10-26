@@ -53,6 +53,7 @@ public:
   void SetFiles(TString sigpath, TString bgpath); //!< Sets input signal and background files
   void BookBDT(BDTType t); //!< Book a BDT given a pre-defined type
   void BookBDT(TString opt=""); //!< Book a BDT given a user-defined set of options
+  void BookCuts(TString opt=""); //!< Book a rectangular cut optimizer
   void TrainAll(); //!< Trian all booked methods
 
   TString treename=""; /**< name of tree to load from input files */

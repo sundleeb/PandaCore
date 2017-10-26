@@ -33,6 +33,9 @@ processes =	{
 'ZprimeToTTJet_M-3500_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-3500','MC',1),
 'ZprimeToTTJet_M-4000_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-4000','MC',1),
 
+'ZprimeToTT_M-1000_W-10_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('ZpTT_med-1000_lo','MC',1),
+'ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('ZpTT_med-3000_lo','MC',1),
+
 'ZprimeToWW_narrow_M-800_13TeV-madgraph':('ZpWW_med-800','MC',1),
 'ZprimeToWW_narrow_M-1000_13TeV-madgraph':('ZpWW_med-1000','MC',1),
 'ZprimeToWW_narrow_M-1200_13TeV-madgraph':('ZpWW_med-1200','MC',1),

@@ -168,8 +168,14 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
         hs->Add(h);
         stackIntegral += h->Integral();
       } else {
-        if (doSetNormFactor) 
-          h->Scale(1./h->Integral());
+        if (doSetNormFactor) {
+          float scale = 1./h->Integral();
+          for (int iB=1; iB!=h->GetNbinsX()+1; ++iB) {
+            h->SetBinContent(iB,h->GetBinContent(iB)*scale);
+            h->SetBinError(iB,h->GetBinError(iB)*scale);
+          }
+          // h->Scale(1./h->Integral());
+        }
       }
       hOthers.push_back(w);
     } else if (pt==kData) {
@@ -186,15 +192,26 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
           hData->SetBinError(iB,hData->GetBinError(iB)/hData->Integral());
         }
         */
-        hData->Scale(1./hData->Integral());
+        float scale = 1./hData->Integral();
+        for (int iB=1; iB!=hData->GetNbinsX()+1; ++iB) {
+          hData->SetBinContent(iB,hData->GetBinContent(iB)*scale);
+          hData->SetBinError(iB,hData->GetBinError(iB)*scale);
+        }
+        // hData->Scale(1./hData->Integral());
       }
     } else if (pt<=kSignal3 && pt!=kData) {
       // if it's signal and we're not stacking signal
       hSignal[pt-1] = h;
       hSignal[pt-1]->SetLineWidth(5);
       hSignal[pt-1]->SetFillStyle(0);
-      if (doSetNormFactor)
-        hSignal[pt-1]->Scale(1./hSignal[pt-1]->Integral());
+      if (doSetNormFactor) {
+        float scale = 1./hSignal[pt-1]->Integral();
+        for (int iB=1; iB!=hSignal[pt-1]->GetNbinsX()+1; ++iB) {
+          hSignal[pt-1]->SetBinContent(iB,hSignal[pt-1]->GetBinContent(iB)*scale);
+          hSignal[pt-1]->SetBinError(iB,hSignal[pt-1]->GetBinError(iB)*scale);
+        }
+        // hSignal[pt-1]->Scale(1./hSignal[pt-1]->Integral());
+      }
     } 
   }
   for (int iH=nH-1; iH!=-1; --iH) {

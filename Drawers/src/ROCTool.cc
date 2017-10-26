@@ -113,6 +113,7 @@ TGraph *ROCTool::CalcROC1Cut() {
   float sigIntegral = sigHist->Integral(1,nB);
   float bgIntegral = bgHist->Integral(1,nB);
 
+  float zeroRej = 0;
   for (unsigned int iB=1; iB!=nB+1; ++iB) {
     if (normal) {
       float eff = sigHist->Integral(iB,nB)/sigIntegral;
@@ -125,22 +126,32 @@ TGraph *ROCTool::CalcROC1Cut() {
       effs[iB] = eff; rejs[iB] = rej;
       cuts[iB-1] = sigHist->GetBinLowEdge(iB)+sigHist->GetBinWidth(iB);
     } 
+    if (invertFake && rejs[iB-1] > 0.) {
+      rejs[iB-1] = 1./rejs[iB-1];
+      zeroRej = std::max(10*rejs[iB-1],zeroRej);
+    }
   }
-  if (normal)
-  { effs[nB]=0; rejs[nB]=0; }
-  else
-  { effs[0]=0; rejs[0]=0; }
+
+  if (normal) { effs[nB]=0; rejs[nB]=zeroRej; }
+  else { effs[0]=0; rejs[0]=zeroRej; }
+  for (unsigned int iB=0; iB!=nB; ++iB) {
+    if (rejs[iB] == 0)
+      rejs[iB] = zeroRej;
+  }
 
   TGraph *roc = new TGraph(nB+1,effs,rejs);
-  roc->GetXaxis()->SetTitle("signal efficiency");
-  roc->GetYaxis()->SetTitle("background acceptance"); 
+  roc->GetXaxis()->SetTitle("Signal efficiency");
+  if (invertFake)
+    roc->GetYaxis()->SetTitle("1 / Background acceptance"); 
+  else
+    roc->GetYaxis()->SetTitle("Background acceptance"); 
   roc->GetYaxis()->SetTitleOffset(1.5);
   roc->SetMinimum(minval); roc->SetMaximum(maxval);
   roc->GetXaxis()->SetLimits(0,1);
 
   TGraph *gcuts = new TGraph(nB+1,effs,cuts);
 
-  PInfo("ROCTool::CalcROC",TString::Format("eff=0.5 => fakerate=%.3f, at x=%.2f",roc->Eval(0.5),gcuts->Eval(0.5)));
+  PInfo("ROCTool::CalcROC",TString::Format("eff=0.3 => fakerate=%.3g, at x=%.2f",roc->Eval(0.3),gcuts->Eval(0.3)));
 
   return roc;
 }

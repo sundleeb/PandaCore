@@ -62,6 +62,9 @@ processes =	{
 'QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('QCD_ht1500to2000','MC',121.5),
 'QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('QCD_ht2000toinf','MC',25.42),
 
+'QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8':('QCD_pt1000to1400','MC',1),
+'QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8':('QCD_pt300to470','MC',1),
+
 'ST_t-channel_antitop_4f_leptonDecays_13TeV-powheg-pythia8':('SingleTop_tTbar_lep','MC',26.22),
 'ST_t-channel_top_4f_leptonDecays_13TeV-powheg-pythia8':('SingleTop_tT_lep','MC',44.07),
 'ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1':('SingleTop_tW','MC',35.85),
