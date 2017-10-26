@@ -18,7 +18,6 @@ args = parser.parse_args()
 if not args.cache:
     args.cache = '/data/t3serv014/{0}/submit/{1}/'.format(getenv('USER'),
                                            args.executable.split('/')[-1].replace('.',''))
-PInfo('submit','Placing cache in '+args.cache)
 system('rm -rf %s/*'%(args.cache))
 
 if path.isfile(args.executable):
@@ -40,7 +39,7 @@ else:
 
 
 if args.njobs:
-    nper = int(float(len(job_arguments))/args.njobs)
+    nper = max(1,int(float(len(job_arguments))/args.njobs))
 else:
     nper = 1
 
@@ -54,3 +53,4 @@ sub = jm.SimpleSubmission(cache_dir=args.cache,
                           nper=nper)
 sub.execute(max_njobs)
 sub.save()
+PInfo('submit','Placed cache in '+args.cache)

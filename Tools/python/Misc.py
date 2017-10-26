@@ -42,8 +42,8 @@ def PError(module,msg,newline="\n"):
 
 ModelParams = namedtuple('ModelParams',['m_V','m_DM','gV_DM','gA_DM','gV_q','gA_q','sigma','delta'])
 
-def read_nr_model(mV,mDM,couplings=None):
-    tmpl = getenv('PANDA_XSECS')+'/non-resonant/%i_%i_xsec_gencut.dat'
+def read_nr_model(mV,mDM,couplings=None,path='non-resonant'):
+    tmpl = getenv('PANDA_XSECS')+'/'+path+'/%i_%i_xsec_gencut.dat'
     try:
         fdat = open(tmpl%(mV,mDM))
     except IOError:

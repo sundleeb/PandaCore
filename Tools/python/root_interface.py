@@ -8,6 +8,7 @@ import numpy as np
 import root_numpy as rnp 
 import ROOT as root
 from Misc import PInfo,  PWarning,  PError
+from array import array 
 
 _hcounter = 0 
 
@@ -74,8 +75,8 @@ def array_as_tree(xarr, treename = None, fcontext = None, xkwargs = {}):
 
 # HISTOGRAM MANIPULATION ---------------------------------------------------
 def draw_hist(hist, xarr, fields, weight = None):
-    warr = xarr[weight] if weight else None
-    if len(warr.shape)>1:
+    warr = xarr[weight] if (weight is not None) else None
+    if (warr is not None) and len(warr.shape)>1:
         warr = warr[:,0]
     if len(fields) == 1:
         return rnp.fill_hist(hist = hist, array = xarr[fields[0]], weights = warr)
@@ -89,9 +90,9 @@ def draw_hist(hist, xarr, fields, weight = None):
 class Selector(object):
     def __init__(self):
         self.data = None 
-        self._nicknames = None
+        self._nicknames = {} 
     def read_files(self, *args, **kwargs):
-        self.data = read_branches(*args, **kwargs)
+        self.data = read_files(*args, **kwargs)
     def read_tree(self, *args, **kwargs):
         self.data = read_tree(*args, **kwargs)
     def rename(self, a, b = None):
@@ -119,17 +120,20 @@ class Selector(object):
         f = root.TFile(fpath, opts)
         array_as_tree(self.data, treename, f)
         f.Close()
-    def draw(self, fields, weight = None, hbase = None, vbins = None, fbins = None):
+    def draw(self, fields, weight = None, mask = None, hbase = None, vbins = None, fbins = None):
         global _hcounter
         if hbase:
             h = hbase.Clone()
         elif vbins:
-            h = root.TH1D('hSelector%i'%_hcounter, '', len(vbins), vbins)
+            h = root.TH1D('hSelector%i'%_hcounter, '', len(vbins)-1, array('f', vbins))
             _hcounter += 1 
         else:
             h = root.TH1D('hSelector%i'%_hcounter, '', *fbins)
             _hcounter += 1 
         if type(fields)==str:
             fields = [fields]
-        draw_hist(h, self.data, fields, weight)
+        masked_data = self.data if mask is None else self.data[mask]
+        draw_hist(h, masked_data, fields, weight)
         return h  
+    # def __getitem__(self, arg):
+    #     return self.data[arg]

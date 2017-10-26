@@ -43,6 +43,7 @@ libraries = [
                                                   ]
            ),
     Library(name='PandaAnalysisFlat',   objects = ['PandaAnalyzer',
+                                                   'PandaLeptonicAnalyzer',
                                                    'GenAnalyzer',
                                                    'LimitTreeBuilder',
                                                    'TagAnalyzer',

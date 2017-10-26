@@ -40,12 +40,20 @@ void PError(const char *module, const char *msg, const char *newline) {
     fprintf(stderr,"ERROR   [%-40s]: %s%s",module,msg,newline);
 }
 
-double getVal(TH1D*h,double val) {
+double getVal(TH1*h,double val) {
   return h->GetBinContent(h->FindBin(val));
 }
 
 double getVal(TH2D*h,double val1, double val2) {
   return h->GetBinContent(h->FindBin(val1,val2));
+}
+
+double getError(TH1*h,double val) {
+  return h->GetBinError(h->FindBin(val));
+}
+
+double getError(TH2D*h,double val1, double val2) {
+  return h->GetBinError(h->FindBin(val1,val2));
 }
 
 std::vector<TString> getDependencies(TString cut) {

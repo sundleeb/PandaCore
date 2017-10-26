@@ -12,9 +12,9 @@ void ROCTool::InitCanvas(double x1, double y1, double x2, double y2, bool isPrel
   c->SetTDRStyle();
   c->SetGrid();
   if (isPrelim)
-    c->AddCMSLabel(0.15,0.94,"Simulation Preliminary"); 
+    c->AddCMSLabel(0.15,0.94," Simulation Preliminary"); 
   else
-    c->AddCMSLabel(0.15,0.94,"Simulation"); 
+    c->AddCMSLabel(0.15,0.94," Simulation"); 
   c->AddSqrtSLabel();
   if (doLogy)
     c->Logy();
