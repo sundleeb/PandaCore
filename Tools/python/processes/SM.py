@@ -99,10 +99,14 @@ processes =	{
 	'WZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_wz','MC',47.2),
 	'ZZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_zz','MC',16.6),
 
-	'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZHbb_mH125','MC',0.1),
-	'ZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ZllHbb_mH125','MC',0.05),
-	'ggZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ggZHbb_mH125','MC',0.012),
-	'ggZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ggZllHbb_mH125','MC',0.006),
-	'WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WmLNuHbb','MC',0.100),
-	'WplusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WpLNuHbb','MC',0.159),
+        'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZHbb_mH125','MC',0.08912),
+        'ZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ZllHbb_mH125','MC',0.04865),
+        'ggZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ggZHbb_mH125','MC',0.014366),
+        'ggZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ggZllHbb_mH125','MC',0.007842),
+        'WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WmLNuHbb','MC',0.100),
+        'WplusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WpLNuHbb','MC',0.159),
+        'ttHTobb_M125_13TeV_powheg_pythia8':('ttHTobb_M125_13TeV_powheg_pythia8','MC',0.506*0.5824),
+        'GluGluHToBB_M125_13TeV_amcatnloFXFX_pythia8':('GluGluHToBB_M125_13TeV_amcatnloFXFX_pythia8','MC',48.48*0.5824),
+        'VBFHToBB_M125_13TeV_amcatnlo_pythia8':('VBFHToBB_M125_13TeV_amcatnlo_pythia8','MC',3.782*0.5824),
+
 }
