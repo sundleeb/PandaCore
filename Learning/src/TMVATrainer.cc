@@ -71,7 +71,11 @@ void TMVATrainer::BookBDT(TString opt) {
   }
 
   PInfo("TMVATrainer::BookBDT",TString::Format("using options %s",opt.Data()));
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
   factory->BookMethod(dataloader,TMVA::Types::kBDT,"BDT",opt);
+#else
+  factory->BookMethod(TMVA::Types::kBDT,"BDT",opt);
+#endif
 }
 
 void TMVATrainer::BookCuts(TString opt) {
@@ -80,7 +84,11 @@ void TMVATrainer::BookCuts(TString opt) {
   }
 
   PInfo("TMVATrainer::BookCuts",TString::Format("using options %s",opt.Data()));
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
   factory->BookMethod(dataloader,TMVA::Types::kCuts,"Cuts",opt);
+#else
+  factory->BookMethod(TMVA::Types::kCuts,"Cuts",opt);
+#endif
 }
 
 void TMVATrainer::TrainAll() {
