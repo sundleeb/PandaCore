@@ -8,6 +8,7 @@
 #include "TTreeFormula.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
 #include "vector"
 #include "PandaCore/Tools/interface/Common.h"
 #include "PandaCore/Tools/interface/TreeTools.h"
@@ -61,6 +62,7 @@ public:
   TString sigweight="", bgweight=""; /**< weights to be applied to signal and background events */
 private:
   TMVA::Factory *factory=0; /**< the real workhorse, used to book and train methods */
+  TMVA::Dataloader *dataloader=0; /**< the real workhorse #2 */
   TFile *sigfile=0, *bgfile=0; /**<  pointers to the input files */
   TTree *sigtree=0, *bgtree=0; /**< input trees */
   TFile *outfile; /**< pointer to output files, owned by this object */
