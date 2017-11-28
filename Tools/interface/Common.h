@@ -149,57 +149,37 @@ class TimeReporter {
      * \param on_  whether this reporter is on
      * \brief Constructor
      */
-    TimeReporter(const char *n, bool on_) {
-      on=on_;
-      name = n; name += "::Time";
-      sw = new TStopwatch();
-      subsw = new TStopwatch();
-    }
+    TimeReporter(TString n, int on_) ;
     /**
      * \brief Destructor
      */
-    ~TimeReporter() { delete sw; delete subsw; }
+    ~TimeReporter();
     /**
      * \brief Starts all stopwatches and resets counters
      */
-    void Start() {
-      if (on) {
-        sw->Start(true);
-        subsw->Start(true);
-      }
-      currentEvent=0;
-      currentSubEvent=1;
-    }
+    void Start(); 
     /**
      * \param s  name of event
      * \param reset  whether to reset the stopwatch for the next event
      * \brief Triggers a top-level event
      */
-    void TriggerEvent(const char *s,bool reset=true) {
-      if (!on)
-        return;
-      currentSubEvent=1;
-      PDebug(name,TString::Format("%2i   : %.3f (%s)",currentEvent,sw->RealTime()*1000,s).Data());
-      sw->Start();
-      subsw->Start();
-      if (reset)
-        currentEvent+=1;
-    }
+    void TriggerEvent(TString s,bool reset=true);
     /**
      * \param s  name of sub-event
      * \brief Triggers a sub-level event
      */
-    void TriggerSubEvent(const char *s) {
-      if (!on)
-        return;
-      PDebug(name,TString::Format("%2i.%-2i: %.3f (%s)",currentEvent,currentSubEvent,subsw->RealTime()*1000,s).Data());
-      currentSubEvent+=1;
-      subsw->Start();
-    }
+    void TriggerSubEvent(TString s); 
+    /**
+     * \brief Prints a summary of timing to screen
+     */
+    void Summary();
   private:
     TString name; /**< name of this task */
-    bool on; /**< whether this reporter is active */
+    int on; /**< whether this reporter is active */
     TStopwatch *sw, *subsw; /**< internal stopwatches */
+    std::map<TString, double> totalTime; /**< total time spent on each task */
+    std::map<TString, unsigned> nCalls; /**< number of calls to each task */
+    std::vector<TString> callOrders; /**< order in which tasks are called */
     int currentEvent=0; /**< internal tracker of the index of the current event */
     int currentSubEvent=1; /**< internal tracker of the index of the sub-event */
 };
