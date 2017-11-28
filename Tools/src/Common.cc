@@ -178,7 +178,7 @@ TimeReporter::Summary()
     return;
   for (TString s : callOrders) {
     PDebug(name,
-        TString::Format("Task %20s called %5u times, average time = %.3f",
-          s.Data(), nCalls[s], totalTime[s]/nCalls[s]));
+        TString::Format("Task %20s called %5u times, average time = %6.3f us, total time = %.3f ms",
+          s.Data(), nCalls[s], totalTime[s]/nCalls[s]*1000, totalTime[s]));
   }
 }
