@@ -122,9 +122,9 @@ class Selector(object):
         f.Close()
     def draw(self, fields, weight = None, mask = None, hbase = None, vbins = None, fbins = None):
         global _hcounter
-        if hbase:
+        if hbase is not None:
             h = hbase.Clone()
-        elif vbins:
+        elif vbins is not None:
             h = root.TH1D('hSelector%i'%_hcounter, '', len(vbins)-1, array('f', vbins))
             _hcounter += 1 
         else:

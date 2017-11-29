@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-'''@package docstring
-'''
 import time
 from re import sub
 from sys import exit 
@@ -10,7 +8,7 @@ from condor import classad,htcondor
 from Misc import PInfo,PDebug,PWarning,PError
 from os import getenv,getuid,system,path,environ
 
-# module was partitioned to facilitate reading job configs
+# Module was partitioned to facilitate reading job configs
 # on nodes that do not have htcondor bindings
 from job_config import * 
 
@@ -19,6 +17,7 @@ from job_config import *
 # HTCondor interface for job submission and tracking
 #############################################################
 
+### global configuration ###
 job_status = {
            1:'idle',
            2:'running',
@@ -29,20 +28,29 @@ job_status = {
            7:'suspended',
         }
 
+def environ_to_condor():
+    s = '' 
+    for k,v in environ.iteritems():
+        if any([x in k for x in ['PANDA','SUBMIT','USER']]):
+            s += '%s=%s '%(k,v)
+    return s 
+
 base_job_properties = None 
 pool_server = None 
 schedd_server = getenv('HOSTNAME')
 should_spool = False
 query_owner = getenv('USER')
+
 try:
-    urgent = int(getenv('SUBMIT_URGENT'))
-    if urgent:
+    if int(getenv('SUBMIT_URGENT')):
         acct_grp_t3 = 'group_t3mit.urgent'
     else:
         acct_grp_t3 = 'group_t3mit'
 except:
     acct_grp_t3 = 'group_t3mit'
 
+
+### predefined schedd options ###
 def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
     if config=='T3':
@@ -113,13 +121,6 @@ schedd_config = getenv('SUBMIT_SCHEDD')
 schedd_config = 'T3' if not schedd_config else schedd_config
 setup_schedd(schedd_config) 
 
-
-def environ_to_condor():
-    s = '' 
-    for k,v in environ.iteritems():
-        if any([x in k for x in ['PANDA','SUBMIT','USER']]):
-            s += '%s=%s '%(k,v)
-    return s 
 
 
 class _BaseSubmission(object):
@@ -360,6 +361,12 @@ class Submission(_BaseSubmission):
             cluster_ad[key] = value
         for key,value in self.custom_job_properties.iteritems():
             if type(value)==str:
+                for pattern,target in repl.iteritems():
+                    value = value.replace(pattern,target)
+            cluster_ad[key] = value
+        job_properties['Environment'] = environ_to_condor()
+        for key,value in job_properties.iteritems():
+            if type(value)==str and key!='Environment':
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
