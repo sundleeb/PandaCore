@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-'''@package docstring
-'''
 from re import sub
 import cPickle as pickle
 import time
@@ -8,6 +6,7 @@ from os import getenv,getuid,system,path,environ
 from Misc import PInfo,PDebug,PWarning,PError
 from collections import namedtuple
 from sys import exit 
+# module *must* remain independent of htcondor to run on T2
 
 #############################################################
 # DataSample and associated functions

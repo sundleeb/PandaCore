@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-'''@package docstring
-'''
 import time
 from re import sub
 from sys import exit 
@@ -45,7 +43,7 @@ except:
 
 def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
-    if config=='T3':
+    if config=='T3' or config is None:
         base_job_properties = {
             "Cmd" : "WORKDIR/exec.sh",
             "WhenToTransferOutput" : "ON_EXIT",
@@ -70,9 +68,12 @@ def setup_schedd(config='T3'):
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
             "Requirements" : 
-                classad.ExprTree('Arch == "X86_64" && OpSysAndVer == "SL6"'),
+                #classad.ExprTree('Arch == "X86_64" && OpSysAndVer == "SL6"'),
+                classad.ExprTree('UidDomain == "cmsaf.mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
             "AcctGroup" : 'group_cmsuser',
             "AccountingGroup" : 'group_cmsuser.USER',
+            # "AcctGroup" : 'group_cmsuser',
+            # "AccountingGroup" : 'group_cmsuser.USER',
             "X509UserProxy" : "/tmp/x509up_uUID",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",

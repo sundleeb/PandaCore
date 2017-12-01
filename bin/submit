@@ -23,6 +23,8 @@ system('rm -rf %s/*'%(args.cache))
 if path.isfile(args.executable):
     args.executable = path.abspath(args.executable)
 
+jm.setup_schedd(getenv('SUBMIT_CONFIG'))
+
 job_arguments = []
 if args.arglist:
     with open(args.arglist) as fargs:
