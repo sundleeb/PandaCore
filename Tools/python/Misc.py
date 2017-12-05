@@ -40,6 +40,13 @@ def PError(module,msg,newline="\n"):
         stderr.write('ERROR   [%-40s]: %s%s'%(module,msg,newline))
 
 
+def smart_getenv(v, d=None):
+    val = getenv(v)
+    if val is None:
+        return d
+    return val
+
+
 ModelParams = namedtuple('ModelParams',['m_V','m_DM','gV_DM','gA_DM','gV_q','gA_q','sigma','delta'])
 
 def read_nr_model(mV,mDM,couplings=None,path='non-resonant'):

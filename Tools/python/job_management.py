@@ -25,7 +25,11 @@ job_status = {
            5:'held',
            6:'transferring output',
            7:'suspended',
+
+           -1:'T3', # user-defined
+           -2:'T2', # user-defined
         }
+job_status_rev = {v:k for k,v in job_status.iteritems()}
 
 base_job_properties = None 
 pool_server = None 
@@ -68,8 +72,8 @@ def setup_schedd(config='T3'):
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
             "Requirements" : 
-                #classad.ExprTree('Arch == "X86_64" && OpSysAndVer == "SL6"'),
-                classad.ExprTree('UidDomain == "cmsaf.mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
+                classad.ExprTree('Arch == "X86_64" && OpSysAndVer == "SL6"'),
+                #classad.ExprTree('UidDomain == "cmsaf.mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
             "AcctGroup" : 'group_cmsuser.USER',
             "AccountingGroup" : 'group_cmsuser.USER',
             "X509UserProxy" : "/tmp/x509up_uUID",
@@ -148,7 +152,7 @@ class _BaseSubmission(object):
             raise RuntimeError
         results = self.schedd.query(
             'Owner =?= "%s" && ClusterId =?= %i'%(query_owner,self.cluster_id))
-        jobs = {x:[] for x in ['running','idle','held','other']}
+        jobs = {x:[] for x in ['T3','T2','idle','held','other']}
         for job in results:
             proc_id = int(job['ProcId'])
             status = job['JobStatus']
@@ -159,6 +163,12 @@ class _BaseSubmission(object):
                     samples = self.proc_ids[proc_id].split()
             except KeyError:
                 continue # sometimes one extra dummy job is created and not tracked, oh well
+            if job_status[status] == 'running':
+                remote_host = job['RemoteHost']
+                if '@T3' in remote_host:
+                    status = job_status_rev['T3']
+                else:
+                    status = job_status_rev['T2']
             if job_status[status] in jobs:
                 jobs[job_status[status]] += samples
             else:
@@ -315,7 +325,7 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             if idx in finished:
                 done.add(idx)
                 continue 
-            if only_failed and (idx in status['running']):
+            if only_failed and (idx in (status['T2']+status['T3'])):
                 running.add(idx)
                 continue 
             if only_failed and (idx in status['idle']):
