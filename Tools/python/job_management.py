@@ -70,10 +70,8 @@ def setup_schedd(config='T3'):
             "Requirements" : 
                 #classad.ExprTree('Arch == "X86_64" && OpSysAndVer == "SL6"'),
                 classad.ExprTree('UidDomain == "cmsaf.mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
-            "AcctGroup" : 'group_cmsuser',
+            "AcctGroup" : 'group_cmsuser.USER',
             "AccountingGroup" : 'group_cmsuser.USER',
-            # "AcctGroup" : 'group_cmsuser',
-            # "AccountingGroup" : 'group_cmsuser.USER',
             "X509UserProxy" : "/tmp/x509up_uUID",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",
