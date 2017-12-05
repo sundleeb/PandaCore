@@ -260,7 +260,6 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
         #for k in ['X509UserProxy','TransferInput']:
         for k in ['TransferInput','ShouldTransferFiles','WhenToTransferOutput']:
             del job_properties[k]
-        # job_properties['Environment'] = 'A=B C=D'
         job_properties['Environment'] = environ_to_condor()
         for key,value in job_properties.iteritems():
             if type(value)==str and key!='Environment':
@@ -362,13 +361,14 @@ class Submission(_BaseSubmission):
         cluster_ad = classad.ClassAd()
         job_properties = base_job_properties.copy()
         job_properties['TransferInput'] += ',%s'%(self.configpath)
+        job_properties['Environment'] = environ_to_condor()
         for key,value in job_properties.iteritems():
-            if type(value)==str:
+            if (key != 'Environment') and (type(value)==str):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
         for key,value in self.custom_job_properties.iteritems():
-            if type(value)==str:
+            if (key != 'Environment') and (type(value)==str):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
