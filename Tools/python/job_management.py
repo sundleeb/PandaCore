@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-'''@package docstring
-'''
 import time
 from re import sub
 from sys import exit 
@@ -27,7 +25,11 @@ job_status = {
            5:'held',
            6:'transferring output',
            7:'suspended',
+
+           -1:'T3', # user-defined
+           -2:'T2', # user-defined
         }
+job_status_rev = {v:k for k,v in job_status.iteritems()}
 
 base_job_properties = None 
 pool_server = None 
@@ -45,7 +47,7 @@ except:
 
 def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
-    if config=='T3':
+    if config=='T3' or config is None:
         base_job_properties = {
             "Cmd" : "WORKDIR/exec.sh",
             "WhenToTransferOutput" : "ON_EXIT",
@@ -71,7 +73,8 @@ def setup_schedd(config='T3'):
             "ShouldTransferFiles" : "YES",
             "Requirements" : 
                 classad.ExprTree('Arch == "X86_64" && OpSysAndVer == "SL6"'),
-            "AcctGroup" : 'group_cmsuser',
+                #classad.ExprTree('UidDomain == "cmsaf.mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
+            "AcctGroup" : 'group_cmsuser.USER',
             "AccountingGroup" : 'group_cmsuser.USER',
             "X509UserProxy" : "/tmp/x509up_uUID",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
@@ -149,7 +152,7 @@ class _BaseSubmission(object):
             raise RuntimeError
         results = self.schedd.query(
             'Owner =?= "%s" && ClusterId =?= %i'%(query_owner,self.cluster_id))
-        jobs = {x:[] for x in ['running','idle','held','other']}
+        jobs = {x:[] for x in ['T3','T2','idle','held','other']}
         for job in results:
             proc_id = int(job['ProcId'])
             status = job['JobStatus']
@@ -160,6 +163,12 @@ class _BaseSubmission(object):
                     samples = self.proc_ids[proc_id].split()
             except KeyError:
                 continue # sometimes one extra dummy job is created and not tracked, oh well
+            if job_status[status] == 'running':
+                remote_host = job['RemoteHost']
+                if '@T3' in remote_host:
+                    status = job_status_rev['T3']
+                else:
+                    status = job_status_rev['T2']
             if job_status[status] in jobs:
                 jobs[job_status[status]] += samples
             else:
@@ -251,7 +260,6 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
         #for k in ['X509UserProxy','TransferInput']:
         for k in ['TransferInput','ShouldTransferFiles','WhenToTransferOutput']:
             del job_properties[k]
-        # job_properties['Environment'] = 'A=B C=D'
         job_properties['Environment'] = environ_to_condor()
         for key,value in job_properties.iteritems():
             if type(value)==str and key!='Environment':
@@ -316,7 +324,7 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             if idx in finished:
                 done.add(idx)
                 continue 
-            if only_failed and (idx in status['running']):
+            if only_failed and (idx in (status['T2']+status['T3'])):
                 running.add(idx)
                 continue 
             if only_failed and (idx in status['idle']):
@@ -353,13 +361,14 @@ class Submission(_BaseSubmission):
         cluster_ad = classad.ClassAd()
         job_properties = base_job_properties.copy()
         job_properties['TransferInput'] += ',%s'%(self.configpath)
+        job_properties['Environment'] = environ_to_condor()
         for key,value in job_properties.iteritems():
-            if type(value)==str:
+            if (key != 'Environment') and (type(value)==str):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
         for key,value in self.custom_job_properties.iteritems():
-            if type(value)==str:
+            if (key != 'Environment') and (type(value)==str):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
