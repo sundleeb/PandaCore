@@ -52,6 +52,11 @@ processes =	{
 	'ZJetsToNuNu_HT-2500ToInf_13TeV-madgraph':('ZtoNuNu_ht2500toinf','MC',0.006945),
 	'ZJetsToNuNu_HT-600ToInf_13TeV-madgraph':('ZtoNuNu_ht600toinf','MC',4.098),
 
+	'DYJetsToNuNu_PtZ-100To250_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('ZtoNuNu_pt100to250','MC',3*55.4),
+	'DYJetsToNuNu_PtZ-250To400_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('ZtoNuNu_pt250to400','MC',3*2.0),
+	'DYJetsToNuNu_PtZ-400To650_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('ZtoNuNu_pt400to650','MC',3*0.28),
+	'DYJetsToNuNu_PtZ-650ToInf_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('ZtoNuNu_pt650toinf','MC',3*0.026),
+	
 	'GJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('GJets_ht40to100','MC',23080.0),
 	'GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('GJets_ht100to200','MC',9235),
 	'GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('GJets_ht200to400','MC',2298),
@@ -105,10 +110,14 @@ processes =	{
 	'WZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_wz','MC',47.2),
 	'ZZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_zz','MC',16.6),
 
-	'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZHbb_mH125','MC',0.1),
-	'ZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ZllHbb_mH125','MC',0.05),
-	'ggZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ggZHbb_mH125','MC',0.012),
-	'ggZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ggZllHbb_mH125','MC',0.006),
-	'WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WmLNuHbb','MC',0.100),
-	'WplusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WpLNuHbb','MC',0.159),
+        'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZHbb_mH125','MC',0.08912),
+        'ZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ZllHbb_mH125','MC',0.04865),
+        'ggZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ggZHbb_mH125','MC',0.014366),
+        'ggZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ggZllHbb_mH125','MC',0.007842),
+        'WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WmLNuHbb','MC',0.100),
+        'WplusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WpLNuHbb','MC',0.159),
+        'ttHTobb_M125_13TeV_powheg_pythia8':('ttHbb','MC',0.506*0.5824),
+        'GluGluHToBB_M125_13TeV_powheg_pythia8':('ggHbb','MC',48.48*0.5824),
+        'VBFHToBB_M125_13TeV_amcatnlo_pythia8':('VBFHbb','MC',3.782*0.5824),
+
 }

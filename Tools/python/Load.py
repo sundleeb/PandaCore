@@ -14,6 +14,7 @@ class Library():
         self.deps = deps
 
 loaded = []
+DEBUG = False
 
 libraries = [
     Library(name='PandaCoreTools',      objects = [ 'Functions',
@@ -46,6 +47,7 @@ libraries = [
                                                    'PandaLeptonicAnalyzer',
                                                    'GenAnalyzer',
                                                    'LimitTreeBuilder',
+                                                   'TagAnalyzer',
                                                    'SFTreeBuilder',
                                                    'BTagTreeBuilder',
                                                   ]
@@ -81,7 +83,8 @@ def Load(request):
             break
 
     if requested_lib in loaded:
-        PWarning('PandaCore.Tools.Load','Requested %s has already been loaded in %s'%(request, requested_lib.name))
+        if DEBUG:
+            PWarning('PandaCore.Tools.Load','Requested %s has already been loaded in %s'%(request, requested_lib.name))
         return
 
     if not requested_lib:

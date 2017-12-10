@@ -8,6 +8,9 @@
 #include "TTreeFormula.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
+#include "TMVA/DataLoader.h"
+#endif
 #include "vector"
 #include "PandaCore/Tools/interface/Common.h"
 #include "PandaCore/Tools/interface/TreeTools.h"
@@ -53,6 +56,7 @@ public:
   void SetFiles(TString sigpath, TString bgpath); //!< Sets input signal and background files
   void BookBDT(BDTType t); //!< Book a BDT given a pre-defined type
   void BookBDT(TString opt=""); //!< Book a BDT given a user-defined set of options
+  void BookCuts(TString opt=""); //!< Book a rectangular cut optimizer
   void TrainAll(); //!< Trian all booked methods
 
   TString treename=""; /**< name of tree to load from input files */
@@ -60,6 +64,11 @@ public:
   TString sigweight="", bgweight=""; /**< weights to be applied to signal and background events */
 private:
   TMVA::Factory *factory=0; /**< the real workhorse, used to book and train methods */
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
+  TMVA::DataLoader *dataloader=0; /**< the real workhorse #2 */
+#else
+  TMVA::Factory *dataloader=factory; /**< the real workhorse, used to book and train methods */
+#endif
   TFile *sigfile=0, *bgfile=0; /**<  pointers to the input files */
   TTree *sigtree=0, *bgtree=0; /**< input trees */
   TFile *outfile; /**< pointer to output files, owned by this object */
