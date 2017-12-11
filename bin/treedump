@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from PandaCore.Tools.Misc import PInfo, PError, tTIMES
+from PandaCore.Tools.Misc import PInfo, PError, tTIMES, tAND
 from sys import argv, exit
 from re import sub
 import argparse
@@ -8,8 +8,9 @@ from os.path import isfile
 
 parser = argparse.ArgumentParser(description='treedump')
 parser.add_argument('--treename',help='input TTree name',type=str,default='events')
-parser.add_argument('--dump',help='file containing list of dump',type=str)
+parser.add_argument('--dump',help='file containing list of dump',type=str,default=None)
 parser.add_argument('--events',help='event expression',type=str,default=None)
+parser.add_argument('--cut',help='cut',type=str,default=None)
 parser.add_argument('infile',metavar='input',type=str,help='input file to process')
 args = parser.parse_args()
 
@@ -20,17 +21,24 @@ from ROOT import TFile
 
 fmt_string = ' %12s |'
 
-to_dump = [x.strip() for x in open(args.dump).readlines()] if isfile(args.dump) else args.dump.split(',')
+to_dump = []
+if args.dump:
+    to_dump += [x.strip() for x in open(args.dump).readlines()] if isfile(args.dump) else args.dump.split(',')
 for x in ['eventNumber','lumiNumber','runNumber']:
     to_dump.insert(0,x)
 
-events = [x.strip() for x in open(args.events).readlines()] if isfile(args.events) else args.events.split(',')
-event_cutstring = '||'.join(['eventNumber==%s'%x for x in events])
 
 f = TFile(args.infile)
 t = f.FindObjectAny(args.treename)
 
-arr = read_tree(t, branches=to_dump, cut=event_cutstring)
+cut = '1==1'
+if args.events:
+    events = [x.strip() for x in open(args.events).readlines()] if isfile(args.events) else args.events.split(',')
+    event_cutstring = '||'.join(['eventNumber==%s'%x for x in events])
+    cut = tAND(cut, event_cutstring)
+if args.cut:
+    cut = tAND(cut, args.cut)
+arr = read_tree(t, branches=to_dump, cut=cut)
 out_str = ''
 for d in to_dump:
     out_str += fmt_string%d
@@ -41,6 +49,8 @@ out_str += '\n'
 
 # N = arr.shape[0] 
 # for i in xrange(N):
+if not args.events:
+    events = arr['eventNumber']
 for e in events:
     mask = arr['eventNumber']==long(e)
     row = arr[mask]
