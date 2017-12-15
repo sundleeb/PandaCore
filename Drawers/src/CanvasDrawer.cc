@@ -41,12 +41,11 @@ void CanvasDrawer::SplitCanvas(TCanvas *c_) {
   c->cd();
 
   pad1 = new TPad("pad1","pad1",0,0.3,1,1.0);
-  pad1->SetBottomMargin(0);
+  pad1->SetBottomMargin(0.02);
   pad1->Draw();
 
-  pad2 = new TPad("pad2","pad2",0,0.05,1,0.3);
-  pad2->SetTopMargin(0);
-  pad2->SetBottomMargin(0.3);
+  pad2 = new TPad("pad2","pad2",0,0.0,1,0.3);
+  pad2->SetBottomMargin(0.35);
   pad2->Draw();
 }
 
@@ -104,7 +103,7 @@ void CanvasDrawer::SetTDRStyle() {
     gStyle->SetLabelFont(42, "XYZ");
     gStyle->SetLabelOffset(0.007, "XYZ");
     gStyle->SetLabelSize(0.04, "XYZ");
-    gStyle->SetTitleSize(0.05,"XYZ");
+    gStyle->SetTitleSize(0.06,"XYZ");
 
     gStyle->SetAxisColor(1, "XYZ");
     gStyle->SetStripDecimals(1); 
@@ -167,7 +166,7 @@ void CanvasDrawer::SetRatioStyle() {
     gStyle->SetLabelFont(42, "XYZ");
     gStyle->SetLabelOffset(0.007, "XYZ");
     gStyle->SetLabelSize(0.04, "XYZ");
-    gStyle->SetTitleSize(0.05,"XYZ");
+    gStyle->SetTitleSize(0.06,"XYZ");
 
     gStyle->SetAxisColor(1, "XYZ");
     gStyle->SetStripDecimals(1); 
@@ -203,7 +202,7 @@ void CanvasDrawer::AddCMSLabel(double x, double y, TString subhead) {
 void CanvasDrawer::AddLumiLabel(bool fb, double customLumi) {
   if (customLumi>0) 
     lumi = customLumi;
-  float textsize = doRatio ? 0.05 : 0.05;
+  float textsize = doRatio ? 0.06 : 0.06;
   TString units = (fb) ? "fb" : "pb";
   AddPlotLabel(TString::Format("%i %s^{-1} (13 TeV)",(int)lumi,units.Data()).Data(),0.95,0.94,false,42,0.8*textsize,31);
 }

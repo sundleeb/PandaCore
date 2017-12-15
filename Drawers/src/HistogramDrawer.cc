@@ -338,15 +338,16 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       firstHist->Draw(hOthers[0].opt);
     else
       firstHist->Draw(drawOption);
-    /*
     if (!doRatio) {
       firstHist->GetXaxis()->SetTitle(xlabel);
     } else {
       firstHist->GetXaxis()->SetTitle("");
+      firstHist->GetXaxis()->SetLabelSize(0);
     }
+    /*
     firstHist->GetYaxis()->SetTitle(ylabel);
     */
-    firstHist->GetYaxis()->SetTitleOffset(1.5);
+    firstHist->GetYaxis()->SetTitleOffset(1.2);
   }
 
   // plot everything else
@@ -360,9 +361,10 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       hs->GetXaxis()->SetTitle(xlabel);
     } else {
       hs->GetXaxis()->SetTitle("");
+      hs->GetXaxis()->SetLabelSize(0);
     }
     hs->GetYaxis()->SetTitle(ylabel);
-    hs->GetYaxis()->SetTitleOffset(1.5);
+    hs->GetYaxis()->SetTitleOffset(1.2);
     if (doDrawMCErrors)
       hSum->Draw("e2 same");
   } else {
@@ -415,7 +417,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   double *xVals=0, *yVals=0, *xErrors=0, *yErrors=0;
   if (doRatio && hData) {
     pad2->cd();
-    pad2->SetGridy();
+//    pad2->SetGridy();
     hRatio = (TH1D*)hData->Clone("ratio");
     hRatio->SetMaximum(-1111); hRatio->SetMinimum(-1111);
     if (doDrawMCErrors) {
@@ -512,14 +514,14 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
     hRatio->GetXaxis()->SetTitle(xlabel);
     hRatio->GetYaxis()->SetTitle(ratioLabel);
     hRatio->GetYaxis()->SetNdivisions(5);
-    hRatio->GetYaxis()->SetTitleSize(20);
+    hRatio->GetYaxis()->SetTitleSize(30);
     hRatio->GetYaxis()->SetTitleFont(43);
-    hRatio->GetYaxis()->SetTitleOffset(2.5);
+    hRatio->GetYaxis()->SetTitleOffset(1.5);
     hRatio->GetYaxis()->SetLabelFont(43); 
-    hRatio->GetYaxis()->SetLabelSize(15);
-    hRatio->GetXaxis()->SetTitleSize(20);
+    hRatio->GetYaxis()->SetLabelSize(20);
+    hRatio->GetXaxis()->SetTitleSize(30);
     hRatio->GetXaxis()->SetTitleFont(43);
-    hRatio->GetXaxis()->SetTitleOffset(5);
+    hRatio->GetXaxis()->SetTitleOffset(3.5);
     hRatio->GetXaxis()->SetLabelFont(43);
     hRatio->GetXaxis()->SetLabelSize(20);
     TLine *zero = new TLine(hRatio->GetXaxis()->GetXmin(), 1,

@@ -14,6 +14,7 @@
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "TFile.h"
+#include "TLegendEntry.h"
 #include <iostream>
 
 /**
@@ -152,7 +153,8 @@ void BaseGraphDrawer<T>::Draw(TString outDir, TString baseName) {
       TString legOption("L");
       if (drawOption.Contains("3"))
         legOption = "F";
-      legend->AddEntry(graph,labels[iG],legOption);
+      auto *entry = legend->AddEntry(graph,labels[iG],legOption);
+      entry->SetLineWidth(6);
     }
 
   }
@@ -162,7 +164,8 @@ void BaseGraphDrawer<T>::Draw(TString outDir, TString baseName) {
     TMarker *m = markers[iM];
     m->Draw("p same");
     if (legend) {
-      legend->AddEntry(m,marker_labels[iM],"p");
+      auto *entry = legend->AddEntry(m,marker_labels[iM],"p");
+      entry->SetLineWidth(6);
     }
   }
 

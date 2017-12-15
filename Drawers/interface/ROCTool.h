@@ -30,6 +30,8 @@ class ROCTool {
     void SetPlotRange(float m, float M) { minval=m; maxval=M; }
 
     GraphDrawer *c=0;
+    TString xLabel = "Signal efficiency";
+    TString yLabel = "Background acceptance";
   private:
     bool doLogy=false;
     float minval=0, maxval=1;

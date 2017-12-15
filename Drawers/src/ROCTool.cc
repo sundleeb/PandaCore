@@ -12,16 +12,16 @@ void ROCTool::InitCanvas(double x1, double y1, double x2, double y2, bool isPrel
   c->SetTDRStyle();
   c->SetGrid();
   if (isPrelim)
-    c->AddCMSLabel(0.15,0.94," Simulation Preliminary"); 
+    c->AddCMSLabel(0.15,0.84," Simulation Preliminary"); 
   else
-    c->AddCMSLabel(0.15,0.94," Simulation"); 
+    c->AddCMSLabel(0.19,0.84," Simulation"); 
   c->AddSqrtSLabel();
   if (doLogy)
     c->Logy();
   if (x1>0)
     c->InitLegend(x1,y1,x2,y2);
   else if (doLogy)
-    c->InitLegend(0.6,.15,.94,.5);
+    c->InitLegend(0.5,.15,.94,.5);
   else
     c->InitLegend(.15,.4,.43,.83);
 } 
@@ -132,9 +132,9 @@ TGraph *ROCTool::CalcROC1Cut() {
   { effs[0]=0; rejs[0]=0; }
 
   TGraph *roc = new TGraph(nB+1,effs,rejs);
-  roc->GetXaxis()->SetTitle("Signal efficiency");
-  roc->GetYaxis()->SetTitle("Background acceptance"); 
-  roc->GetYaxis()->SetTitleOffset(1.5);
+  roc->GetXaxis()->SetTitle(xLabel);
+  roc->GetYaxis()->SetTitle(yLabel); 
+  roc->GetYaxis()->SetTitleOffset(1.2);
   roc->SetMinimum(minval); roc->SetMaximum(maxval);
   roc->GetXaxis()->SetLimits(0,1);
 
@@ -185,7 +185,7 @@ TGraph *ROCTool::CalcROC2Cut() {
   TGraph *roc = new TGraph(nB,effs2D,rejs2D);
   roc->GetXaxis()->SetTitle("signal efficiency");
   roc->GetYaxis()->SetTitle("background acceptance"); 
-  roc->GetYaxis()->SetTitleOffset(1.5);
+  roc->GetYaxis()->SetTitleOffset(1.2);
   roc->SetMinimum(minval); roc->SetMaximum(maxval);
   roc->GetXaxis()->SetLimits(0,1);
 

@@ -126,6 +126,7 @@ public:
 
   bool HasLegend() { return legend!=0; }
   void ClearLegend() { if (legend) legend->Clear(); }
+  TLegend *GetLegend() { return legend; }
 
 protected:
   /**
@@ -168,7 +169,7 @@ protected:
                         kGray,
                         kOrange-3,
                         kGreen-6,
-                        kAzure+5,
+                        kAzure-9,
                         kRed-5,
                         kViolet-8,
                         kCyan-2,
