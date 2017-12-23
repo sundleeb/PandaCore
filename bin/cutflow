@@ -6,10 +6,11 @@ from re import sub
 import argparse
 
 parser = argparse.ArgumentParser(description='cutflow')
-parser.add_argument('--treename',help='input TTree name',type=str,default='events')
-parser.add_argument('--cutlist',help='file containing list of cuts',type=str)
-parser.add_argument('--weight',help='weight expression',type=str,default=None)
-parser.add_argument('infile',metavar='input',type=str,help='input file to process')
+parser.add_argument('--treename', help='input TTree name', type=str, default='events')
+parser.add_argument('--cutlist', help='file containing list of cuts', type=str)
+parser.add_argument('--weight', help='weight expression', type=str, default=None)
+parser.add_argument('--dumpEvents', action='store_true')
+parser.add_argument('infile', metavar='input', type=str, help='input file to process')
 args = parser.parse_args()
 
 argv = []
@@ -22,7 +23,8 @@ class Cutflow(object):
         self.cuts = ['1==1']
         self.nicknames = {'1==1':'Full'}
         self.weight = None
-    def register(self,cut,nickname=None):
+        self.event = None
+    def register(self, cut, nickname=None):
         cut = cut.strip()
         if cut not in self.cuts:
             self.cuts.append(cut)
@@ -31,26 +33,38 @@ class Cutflow(object):
                 self.nicknames[cut] = nickname
             else:
                 self.nicknames[cut] = cut
-    def check(self,fpath, treename = 'events'):
+    def check(self, fpath, treename = 'events'):
         branches = self.cuts[:]
         if self.weight:
             branches.append(self.weight)
+        if self.event:
+            branches.append(self.event)
         xarr = rnp.root2array([fpath], 
-                              branches = branches,
+                              branches = branches, 
                               treename = treename)
+        if self.event:
+            events = xarr[self.event]
         if self.weight:
             weights = xarr[self.weight]
         else:
             weights = 1
-        xarr = xarr.view(np.float64).reshape(xarr.shape+(-1,))
-        print '%-20s : %15s %15s'%('SELECTION','YIELD','RAW')
+        xarr = xarr.view(np.float64).reshape(xarr.shape+(-1, ))
+        print '%-20s : %15s %15s'%('SELECTION', 'YIELD', 'RAW')
         print '---------------------------------------------------------'
         for ic in xrange(len(self.cuts)): 
-            xslice = xarr[:,:(ic+1)]
+            xslice = xarr[:, :(ic+1)]
             xpass = (xslice.sum(axis=1) == (ic+1))
             npass = xpass.sum()
             nyield = (xpass * weights).sum()
-            print '%-20s : %15f %15i'%(self.nicknames[self.cuts[ic]][:20],nyield,npass)
+            print '%-20s : %15f %15i'%(self.nicknames[self.cuts[ic]][:20], nyield, npass)
+        if self.event:
+            ncuts = len(self.cuts)
+            pass_all = (xslice.sum(axis=1) == ncuts)
+            events_passing = events[pass_all]
+            print '---------------------------------------------------------'
+            print 'Passing events:'
+            for e in events_passing:
+                print '  ', e
 
 infile = args.infile
 
@@ -59,8 +73,10 @@ with open(args.cutlist) as fcuts:
 
 c = Cutflow()
 if args.weight:
-    c.weight = tTIMES('1',args.weight)
+    c.weight = tTIMES('1', args.weight)
 for cut in cuts:
     c.register(*(cut.split(':')))
+if args.dumpEvents:
+    c.event = 'eventNumber'
 
-c.check(infile,args.treename)
+c.check(infile, args.treename)

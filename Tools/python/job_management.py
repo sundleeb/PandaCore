@@ -1,105 +1,18 @@
 #!/usr/bin/env python
 '''@package docstring
 '''
-from re import sub
-from condor import classad,htcondor
-import cPickle as pickle
 import time
-from os import getenv,getuid,system,path,environ
-from Misc import PInfo,PDebug,PWarning,PError
-from collections import namedtuple
+from re import sub
 from sys import exit 
+import cPickle as pickle
+from collections import namedtuple
+from condor import classad,htcondor
+from Misc import PInfo,PDebug,PWarning,PError
+from os import getenv,getuid,system,path,environ
 
-#############################################################
-# DataSample and associated functions
-#############################################################
-
-class DataSample:
-    def __init__(self,name,dtype,xsec):
-        self.name = name
-        self.dtype = dtype
-        self.xsec = xsec
-        self.files = []
-    def get_id(self):
-        try:
-            return int(self.name.split('_')[-1])
-        except:
-            return -1
-    def add_file(self,fname):
-        self.files.append(fname)
-    def get_config(self,nfiles,suffix=''):
-        nfiles = int(nfiles)
-        rlist = []
-        nall_files = len(self.files)
-        if nfiles<0:
-            nfiles = nall_files+1
-        for i in xrange(nall_files/nfiles+1):
-            rstr = '[CONFIG%s]\n'%(suffix)
-            rstr += '{0:<25} {1:<10} {2:<15}\n'.format('%s%s'%(self.name,suffix),self.dtype,self.xsec)
-            for f in self.files[i*nfiles:min((i+1)*nfiles,nall_files)]:
-                rstr += '\t%s\n'%f
-            rlist.append(rstr)
-        return rlist
-
-def read_sample_config(fpath,as_dict=True):
-    f = open(fpath)
-    samples = []
-    class State:
-        def __init__(self):
-            return
-    NULL,CONFIG,DATASET,FILE = [State() for _ in xrange(4)]
-    state=NULL
-    current_sample = None
-    for line in f:
-        if "CONFIG" in line:
-            if current_sample:
-                samples.append(current_sample)
-            state=CONFIG
-            continue
-        if state==CONFIG:
-            ll = line.split()
-            current_sample = DataSample(ll[0],ll[1],float(ll[2]))
-            state=DATASET
-            continue
-        if state==DATASET or state==FILE:
-            ll = line.strip()
-            current_sample.add_file(ll)
-            state=FILE
-    if state==FILE:
-        samples.append(current_sample)
-    
-    if as_dict:
-        return { x.name:x for x in samples }
-    else:
-        return samples
-
-def merge_config_samples(sample_list,as_dict=True):
-    if type(sample_list)==dict:
-        sample_list = [v for k,v in sample_list.iteritems()]
-    samples = {}
-    for s in sample_list:
-        rename = sub('_[0-9]+$','',s.name)
-        if rename not in samples:
-            samples[rename] = DataSample(rename,s.dtype,s.xsec)
-        for f in s.files:
-            samples[rename].add_file(f)
-    if as_dict:
-        return samples
-    else:
-        return [v for k,v in samples.iteritems()]
-
-def convert_catalog(file_list,as_dict=True):
-    samples = {}
-    for line in file_list:
-        ll = line.split()
-        sample_name = sub('_[0-9]+$','',ll[0])
-        if sample_name not in samples:
-            samples[sample_name] = DataSample(sample_name,ll[1],float(ll[2]))
-        samples[sample_name].add_file(ll[3])
-    if as_dict:
-        return samples
-    else:
-        return [v for k,v in samples.iteritems()]
+# module was partitioned to facilitate reading job configs
+# on nodes that do not have htcondor bindings
+from job_config import * 
 
 
 #############################################################
@@ -121,6 +34,14 @@ pool_server = None
 schedd_server = getenv('HOSTNAME')
 should_spool = False
 query_owner = getenv('USER')
+try:
+    urgent = int(getenv('SUBMIT_URGENT'))
+    if urgent:
+        acct_grp_t3 = 'group_t3mit.urgent'
+    else:
+        acct_grp_t3 = 'group_t3mit'
+except:
+    acct_grp_t3 = 'group_t3mit'
 
 def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
@@ -140,11 +61,36 @@ def setup_schedd(config='T3'):
         schedd_server = getenv('HOSTNAME')
         should_spool = False
         query_owner = getenv('USER')
+    elif config=='SubMIT':
+        base_job_properties = {
+            "Cmd" : "WORKDIR/exec.sh",
+            "WhenToTransferOutput" : "ON_EXIT",
+            "ShouldTransferFiles" : "YES",
+            "Requirements" : 
+                classad.ExprTree('( ( ( OSGVO_OS_STRING == "RHEL 6" && HAS_CVMFS_cms_cern_ch ) || GLIDEIN_REQUIRED_OS == "rhel6" || ( GLIDEIN_Site == "MIT_CampusFactory" && ( BOSCOGroup == "bosco_cms" ) && HAS_CVMFS_cms_cern_ch ) ) && ( isUndefined(GLIDEIN_Entry_Name) ||  !stringListMember(GLIDEIN_Entry_Name,"CMS_T2_US_Nebraska_Red_op,CMS_T2_US_Nebraska_Red_gw1_op,CMS_T2_US_Nebraska_Red_gw2_op,CMS_T3_MX_Cinvestav_proton_work,CMS_T3_US_Omaha_tusker,CMSHTPC_T3_US_Omaha_tusker,Glow_US_Syracuse_condor,Glow_US_Syracuse_condor-ce01,Gluex_US_NUMEP_grid1,HCC_US_BNL_gk01,HCC_US_BNL_gk02,HCC_US_BU_atlas-net2,OSG_US_FIU_HPCOSGCE,OSG_US_Hyak_osg,OSG_US_UConn_gluskap,OSG_US_SMU_mfosgce",",") ) && ( isUndefined(GLIDEIN_Site) ||  !stringListMember(GLIDEIN_Site,"SU-OG,HOSTED_BOSCO_CE",",") ) ) && ( ( Arch == "INTEL" || Arch == "X86_64" ) ) && ( TARGET.OpSys == "LINUX" ) && ( TARGET.Disk >= RequestDisk ) && ( TARGET.Memory >= RequestMemory ) && ( TARGET.HasFileTransfer )'),
+            "AcctGroup" : "analysis",
+            "AccountingGroup" : "analysis.USER",
+            "X509UserProxy" : "/tmp/x509up_uUID",
+            "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
+            "In" : "/dev/null",
+            "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
+            "ProjectName" : "CpDarkMatterSimulation",
+            "Rank" : "Mips",
+            'SubMITOwner' : 'USER',
+        }
+
+        pool_server = 'submit.mit.edu:9615'
+        schedd_server ='submit.mit.edu'
+        query_owner = 'anonymous'
+        should_spool = True
     else:
         PError('job_management.setup_schedd','Unknown config %s'%config)
         raise ValueError
 
-setup_schedd() # set the defaults for T3
+schedd_config = getenv('SUBMIT_SCHEDD')
+schedd_config = 'T3' if not schedd_config else schedd_config
+setup_schedd(schedd_config) 
+
 
 def environ_to_condor():
     s = '' 
@@ -274,7 +220,8 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             frunner.write(runner)
         repl = {'WORKDIR' : self.workdir,
                 'LOGDIR' : self.logdir,
-                'UID':str(getuid()),
+                'UID' : str(getuid()),
+                'USER' : getenv('USER'),
                 'SUBMITID' : str(self.sub_id)}
         cluster_ad = classad.ClassAd()
 
@@ -291,7 +238,7 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             cluster_ad[key] = value
 
         proc_properties = {
-            'UserLog' : 'LOGDIR/SUBMITID.log',
+            'UserLog' : 'LOGDIR/SUBMITID_PROCID.log',
             'Out' : 'LOGDIR/SUBMITID_PROCID.out',
             'Err' : 'LOGDIR/SUBMITID_PROCID.err',
         }
@@ -335,20 +282,22 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
 
     def check_missing(self, only_failed=True):
         try:
-            finished = map(lambda x : x.strip(), [x for x in  open(self.workdir+'/progress.log').readlines() if len(x.strip())])
+            finished = map(lambda x : int(x.strip()), [x for x in  open(self.workdir+'/progress.log').readlines() if len(x.strip())])
         except IOError:
             finished = []
         status = self.query_status()
+        for k,v in status.iteritems():
+            status[k] = [int(x) for x in v]
         missing = set([]); done = set([]); running = set([]); idle = set([])
         for idx in self.arguments:
             args = str(idx)
-            if args in finished:
+            if idx in finished:
                 done.add(idx)
                 continue 
-            if only_failed and (args in status['running']):
+            if only_failed and (idx in status['running']):
                 running.add(idx)
                 continue 
-            if only_failed and (args in status['idle']):
+            if only_failed and (idx in status['idle']):
                 idle.add(idx)
                 continue 
             missing.add(idx)
@@ -392,6 +341,7 @@ class Submission(_BaseSubmission):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
+        PInfo(self.__name__+'.execute','Cluster ClassAd:','')
         print cluster_ad
 
         proc_properties = {

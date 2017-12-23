@@ -86,20 +86,32 @@ print header
 print s 
 
 if args.verbose:
+    if len(statii['idle']):
+        farglist = open(submissions[0].arglist).readlines()
+        print 'Idle:'
+        for arg in statii['idle']:
+            print '   ',arg,'=>',farglist[int(arg)-1].strip()
+    if len(statii['running']):
+        farglist = open(submissions[0].arglist).readlines()
+        print 'Running:'
+        for arg in statii['running']:
+            print '   ',arg,'=>',farglist[int(arg)-1].strip()
     if len(statii['missing']):
         farglist = open(submissions[0].arglist).readlines()
         print 'Missing:'
         for arg in statii['missing']:
-            print '   ',farglist[int(arg)-1].strip()
+            print '   ',arg,'=>',farglist[int(arg)-1].strip()
 
 if args.kill:
     for s in submissions:
+        # this should be moved to the htcondor lib interface
         print 'Killing ClusterId %i'%s.cluster_id
         system('condor_rm %i'%(s.cluster_id))
 
 
 resubmit = any([args.resubmit_incomplete, args.resubmit_failed, args.resubmit_all])
 if resubmit and len(statii['missing']):
+    system('voms-proxy-init -voms cms --valid 168:00')
     s = submissions[0]
     nper = s.nper
     if args.njobs:

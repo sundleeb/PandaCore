@@ -104,7 +104,8 @@ void PlotUtility::DrawAll(TString outDir) {
 		fOut->Close();
 		fOut = new TFile(outDir+"hists.root","RECREATE");
 	}
-  TFile *fBuffer = new TFile(TString::Format("/tmp/buffer_%i.root",gSystem->GetPid()).Data(),"RECREATE");
+	//TFile *fBuffer = new TFile(TString::Format("/tmp/buffer_%i.root",gSystem->GetPid()).Data(),"RECREATE");
+  TFile *fBuffer = new TFile(TString::Format("/uscmst1b_scratch/lpc1/3DayLifetime/buffer_%i.root",gSystem->GetPid()).Data(),"RECREATE");
   fBuffer->cd();
   if (order.size()==0) {
     for (unsigned int iP=0; iP!=nProcesses; ++iP) 

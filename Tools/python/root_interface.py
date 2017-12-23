@@ -8,6 +8,7 @@ import numpy as np
 import root_numpy as rnp 
 import ROOT as root
 from Misc import PInfo,  PWarning,  PError
+from array import array 
 
 _hcounter = 0 
 
@@ -25,7 +26,10 @@ def read_branches(filenames, tree, branches, cut, treename = "events", xkwargs =
     if not(filenames or treename) or (filenames and tree):
         PError("root_interface.read_branches", "Exactly one of filenames and tree should be specified!")
         return None
-    branches_ = list(set(branches)) # remove duplicates
+    if branches:
+        branches_ = list(set(branches)) # remove duplicates
+    else:
+        branches_ = None
     if filenames:
         return rnp.root2array(filenames = filenames, 
                               treename = treename, 
@@ -116,17 +120,20 @@ class Selector(object):
         f = root.TFile(fpath, opts)
         array_as_tree(self.data, treename, f)
         f.Close()
-    def draw(self, fields, weight = None, hbase = None, vbins = None, fbins = None):
+    def draw(self, fields, weight = None, mask = None, hbase = None, vbins = None, fbins = None):
         global _hcounter
         if hbase:
             h = hbase.Clone()
         elif vbins:
-            h = root.TH1D('hSelector%i'%_hcounter, '', len(vbins), vbins)
+            h = root.TH1D('hSelector%i'%_hcounter, '', len(vbins)-1, array('f', vbins))
             _hcounter += 1 
         else:
             h = root.TH1D('hSelector%i'%_hcounter, '', *fbins)
             _hcounter += 1 
         if type(fields)==str:
             fields = [fields]
-        draw_hist(h, self.data, fields, weight)
+        masked_data = self.data if mask is None else self.data[mask]
+        draw_hist(h, masked_data, fields, weight)
         return h  
+    def __getitem__(self, arg):
+        return self.data[arg]

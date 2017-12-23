@@ -43,6 +43,7 @@ libraries = [
                                                   ]
            ),
     Library(name='PandaAnalysisFlat',   objects = ['PandaAnalyzer',
+                                                   'PandaLeptonicAnalyzer',
                                                    'GenAnalyzer',
                                                    'LimitTreeBuilder',
                                                    'SFTreeBuilder',
@@ -50,6 +51,8 @@ libraries = [
                                                   ]
            ), 
     Library(name='RedPandaCluster',     objects = ['Clusterer',
+                                                    'Camera',
+                                                    'PFAnalyzer',
                                                    ] 
            ),
 ]
