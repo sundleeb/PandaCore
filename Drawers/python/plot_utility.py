@@ -178,7 +178,7 @@ class PlotUtility():
         if f_out.IsZombie():
             f_out.Close()
             f_out = root.TFile(outdir+'hists.root', 'RECREATE')
-        f_buffer_path = '/tmp/%s/buffer_%i.root'%(getenv('USER'), root.gSystem.GetPid())
+        f_buffer_path = '/uscmst1b_scratch/lpc1/3DayLifetime/%s/buffer_%i.root'%(getenv('USER'), root.gSystem.GetPid())
         f_buffer = root.TFile(f_buffer_path, 'RECREATE')
         f_buffer.cd()
 

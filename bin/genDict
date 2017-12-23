@@ -125,6 +125,9 @@ generate_dict() {
 
   if ! [ -e $LINKDEF ] || ! [ -d $SRCDIR ] || ! [ -d $INCDIR ]
   then
+      echo "$LINKDEF"
+      echo "$SRCDIR"
+      echo "$INCDIR"
     echo "$PACKAGE does not appear to be a valid package."
     return
   fi
