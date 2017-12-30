@@ -35,7 +35,7 @@ job_status_rev = {v:k for k,v in job_status.iteritems()}
 def environ_to_condor():
     s = '' 
     for k,v in environ.iteritems():
-        if any([x in k for x in ['PANDA','SUBMIT','USER']]):
+        if any([x in k for x in ['PANDA','SUBMIT','USER','SCRAM_ARCH','CMSSW_VERSION']]):
             s += '%s=%s '%(k,v)
     return s 
 
