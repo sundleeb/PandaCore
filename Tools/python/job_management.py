@@ -12,6 +12,10 @@ from os import getenv,getuid,system,path,environ
 # on nodes that do not have htcondor bindings
 from job_config import * 
 
+SILENT = False
+def myPInfo(*args, **kwargs):
+    if not SILENT:
+        PInfo(*args, **kwargs)
 
 #############################################################
 # HTCondor interface for job submission and tracking
@@ -150,7 +154,7 @@ class _BaseSubmission(object):
 
     def query_status(self):
         if not self.cluster_id:
-            PError(self.__name__+".status",
+            PError(self.__name__+".query_status",
                    "This submission has not been executed yet (ClusterId not set)")
             raise RuntimeError
         results = self.schedd.query(
@@ -177,6 +181,17 @@ class _BaseSubmission(object):
             else:
                 jobs['other'] += samples
         return jobs
+
+
+    def kill(self):
+        if not self.cluster_id:
+            PError(self.__name__+".query_status",
+                   "This submission has not been executed yet (ClusterId not set)")
+            raise RuntimeError
+        N = self.schedd.act(htcondor.JobAction.Remove, ["%s.%s"%(self.cluster_id, p) for p in self.proc_ids])['TotalSuccess']
+        if N:
+            PInfo(self.__name__+'.kill',
+                  'Killed %i jobs in ClusterId=%i'%(N,self.cluster_id))
 
 
     def __getstate__(self):
@@ -242,6 +257,7 @@ class SimpleSubmission(_BaseSubmission):
         runner = '''
 #!/bin/bash
 env
+hostname
 cd {0} 
 eval `/cvmfs/cms.cern.ch/common/scramv1 runtime -sh`
 cd -
@@ -297,19 +313,18 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             procs.append((proc_ad,1))
             proc_id += 1
 
-        PInfo(self.__name__+'.execute','Submitting %i jobs!'%(len(procs)))
+        myPInfo(self.__name__+'.execute','Submitting %i jobs!'%(len(procs)))
         self.submission_time = time.time()
         results = []
         self.proc_ids = {}
         if len(procs):
-            PInfo(self.__name__+'.execute','Cluster ClassAd:','')
-            print cluster_ad 
+            myPInfo(self.__name__+'.execute','Cluster ClassAd:'+str(cluster_ad))
             self.cluster_id = self.schedd.submitMany(cluster_ad, procs, spool=should_spool, ad_results=results)
             if should_spool:
                 self.schedd.spool(results)
             for result,idx in zip(results,range(n_to_run)):
                 self.proc_ids[int(result['ProcId'])] = arg_mapping[idx]
-            PInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
+            myPInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
         else:
             self.cluster_id = -1
 
@@ -381,8 +396,7 @@ class Submission(_BaseSubmission):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
-        PInfo(self.__name__+'.execute','Cluster ClassAd:','')
-        print cluster_ad
+        myPInfo(self.__name__+'.execute','Cluster ClassAd:'+str(cluster_ad))
 
         proc_properties = {
             "Arguments" : "PROCID SUBMITID",
@@ -406,16 +420,16 @@ class Submission(_BaseSubmission):
             if njobs and proc_id>=njobs:
                 break
 
-        PInfo('Submission.execute','Submitting %i jobs!'%(len(procs)))
+        myPInfo('Submission.execute','Submitting %i jobs!'%(len(procs)))
         self.submission_time = time.time()
         results = []
         self.cluster_id = self.schedd.submitMany(cluster_ad, procs, spool=should_spool, ad_results=results)
         if should_spool:
-            PInfo('Submission.execute','Spooling inputs...')
+            myPInfo('Submission.execute','Spooling inputs...')
             self.schedd.spool(results)
         self.proc_ids = {}
         for result,name in zip(results,sorted(self.arguments)):
             self.proc_ids[int(result['ProcId'])] = name
 #            print 'Mapping %i->%s'%(result['ProcId'],name)
-        PInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
+        myPInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
 

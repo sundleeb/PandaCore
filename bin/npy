@@ -3,7 +3,7 @@
 import readline
 import code
 import numpy as np
-from sys import argv 
+from sys import argv, exit
 from PandaCore.Tools.Misc import PInfo, PError
 from argparse import ArgumentParser 
 
@@ -19,11 +19,20 @@ for fpath in args.files:
     if args.verbose:
         PInfo('npy', fpath)
 
+if len(data) == 1:
+    d = data.values()[0]
+else:
+    d = data
+
 if args.python:
     vars = globals().copy()
     vars.update(locals())
     shell = code.InteractiveConsole(vars)
     shell.interact()
 else:
-    from IPython import embed
-    embed()
+    try:
+        from IPython import embed
+        embed()
+    except ImportError as e:
+        PError('npy', 'IPython not found, try passing --python for bare python shell')
+        exit(1)

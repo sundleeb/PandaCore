@@ -107,9 +107,7 @@ for cache in args.cache:
 
     if args.kill:
         for s in submissions:
-            # this should be moved to the htcondor lib interface
-            print 'Killing ClusterId %i'%s.cluster_id
-            system('condor_rm %i'%(s.cluster_id))
+            s.kill()
 
 
     resubmit = any([args.resubmit_incomplete, args.resubmit_failed, args.resubmit_all])
