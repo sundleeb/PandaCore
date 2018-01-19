@@ -78,4 +78,6 @@ processes =	{
 	'WGstarToLNuMuMu_012Jets_13TeV-madgraph':('WGstarToLNuMuMu_012Jets_13TeV-madgraph','MC',2.793),
 	'WGToLNuG_TuneCUETP8M1_13TeV-madgraphMLM-pythia8':('WGToLNuG_TuneCUETP8M1_13TeV-madgraphMLM-pythia8','MC',489.0),
 	'ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8','MC',123.9*1.06),
+        'TT_TuneCUETP8M2T4_13TeV-powheg-pythia8':('TT_TuneCUETP8M2T4_13TeV-powheg-pythia8','MC',831.76),
+        'WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8','MC',20508.9*3),
 }
