@@ -9,12 +9,12 @@ from processes.SM import processes as SM
 
 processes = {}
 for d in [data, BSM, SM]:
-	processes.update(d)
+    processes.update(d)
 
 
 if __name__=='__main__':
-	import pprint
-	pp = pprint.PrettyPrinter(width=160)
-	for d in [data, BSM, SM]:
-		print 
-		pp.pprint(d)
+    import pprint
+    pp = pprint.PrettyPrinter(width=160)
+    for d in [data, BSM, SM]:
+        print 
+        pp.pprint(d)
