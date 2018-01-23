@@ -95,6 +95,7 @@ processes =	{
 	'TT_TuneCUETP8M2T4_13TeV-powheg-isrup-pythia8':                     ('TTbar_PowhegISRUp','MC',831.76),
 	'TT_TuneCUETP8M2T4down_13TeV-powheg-pythia8':                       ('TTbar_PowhegTuneDown','MC',831.76),
 	'TT_TuneCUETP8M2T4up_13TeV-powheg-pythia8':                         ('TTbar_PowhegTuneUp','MC',831.76),
+    'TTTo2L2Nu_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8':('TTTo2L2Nu','MC',88.288),
 
 	'tZq_ll_4f_13TeV-amcatnlo-pythia8':('SingleTop_tZll','MC',0.0758),
 	'tZq_nunu_4f_13TeV-amcatnlo-pythia8_TuneCUETP8M1':('SingleTop_tZnunu','MC',0.1379),
@@ -107,8 +108,27 @@ processes =	{
 	'EWKWMinus2Jets_WToLNu_M-50_13TeV-madgraph-pythia8':('WJets_EWKWMinus','MC',20.35),
 
 	'WW_TuneCUETP8M1_13TeV-pythia8':('Diboson_ww','MC',118.7),
-	'WZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_wz','MC',47.2),
-	'ZZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_zz','MC',16.6),
+	'WZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_wz','MC',47.13),
+	'ZZ_TuneCUETP8M1_13TeV-pythia8':('Diboson_zz','MC',16.523),
+    
+    'WWTo2L2Nu_13TeV-powheg':('WWTo2L2Nu','MC',(118.7-3.974)*0.1086*0.1086*9), #12.178
+    'WWTo4Q_13TeV-powheg':('WWTo4Q','MC',51.723),
+    'WWToLNuQQ_13TeV-powheg':('WWToLNuQQ','MC',49.997),
+    'WZTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8':('WZTo1L1Nu2Q','MC',10.71),
+    'WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8':('WZTo1L3Nu','MC',3.033),
+    'WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8':('WZTo2L2Q','MC',5.595),
+    'WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8':('WZTo3LNu','MC',4.430),
+    'ZZTo2L2Nu_13TeV_powheg_pythia8':('ZZTo2L2Nu','MC',0.5644),
+    'ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8':('ZZTo2L2Q','MC',3.22),
+    'ZZTo4L_13TeV_powheg_pythia8':('ZZTo4L','MC',1.212),
+    'GluGluToContinToZZTo2e2nu_13TeV_MCFM701_pythia8':('ggZZTo2e2nu','MC',0.003956),
+    'GluGluToContinToZZTo2mu2nu_13TeV_MCFM701_pythia8':('ggZZTo2mu2tau','MC',0.003956),
+    'GluGluToContinToZZTo2e2mu_13TeV_MCFM701_pythia8':('ggZZTo2e2mu','MC',0.0073462),
+    'GluGluToContinToZZTo2e2tau_13TeV_MCFM701_pythia8':('ggZZTo2e2tau','MC',0.0073462),
+    'GluGluToContinToZZTo2mu2tau_13TeV_MCFM701_pythia8':('ggZZTo2mu2tau','MC',0.0073462),
+    'GluGluToContinToZZTo4e_13TeV_MCFM701_pythia8':('ggZZTo4e','MC',0.0036478),
+    'GluGluToContinToZZTo4mu_13TeV_MCFM701_pythia8':('ggZZTo4mu','MC',0.0036478),
+    'GluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8':('ggZZTo4tau','MC',0.0036478),
 
         'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZHbb_mH125','MC',0.08912),
         'ZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ZllHbb_mH125','MC',0.04865),
