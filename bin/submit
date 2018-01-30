@@ -13,7 +13,10 @@ parser.add_argument('--arglist',type=str,default=None)
 parser.add_argument('--args',type=str,nargs='+',default=None)
 parser.add_argument('--cache',type=str,default=None)
 parser.add_argument('--dryrun',action='store_true')
+parser.add_argument('--silent',action='store_true')
 args = parser.parse_args()
+
+jm.SILENT = not(args.silent)
 
 if not args.cache:
     args.cache = '/data/t3serv014/{0}/submit/{1}/'.format(getenv('USER'),
@@ -39,7 +42,7 @@ else:
     PError('submit','Please specify arguments!')
     exit(1)
 
-
+jm.issue_proxy()
 if args.njobs:
     nper = max(1,int(float(len(job_arguments))/args.njobs))
 else:
@@ -47,7 +50,6 @@ else:
 
 max_njobs = -1 if args.dryrun else None
 
-system('voms-proxy-init -voms cms --valid 168:00')
 sub = jm.SimpleSubmission(cache_dir=args.cache,
                           executable=args.executable,
                           arglist=job_arguments,

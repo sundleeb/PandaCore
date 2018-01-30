@@ -1,5 +1,6 @@
 #include "../interface/CanvasDrawer.h"
 #include "TGaxis.h"
+#include "TSystem.h"
 
 CanvasDrawer::CanvasDrawer(double x, double y) {
   if (x>0) {
@@ -285,6 +286,7 @@ void CanvasDrawer::AddAdditional(TObject *o, TString opt, TString aname) {
 }
 
 void CanvasDrawer::Draw(TString outDir, TString baseName) {
+  gSystem->mkdir(outDir,true);
   if (!addsDrawn) {
     unsigned int nAdd = internalAdds.size();
     for (unsigned int iA=0; iA!=nAdd; ++iA) {

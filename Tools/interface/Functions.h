@@ -29,7 +29,9 @@ double clean(double x, double d=-1);
 double bound(double val, double low, double high);
 
 template <typename T>
-int sign(T x);
+int sign(T x) {
+    return (x<0) ? -1 : 1;
+}
 
 // need a non-templated instance to be able to 
 // load in interactive ROOT => use in TTreeFormula

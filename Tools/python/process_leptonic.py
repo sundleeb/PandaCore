@@ -5,17 +5,16 @@ Just a giant list of processes and properties
 
 from processes.data import processes as data
 from processes.BSM import processes as BSM
-from processes.SM import processes as SM
 from processes.SM_Leptonic import processes as SM_Leptonic
 
 processes = {}
-for d in [data,BSM,SM,SM_Leptonic]:
-	processes.update(d)
+for d in [data,BSM,SM_Leptonic]:
+    processes.update(d)
 
 
 if __name__=='__main__':
-	import pprint
-	pp = pprint.PrettyPrinter(width=160)
-	for d in [data,BSM,SM,SM_Leptonic]:
-		print 
-		pp.pprint(d)
+    import pprint
+    pp = pprint.PrettyPrinter(width=160)
+    for d in [data,BSM,SM_Leptonic]:
+        print 
+        pp.pprint(d)
