@@ -20,7 +20,6 @@ def _close_files():
     global files
     for k,v in files.iteritems():
         v.close()
-        del files[k]
 
 import atexit
 atexit.register(_close_files)
