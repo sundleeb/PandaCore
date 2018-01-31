@@ -12,6 +12,10 @@ from os import getenv,getuid,system,path,environ
 # on nodes that do not have htcondor bindings
 from job_config import * 
 
+SILENT = False
+def myPInfo(*args, **kwargs):
+    if not SILENT:
+        PInfo(*args, **kwargs)
 
 #############################################################
 # HTCondor interface for job submission and tracking
@@ -35,7 +39,7 @@ job_status_rev = {v:k for k,v in job_status.iteritems()}
 def environ_to_condor():
     s = '' 
     for k,v in environ.iteritems():
-        if any([x in k for x in ['PANDA','SUBMIT','USER']]):
+        if any([x in k for x in ['PANDA','SUBMIT','USER','SCRAM_ARCH','CMSSW_VERSION']]):
             s += '%s=%s '%(k,v)
     return s 
 
@@ -53,6 +57,12 @@ try:
 except:
     acct_grp_t3 = 'group_t3mit'
 
+def issue_proxy():
+    myPInfo('job_management','Requesting proxy...')
+    cmd = 'voms-proxy-init -voms cms --valid 168:00' 
+    if SILENT:
+        cmd += ' >/dev/null 2>&1' 
+    system(cmd)
 
 ### predefined schedd options ###
 def setup_schedd(config='T3'):
@@ -79,7 +89,21 @@ def setup_schedd(config='T3'):
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
             "Requirements" : 
-                classad.ExprTree('( ( ( OSGVO_OS_STRING == "RHEL 6" && HAS_CVMFS_cms_cern_ch ) || GLIDEIN_REQUIRED_OS == "rhel6" || ( GLIDEIN_Site == "MIT_CampusFactory" && ( BOSCOGroup == "bosco_cms" ) && HAS_CVMFS_cms_cern_ch ) ) && ( isUndefined(GLIDEIN_Entry_Name) ||  !stringListMember(GLIDEIN_Entry_Name,"CMS_T2_US_Nebraska_Red_op,CMS_T2_US_Nebraska_Red_gw1_op,CMS_T2_US_Nebraska_Red_gw2_op,CMS_T3_MX_Cinvestav_proton_work,CMS_T3_US_Omaha_tusker,CMSHTPC_T3_US_Omaha_tusker,Glow_US_Syracuse_condor,Glow_US_Syracuse_condor-ce01,Gluex_US_NUMEP_grid1,HCC_US_BNL_gk01,HCC_US_BNL_gk02,HCC_US_BU_atlas-net2,OSG_US_FIU_HPCOSGCE,OSG_US_Hyak_osg,OSG_US_UConn_gluskap,OSG_US_SMU_mfosgce",",") ) && ( isUndefined(GLIDEIN_Site) ||  !stringListMember(GLIDEIN_Site,"SU-OG,HOSTED_BOSCO_CE",",") ) ) && ( ( Arch == "INTEL" || Arch == "X86_64" ) ) && ( TARGET.OpSys == "LINUX" ) && ( TARGET.Disk >= RequestDisk ) && ( TARGET.Memory >= RequestMemory ) && ( TARGET.HasFileTransfer )'),
+                classad.ExprTree('Arch == "X86_64" && ( isUndefined(IS_GLIDEIN) || ( OSGVO_OS_STRING == "RHEL 6" && \
+HAS_CVMFS_cms_cern_ch == True ) || GLIDEIN_REQUIRED_OS == "rhel6" || ( Has_CVMFS_cms_cern_ch == True && \
+(BOSCOGroup == "bosco_cms" || BOSCOGroup == "paus") ) ) && (isUndefined(GLIDEIN_Entry_Name) || \
+!stringListMember(GLIDEIN_Entry_Name, "CMS_T2_US_Nebraska_Red,CMS_T2_US_Nebraska_Red_op,CMS_T2_US_Nebraska_Red_gw1,\
+CMS_T2_US_Nebraska_Red_gw1_op,CMS_T2_US_Nebraska_Red_gw2,CMS_T2_US_Nebraska_Red_gw2_op,CMS_T3_MX_Cinvestav_proton_work,\
+CMS_T3_US_Omaha_tusker,CMSHTPC_T1_FR_CCIN2P3_cccreamceli01_multicore,CMSHTPC_T1_FR_CCIN2P3_cccreamceli02_multicore,\
+CMSHTPC_T1_FR_CCIN2P3_cccreamceli03_multicore,CMSHTPC_T1_FR_CCIN2P3_cccreamceli04_multicore,\
+CMSHTPC_T2_FR_CCIN2P3_cccreamceli01_multicore,CMSHTPC_T2_FR_CCIN2P3_cccreamceli02_multicore,\
+CMSHTPC_T2_FR_CCIN2P3_cccreamceli03_multicore,CMSHTPC_T3_US_Omaha_tusker,Engage_US_MWT2_iut2_condce,\
+Engage_US_MWT2_iut2_condce_mcore,Engage_US_MWT2_osg_condce,Engage_US_MWT2_osg_condce_mcore,Engage_US_MWT2_uct2_condce,\
+Engage_US_MWT2_uct2_condce_mcore,Glow_US_Syracuse_condor,Glow_US_Syracuse_condor-ce01,Gluex_US_NUMEP_grid1,HCC_US_BNL_gk01,\
+HCC_US_BNL_gk02,HCC_US_BU_atlas-net2,HCC_US_BU_atlas-net2_long,HCC_US_SWT2_gk01,IceCube_US_Wisconsin_osg-ce,\
+OSG_US_Clemson-Palmetto_condce,OSG_US_Clemson-Palmetto_condce_mcore,OSG_US_FIU_HPCOSGCE,OSG_US_Hyak_osg,OSG_US_IIT_iitgrid_rhel6,\
+OSG_US_MWT2_mwt2_condce,OSG_US_MWT2_mwt2_condce_mcore,OSG_US_UConn_gluskap,OSG_US_SMU_mfosgce", ",")) && (isUndefined(GLIDEIN_Site)\
+|| !stringListMember(GLIDEIN_Site, "HOSTED_BOSCO_CE", ","))'),
             "AcctGroup" : "analysis",
             "AccountingGroup" : "analysis.USER",
             "X509UserProxy" : "/tmp/x509up_uUID",
@@ -93,8 +117,8 @@ def setup_schedd(config='T3'):
 
         pool_server = 'submit.mit.edu:9615'
         schedd_server ='submit.mit.edu'
-        query_owner = 'anonymous'
-        should_spool = True
+        query_owner = getenv('USER')
+        should_spool = False
     else:
         PError('job_management.setup_schedd','Unknown config %s'%config)
         raise ValueError
@@ -104,6 +128,7 @@ schedd_config = 'T3' if not schedd_config else schedd_config
 setup_schedd(schedd_config) 
 
 
+### submission class definitions ###
 
 class _BaseSubmission(object):
     def __init__(self, cache_filepath):
@@ -127,11 +152,10 @@ class _BaseSubmission(object):
 
     def query_status(self):
         if not self.cluster_id:
-            PError(self.__name__+".status",
+            PError(self.__class__.__name__+".query_status",
                    "This submission has not been executed yet (ClusterId not set)")
             raise RuntimeError
-        results = self.schedd.query(
-            'Owner =?= "%s" && ClusterId =?= %i'%(query_owner,self.cluster_id))
+        results = self.schedd.query('ClusterId =?= %i'%(self.cluster_id))
         jobs = {x:[] for x in ['T3','T2','idle','held','other']}
         for job in results:
             proc_id = int(job['ProcId'])
@@ -154,6 +178,17 @@ class _BaseSubmission(object):
             else:
                 jobs['other'] += samples
         return jobs
+
+
+    def kill(self):
+        if not self.cluster_id:
+            PError(self.__class__.__name__+".query_status",
+                   "This submission has not been executed yet (ClusterId not set)")
+            raise RuntimeError
+        N = self.schedd.act(htcondor.JobAction.Remove, ["%s.%s"%(self.cluster_id, p) for p in self.proc_ids])['TotalSuccess']
+        if N:
+            PInfo(self.__class__.__name__+'.kill',
+                  'Killed %i jobs in ClusterId=%i'%(N,self.cluster_id))
 
 
     def __getstate__(self):
@@ -184,7 +219,6 @@ class _BaseSubmission(object):
 class SimpleSubmission(_BaseSubmission):
     def __init__(self,cache_dir,executable=None,arglist=None,arguments=None,nper=1):
         super(SimpleSubmission,self).__init__(cache_dir+'/submission.pkl')
-        self.__name__='SimpleSubmission'
         self.cache_dir = cache_dir
         if executable!=None:
             self.executable = executable
@@ -200,7 +234,7 @@ class SimpleSubmission(_BaseSubmission):
                 self.arglist = last_sub.arglist
                 self.nper = last_sub.nper
             except:
-                PError(self.__name__+'.__init__',
+                PError(self.__class__.__name__+'.__init__',
                        'Must provide a valid cache or arguments!')
                 raise RuntimeError
         self.cmssw = getenv('CMSSW_BASE')
@@ -219,6 +253,7 @@ class SimpleSubmission(_BaseSubmission):
         runner = '''
 #!/bin/bash
 env
+hostname
 cd {0} 
 eval `/cvmfs/cms.cern.ch/common/scramv1 runtime -sh`
 cd -
@@ -237,7 +272,6 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
         cluster_ad = classad.ClassAd()
 
         job_properties = base_job_properties.copy()
-        #for k in ['X509UserProxy','TransferInput']:
         for k in ['TransferInput','ShouldTransferFiles','WhenToTransferOutput']:
             del job_properties[k]
         job_properties['Environment'] = environ_to_condor()
@@ -274,19 +308,18 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
             procs.append((proc_ad,1))
             proc_id += 1
 
-        PInfo(self.__name__+'.execute','Submitting %i jobs!'%(len(procs)))
+        PInfo(self.__class__.__name__+'.execute','Submitting %i jobs!'%(len(procs)))
         self.submission_time = time.time()
         results = []
         self.proc_ids = {}
         if len(procs):
-            PInfo(self.__name__+'.execute','Cluster ClassAd:','')
-            print cluster_ad 
+            myPInfo(self.__class__.__name__+'.execute','Cluster ClassAd:'+str(cluster_ad))
             self.cluster_id = self.schedd.submitMany(cluster_ad, procs, spool=should_spool, ad_results=results)
             if should_spool:
                 self.schedd.spool(results)
             for result,idx in zip(results,range(n_to_run)):
                 self.proc_ids[int(result['ProcId'])] = arg_mapping[idx]
-            PInfo(self.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
+            PInfo(self.__class__.__name__+'.execute','Submitted to cluster %i'%(self.cluster_id))
         else:
             self.cluster_id = -1
 
@@ -317,7 +350,7 @@ done'''.format(self.cmssw,self.executable,self.workdir+'/progress.log',self.argl
 class Submission(_BaseSubmission):
     '''Submission 
     
-    This class is used specifically for heavy analysis-specific submission
+    This class is used for heavy analysis-specific submission
     with robust re-packaging and re-submission of failures.
     
     Extends:
@@ -325,7 +358,6 @@ class Submission(_BaseSubmission):
     '''
     def __init__(self,sample_configpath,cache_filepath):
         super(Submission,self).__init__(cache_filepath)
-        self.__name__='Submission'
         self.arguments = read_sample_config(sample_configpath)
         self.configpath = sample_configpath
         
@@ -333,11 +365,13 @@ class Submission(_BaseSubmission):
     def execute(self,njobs=None):
         logdir = getenv('SUBMIT_LOGDIR')
         workdir = getenv('SUBMIT_WORKDIR')
-        repl = { 'LOGDIR':logdir,
-                 'WORKDIR':workdir,
-                 'UID':str(getuid()),
-                 'USER':getenv('USER'),
-                 'SUBMITID':str(self.sub_id), }
+        repl = { 
+            'LOGDIR' : logdir,
+            'WORKDIR' : workdir,
+            'UID' : str(getuid()),
+            'USER' : getenv('USER'),
+            'SUBMITID' : str(self.sub_id), 
+        }
         cluster_ad = classad.ClassAd()
         job_properties = base_job_properties.copy()
         job_properties['TransferInput'] += ',%s'%(self.configpath)
@@ -358,8 +392,7 @@ class Submission(_BaseSubmission):
                 for pattern,target in repl.iteritems():
                     value = value.replace(pattern,target)
             cluster_ad[key] = value
-        PInfo(self.__name__+'.execute','Cluster ClassAd:','')
-        print cluster_ad
+        myPInfo(self.__class__.__name__+'.execute','Cluster ClassAd:'+str(cluster_ad))
 
         proc_properties = {
             "Arguments" : "PROCID SUBMITID",
@@ -371,7 +404,7 @@ class Submission(_BaseSubmission):
         procs = []
         for name in sorted(self.arguments):
             sample = self.arguments[name]
-            repl['PROCID'] = '%i'%sample.get_id() #name.split('_')[-1] 
+            repl['PROCID'] = '%i'%sample.get_id() 
             proc_ad = classad.ClassAd()
             for key,value in proc_properties.iteritems():
                 if type(value)==str:
@@ -383,16 +416,15 @@ class Submission(_BaseSubmission):
             if njobs and proc_id>=njobs:
                 break
 
-        PInfo('Submission.execute','Submitting %i jobs!'%(len(procs)))
+        myPInfo('Submission.execute','Submitting %i jobs!'%(len(procs)))
         self.submission_time = time.time()
         results = []
         self.cluster_id = self.schedd.submitMany(cluster_ad, procs, spool=should_spool, ad_results=results)
         if should_spool:
-            PInfo('Submission.execute','Spooling inputs...')
+            myPInfo('Submission.execute','Spooling inputs...')
             self.schedd.spool(results)
         self.proc_ids = {}
         for result,name in zip(results,sorted(self.arguments)):
             self.proc_ids[int(result['ProcId'])] = name
-#            print 'Mapping %i->%s'%(result['ProcId'],name)
-        PInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
+        myPInfo('Submission.execute','Submitted to cluster %i'%(self.cluster_id))
 
