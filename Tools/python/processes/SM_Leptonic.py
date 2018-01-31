@@ -82,4 +82,6 @@ processes =    {
     'ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8','MC',123.9*1.06),
     'TT_TuneCUETP8M2T4_13TeV-powheg-pythia8':('TT_TuneCUETP8M2T4_13TeV-powheg-pythia8','MC',831.76),
     'WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8':('WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8','MC',20508.9*3),
+
+    'DarkPhoton_ZH_powheg_M-125':('DarkPhoton_ZH_powheg_M-125','MC',0.8839*0.101*0.10),
 }
