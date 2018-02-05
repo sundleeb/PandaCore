@@ -16,7 +16,10 @@ parser.add_argument('--kill',action='store_true')
 parser.add_argument('--cache',type=str,nargs='+')
 parser.add_argument('--njobs',type=int,default=None)
 parser.add_argument('--verbose',action='store_true')
+parser.add_argument('--silent',action='store_true')
 args = parser.parse_args()
+
+jm.SILENT = not(args.silent)
 
 for cache in args.cache:
     if len(args.cache) > 1:
@@ -112,7 +115,7 @@ for cache in args.cache:
 
     resubmit = any([args.resubmit_incomplete, args.resubmit_failed, args.resubmit_all])
     if resubmit and len(statii['missing']):
-        system('voms-proxy-init -voms cms --valid 168:00')
+        jm.issue_proxy()
         s = submissions[0]
         nper = s.nper
         if args.njobs:
