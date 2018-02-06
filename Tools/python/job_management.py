@@ -68,9 +68,6 @@ def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
     if config=='T3' or config is None:
         base_job_properties = {
-<<<<<<< HEAD
-   "Cmd" : "WORKDIR/exec.sh",
-=======
             "Iwd" : "WORKDIR",
             "Cmd" : "WORKDIR/exec.sh",
             "WhenToTransferOutput" : "ON_EXIT",
@@ -93,7 +90,6 @@ def setup_schedd(config='T3'):
         base_job_properties = {
             "Iwd" : "WORKDIR",
             "Cmd" : "WORKDIR/exec.sh",
->>>>>>> 25ed81524db078fc521c74bbf4694d44334a9e28
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
             "X509UserProxy" : "/tmp/x509up_uUID",
