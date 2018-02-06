@@ -3,7 +3,6 @@ import time
 from re import sub
 from sys import exit 
 import cPickle as pickle
-from collections import namedtuple
 from condor import classad,htcondor
 from Misc import PInfo,PDebug,PWarning,PError
 from os import getenv,getuid,system,path,environ
@@ -69,7 +68,32 @@ def setup_schedd(config='T3'):
     global pool_server, schedd_server, base_job_properties, should_spool
     if config=='T3' or config is None:
         base_job_properties = {
+<<<<<<< HEAD
    "Cmd" : "WORKDIR/exec.sh",
+=======
+            "Iwd" : "WORKDIR",
+            "Cmd" : "WORKDIR/exec.sh",
+            "WhenToTransferOutput" : "ON_EXIT",
+            "ShouldTransferFiles" : "YES",
+            "Requirements" : 
+                classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
+            "AcctGroup" : acct_grp_t3,
+            "AccountingGroup" : '%s.USER'%(acct_grp_t3),
+            "X509UserProxy" : "/tmp/x509up_uUID",
+            "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
+            "In" : "/dev/null",
+            "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
+        }
+
+        pool_server = None
+        schedd_server = getenv('HOSTNAME')
+        should_spool = False
+        query_owner = getenv('USER')
+    elif config=='T2':
+        base_job_properties = {
+            "Iwd" : "WORKDIR",
+            "Cmd" : "WORKDIR/exec.sh",
+>>>>>>> 25ed81524db078fc521c74bbf4694d44334a9e28
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
             "X509UserProxy" : "/tmp/x509up_uUID",
@@ -85,6 +109,7 @@ def setup_schedd(config='T3'):
         query_owner = getenv('USER')
     elif config=='SubMIT':
         base_job_properties = {
+            "Iwd" : "WORKDIR",
             "Cmd" : "WORKDIR/exec.sh",
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
@@ -106,7 +131,7 @@ OSG_US_MWT2_mwt2_condce,OSG_US_MWT2_mwt2_condce_mcore,OSG_US_UConn_gluskap,OSG_U
 || !stringListMember(GLIDEIN_Site, "HOSTED_BOSCO_CE", ","))'),
             "AcctGroup" : "analysis",
             "AccountingGroup" : "analysis.USER",
-            "X509UserProxy" : "/tmp/x509up_uUID",
+            "X509UserProxy" : "/tmp/x509up_u2268",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",
             "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
