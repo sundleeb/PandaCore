@@ -13,10 +13,11 @@ parser.add_argument('--events',help='event expression',type=str,default=None)
 parser.add_argument('--cut',help='cut',type=str,default=None)
 parser.add_argument('infile',metavar='input',type=str,help='input file to process')
 args = parser.parse_args()
-
+sname = argv[0]
 argv = []
 
-from PandaCore.Tools.root_interface import read_tree 
+from PandaCore.Tools.root_interface import read_tree
+import numpy as np
 from ROOT import TFile 
 
 fmt_string = ' %12s |'
@@ -41,7 +42,7 @@ if args.cut:
 arr = read_tree(t, branches=to_dump, cut=cut)
 out_str = ''
 for d in to_dump:
-    out_str += fmt_string%d
+    out_str += fmt_string%(d[:12])
 out_str += '\n'
 for d in to_dump:
     out_str += fmt_string%('-'*12)
@@ -53,6 +54,9 @@ if not args.events:
     events = arr['eventNumber']
 for e in events:
     mask = arr['eventNumber']==long(e)
+    if not np.sum(mask):
+        PError(sname, 'Could not find event '+str(e))
+        continue
     row = arr[mask]
     for d in to_dump:
         out_str += fmt_string%(row[d][0])

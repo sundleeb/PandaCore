@@ -141,10 +141,7 @@ protected:
   /**
    * \brief Internal class for managing TObjects and their properties
    */
-  class ObjWrapper {
-    public:
-      ObjWrapper() {}
-      ~ObjWrapper() {}
+  struct ObjWrapper {
       TObject *o;
       TString label;
       TString opt;
