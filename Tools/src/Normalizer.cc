@@ -42,6 +42,6 @@ void Normalizer::NormalizeTree(TString fpath, double xsec)
         return; 
     }
     NormalizeTree(t,h->Integral(),xsec);
-    fIn->WriteTObject(t);
+    fIn->WriteTObject(t,treeName.Data(),"overwrite");
     fIn->Close();
 }

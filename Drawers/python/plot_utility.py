@@ -29,6 +29,7 @@ class Process():
         self.additional_cut = '1==1'
         self.additional_weight = '1'
         self.tree_name = tree_name
+        self.ratio = False
         # private stuff
         self.__files = []
         return
@@ -331,6 +332,9 @@ class PlotUtility():
                 add_hist_args.append( proc.process_type )
                 if proc.color != proc.process_type:
                     add_hist_args.append( proc.color )
+                else:
+                    add_hist_args.append( -1 )
+                add_hist_args += ['', proc.ratio]
                 self.canvas.AddHistogram(*add_hist_args)
 
                 f_out.WriteTObject(h, h.GetName(), "overwrite")

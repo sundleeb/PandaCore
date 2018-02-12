@@ -28,7 +28,7 @@ void HistogramDrawer::AddSystematic(TH1D *o, TString opt, TString aname) {
   internalSysts.push_back(hw);
 }
 
-void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int cc, TString opt) {
+void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int cc, TString opt, bool ratio) {
   if (h!=NULL) {
     h->SetStats(0);
     h->SetTitle("");
@@ -36,6 +36,7 @@ void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int c
     HistWrapper w;
     w.h = h;
     w.label = label;
+    w.ratio = ratio;
     if (pt==nProcesses) 
       w.pt = (ProcessType)(internalHists.size()+2);
     else
@@ -46,7 +47,7 @@ void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int c
       w.cc = cc;
     if (opt=="") {
       if (pt==kData)
-        w.opt = "e0lp";
+        w.opt = "elp0";
       else
         w.opt = drawOption;
     } else
@@ -56,7 +57,7 @@ void HistogramDrawer::AddHistogram(TH1D *h, TString label, ProcessType pt, int c
   }
 }
 
-void HistogramDrawer::AddHistogram(TString hname, TString label, ProcessType pt, TString fname) {
+void HistogramDrawer::AddHistogram(TString hname, TString label, ProcessType pt, TString fname, bool ratio) {
   TFile *tmpFile;
   if (fname!="") 
     tmpFile = TFile::Open(fname);
@@ -64,7 +65,7 @@ void HistogramDrawer::AddHistogram(TString hname, TString label, ProcessType pt,
     tmpFile = centralFile;
 
   TH1D *h = (TH1D*)tmpFile->Get(hname);
-  AddHistogram(h,label,pt);
+  AddHistogram(h,label,pt,ratio);
 }
 
 void HistogramDrawer::SetInputFile(TFile *f) {
@@ -129,12 +130,14 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
   THStack *hs=0;
   TH1D *hData=0;
   TH1D *hSignal[4] = {0,0,0,0};
-  TH1D *hRatio=0;
-  TH1D *hZero=0;
   TH1D *hSum=0;
   TH1D *hRatioErrorUp = 0;
   TH1D *hRatioErrorDown = 0;
+  TLine *zero = 0;
+  TH1D* hRatioError = 0;
   std::vector<HistWrapper> hOthers;
+  std::vector<TH1D*> hRatios;
+  std::vector<TGraphErrors*> gRatioErrors;
 
   c->SetLogy(doLogy&&(!doRatio));
   
@@ -169,33 +172,29 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
             h->SetBinContent(iB,h->GetBinContent(iB)*scale);
             h->SetBinError(iB,h->GetBinError(iB)*scale);
           }
-          // h->Scale(1./h->Integral());
         }
       }
       hOthers.push_back(w);
     } else if (pt==kData) {
       // if it's data
-      hData = h;
+      if (!hData)
+        hData = h;
+      else
+        hOthers.push_back(w);
       if (w.opt.Contains("p")) {
-        hData->SetMarkerColor(Colors[pt]);
-        hData->SetMarkerStyle(20);
+        h->SetMarkerColor(w.cc);
+        h->SetMarkerStyle(20);
         if (whichstyle==3)
-          hData->SetMarkerSize(1.2);
+          h->SetMarkerSize(1.2);
         else
-          hData->SetMarkerSize(1);
+          h->SetMarkerSize(1);
       }
       if (doSetNormFactor) {
-        /*
-        for (int iB=0; iB!=nBins; ++iB) {
-          hData->SetBinError(iB,hData->GetBinError(iB)/hData->Integral());
+        float scale = 1./h->Integral();
+        for (int iB=1; iB!=h->GetNbinsX()+1; ++iB) {
+          h->SetBinContent(iB,h->GetBinContent(iB)*scale);
+          h->SetBinError(iB,h->GetBinError(iB)*scale);
         }
-        */
-        float scale = 1./hData->Integral();
-        for (int iB=1; iB!=hData->GetNbinsX()+1; ++iB) {
-          hData->SetBinContent(iB,hData->GetBinContent(iB)*scale);
-          hData->SetBinError(iB,hData->GetBinError(iB)*scale);
-        }
-        // hData->Scale(1./hData->Integral());
       }
     } else if (pt<=kSignal3 && pt!=kData) {
       // if it's signal and we're not stacking signal
@@ -208,7 +207,6 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
           hSignal[pt-1]->SetBinContent(iB,hSignal[pt-1]->GetBinContent(iB)*scale);
           hSignal[pt-1]->SetBinError(iB,hSignal[pt-1]->GetBinError(iB)*scale);
         }
-        // hSignal[pt-1]->Scale(1./hSignal[pt-1]->Integral());
       }
     } 
   }
@@ -219,7 +217,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       legOption = "EL";
     if (doStack || w.opt.Contains("e2"))
       legOption = "F";
-    if (w.pt==kData && w.opt=="elp")
+    if (w.pt==kData && w.opt=="elp0")
       legOption = "ELP";
     if (legend && w.label!="")
       legend->AddEntry(w.h,w.label,legOption);
@@ -350,14 +348,7 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
       firstHist->Draw(hOthers[0].opt);
     else
       firstHist->Draw(drawOption);
-    /*
-    if (!doRatio) {
-      firstHist->GetXaxis()->SetTitle(xlabel);
-    } else {
-      firstHist->GetXaxis()->SetTitle("");
-    }
-    firstHist->GetYaxis()->SetTitle(ylabel);
-    */
+    padModified = true;
     firstHist->GetYaxis()->SetTitleOffset(1.5);
   }
 
@@ -424,37 +415,29 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
 
   c->cd();
 
-  TGraphErrors *gRatioErrors=0;
-  double *xVals=0, *yVals=0, *xErrors=0, *yErrors=0;
   if (doRatio && hData) {
     pad2->cd();
     pad2->SetGridy();
-    hRatio = (TH1D*)hData->Clone("ratio");
-    hRatio->SetMaximum(-1111); hRatio->SetMinimum(-1111);
-    if (doDrawMCErrors) {
+
+    zero = new TLine(hData->GetXaxis()->GetXmin(), 1,
+                     hData->GetXaxis()->GetXmax(), 1);
+    zero->SetLineColor(1);
+    zero->SetLineWidth(2);
+    zero->Draw("");
+
+    padModified = false;
+
+    if (doDrawMCErrors && hSum) {
       hRatioErrorUp = (TH1D*)hSum->Clone("sumratioup");
       hRatioErrorDown = (TH1D*)hSum->Clone("sumratiodown");
       hRatioErrorUp->SetMaximum(-1111); hRatioErrorUp->SetMinimum(-1111);
       hRatioErrorDown->SetMaximum(-1111); hRatioErrorDown->SetMinimum(-1111);
       hRatioErrorUp->SetFillStyle(FILLSTYLE); hRatioErrorUp->SetLineWidth(1);
       hRatioErrorDown->SetFillStyle(FILLSTYLE); hRatioErrorDown->SetLineWidth(1);
-    }
-    
-    float maxVal=0;
-    xVals = new double[nBins];
-    yVals = new double[nBins];
-    xErrors = new double[nBins];
-    yErrors = new double[nBins];
-    for (int iB=1; iB!=nBins+1; ++iB) {
-      float mcVal=0;
-      for (HistWrapper w : hOthers) {
-        TH1D *hh = w.h;
-        mcVal += hh->GetBinContent(iB);
-      }
-      float dataVal = hData->GetBinContent(iB);
-      float err = hData->GetBinError(iB);
-      float mcErrUp = 0, mcErrDown = 0;
-      if (doDrawMCErrors) {
+
+      for (int iB=1; iB!=nBins+1; ++iB) {
+        float mcVal = hSum->GetBinContent(iB);
+        float mcErrUp = 0, mcErrDown = 0;
         mcErrUp = pow(hSum->GetBinError(iB),2);
         mcErrDown = mcErrUp;
         for (auto w : internalSysts) {
@@ -467,100 +450,155 @@ void HistogramDrawer::Draw(TString outDir, TString baseName) {
         }
         mcErrUp = TMath::Sqrt(mcErrUp);
         mcErrDown = -1*TMath::Sqrt(mcErrDown);
-      }
-      float val,errVal,mcErrValUp, mcErrValDown;
-      if (dataVal==0.||mcVal==0.) {
-        if (dataVal>0) 
-          PWarning("HistogramDrawer::Draw",TString::Format("bin %i has DATA=%.1f, but EXP=%.3f",iB,dataVal,mcVal));
-        if (mcVal==0) {
+        float mcErrValUp, mcErrValDown;
+        if (mcVal==0.) {
           mcErrValUp=0;
           mcErrValDown=0;
         } else {
           mcErrValUp = mcErrUp/mcVal;
           mcErrValDown = mcErrDown/mcVal;
         }
-        val=0;
-        errVal=0;
-      } else {
-        val = dataVal/mcVal;
-        errVal = err/mcVal;
-        mcErrValUp = mcErrUp/mcVal;
-        mcErrValDown = mcErrDown/mcVal;
-      }
-      if (dataVal==0) val=-999; // don't plot missing data points
-      xVals[iB-1] = hRatio->GetBinCenter(iB);
-      yVals[iB-1] = val;
-      xErrors[iB-1] = 0;
-      yErrors[iB-1] = errVal;
-      maxVal = std::max(maxVal,std::abs(val));
-      maxVal = std::max(maxVal,std::abs(errVal+val));
-      maxVal = std::max(maxVal,std::abs(val+errVal));
-      hRatio->SetBinContent(iB,val);
-      hRatio->SetBinError(iB,0.0001);
-      if (doDrawMCErrors) {
         hRatioErrorUp->SetBinContent(iB,mcErrValUp+1);
         hRatioErrorDown->SetBinContent(iB,mcErrValDown+1);
+      } 
+      hRatioError = (TH1D*)hRatioErrorDown->Clone();
+      for (int iB=1; iB!=nBins+1; ++iB) {
+        double up = hRatioErrorUp->GetBinContent(iB);
+        double down = hRatioErrorDown->GetBinContent(iB);
+        hRatioError->SetBinContent(iB,(up+down)*0.5);
+        hRatioError->SetBinError(iB,(up-down)*0.5);
       }
-    } 
-    TH1D *hRatioError = (TH1D*)hRatioErrorDown->Clone();
-    for (int iB=1; iB!=nBins+1; ++iB) {
-      double up = hRatioErrorUp->GetBinContent(iB);
-      double down = hRatioErrorDown->GetBinContent(iB);
-      hRatioError->SetBinContent(iB,(up+down)*0.5);
-      hRatioError->SetBinError(iB,(up-down)*0.5);
+
+      if (padModified)
+        hRatioError->Draw("e2 same");
+      else {
+        hRatioError->Draw("e2");
+        padModified = true;
+      }
+    }
+    
+    TH1D* hRatio = 0; TGraphErrors* gRatio = 0;
+    if (doStack) {
+      BuildRatio(hData, hSum, hRatio, gRatio, false);
+      hRatios.push_back(hRatio);
+      gRatioErrors.push_back(gRatio);
     }
 
-    gRatioErrors = new TGraphErrors(nBins,xVals,yVals,xErrors,yErrors);
-    maxVal = std::min((double)maxVal,.5);
-    if (fixRatio && ratioMax>0)
-      maxVal = ratioMax;
-    maxVal = std::max(double(maxVal),0.1);
-    hRatio->SetTitle("");
-    hRatio->Draw("elp");
-    hRatio->SetMinimum(-1.2*maxVal+1);
-    hRatio->SetMaximum(maxVal*1.2+1);
-    hRatio->SetLineColor(1);
-    hRatio->SetMarkerStyle(20);
-    hRatio->SetMarkerSize(1);
-    hRatio->GetXaxis()->SetTitle(xlabel);
-    hRatio->GetYaxis()->SetTitle(ratioLabel);
-    hRatio->GetYaxis()->SetNdivisions(5);
-    hRatio->GetYaxis()->SetTitleSize(20);
-    hRatio->GetYaxis()->SetTitleFont(43);
-    hRatio->GetYaxis()->SetTitleOffset(2.5);
-    hRatio->GetYaxis()->SetLabelFont(43); 
-    hRatio->GetYaxis()->SetLabelSize(15);
-    hRatio->GetXaxis()->SetTitleSize(20);
-    hRatio->GetXaxis()->SetTitleFont(43);
-    hRatio->GetXaxis()->SetTitleOffset(5);
-    hRatio->GetXaxis()->SetLabelFont(43);
-    hRatio->GetXaxis()->SetLabelSize(20);
-    TLine *zero = new TLine(hRatio->GetXaxis()->GetXmin(), 1,
-                            hRatio->GetXaxis()->GetXmax(), 1);
-    zero->SetLineColor(1);
-    zero->SetLineWidth(2);
-    zero->Draw("same");
-    gRatioErrors->SetLineWidth(2);
-    if (doDrawMCErrors) {
-      hRatioError->Draw("e2 same");
+    for (auto& w : hOthers) {
+      if (!w.ratio)
+        continue;
+      BuildRatio(hData, w.h,  hRatio, gRatio, true);
+      hRatios.push_back(hRatio);
+      gRatioErrors.push_back(gRatio);
     }
-    gRatioErrors->Draw("pe0");
+
   }
   if (doRatio && hData)
     pad1->cd();
 
   CanvasDrawer::Draw(outDir,baseName);
-  delete hSum; hSum=0;
-  delete hRatioErrorUp; hRatioErrorUp=0;
-  delete hRatioErrorDown; hRatioErrorDown=0;
-  delete hs; hs=0;
-  delete hRatio; hRatio=0;
-  delete hZero; hZero=0;
+  delete hSum; 
+  delete hRatioErrorUp; 
+  delete hRatioErrorDown;
   delete pad1; pad1=0;
   delete pad2; pad2=0;
-  delete hs; hs=0;
-  delete gRatioErrors; gRatioErrors=0;
+  delete hs; 
+  delete zero;
+  delete hRatioError;
+  for (auto *p : hRatios) {
+    delete p;
+  }
+  for (auto *p : gRatioErrors)
+    delete p; // this calls the destructors of the arrays
   hOthers.clear();
 }
      
+void HistogramDrawer::BuildRatio(const TH1D* hNum, const TH1D* hDen, TH1D*& hRatio, TGraphErrors*& gRatio, bool denUnc)
+{
+  hRatio = (TH1D*)hNum->Clone();
+  hRatio->SetMaximum(-1111); hRatio->SetMinimum(-1111);
+  int nBins = hRatio->GetNbinsX();
+  
+  float maxVal=0;
+  double* xVal = new double[nBins], *yVal = new double[nBins];
+  double* xError = new double[nBins], *yError = new double[nBins];
 
+
+  for (int iB=1; iB!=nBins+1; ++iB) {
+    float denVal = hDen->GetBinContent(iB);
+    float denErr = hDen->GetBinError(iB);
+    float numVal = hNum->GetBinContent(iB);
+    float numErr = hNum->GetBinError(iB);
+    float val, errVal;
+    if (numVal==0.||denVal==0.) {
+      if (numVal>0) 
+        PWarning("HistogramDrawer::Draw",
+                 TString::Format("bin %i has DATA=%.1f, but EXP=%.3f",iB,numVal,denVal));
+      val=0;
+      errVal=0;
+    } else {
+      val = numVal/denVal;
+      errVal = numErr/denVal;
+      if (denUnc) {
+        errVal = TMath::Sqrt(pow(errVal,2) + pow(denErr/denVal,2));
+      }
+    }
+    if (numVal==0) 
+      val=-999; // don't plot missing data points
+    xVal[iB-1] = hRatio->GetBinCenter(iB);
+    yVal[iB-1] = val;
+    xError[iB-1] = 0;
+    yError[iB-1] = errVal;
+    maxVal = std::max(maxVal,std::abs(val-1));
+    maxVal = std::max(maxVal,std::abs(errVal+val-1));
+    maxVal = std::max(maxVal,std::abs(val-errVal-1));
+    hRatio->SetBinContent(iB,val);
+    hRatio->SetBinError(iB,0.0001);
+  } 
+
+  gRatio = new TGraphErrors(nBins,xVal,yVal,xError,yError);
+  maxVal += 1;
+  maxVal = std::min((double)maxVal,.5);
+  if (fixRatio && ratioMax>0)
+    maxVal = ratioMax;
+  maxVal = std::max(double(maxVal),0.1);
+
+  hRatio->SetTitle("");
+  if (padModified) 
+    hRatio->Draw("elpsame");
+  else {
+    hRatio->Draw("elp");
+    padModified = true;
+  }
+  hRatio->SetMinimum(-1.2*maxVal+1);
+  hRatio->SetMaximum(maxVal*1.2+1);
+  if (denUnc) {
+    hRatio->SetLineColor(hDen->GetLineColor());
+    hRatio->SetMarkerColor(hDen->GetLineColor());
+    gRatio->SetMarkerColor(hDen->GetLineColor());
+    gRatio->SetLineColor(hDen->GetLineColor());
+  } else {
+    hRatio->SetLineColor(1);
+  }
+  hRatio->SetMarkerStyle(20);
+  hRatio->SetMarkerSize(1);
+  hRatio->GetXaxis()->SetTitle(internalHists[0].h->GetXaxis()->GetTitle());
+  hRatio->GetYaxis()->SetTitle(ratioLabel);
+  hRatio->GetYaxis()->SetNdivisions(5);
+  hRatio->GetYaxis()->SetTitleSize(20);
+  hRatio->GetYaxis()->SetTitleFont(43);
+  hRatio->GetYaxis()->SetTitleOffset(2.5);
+  hRatio->GetYaxis()->SetLabelFont(43); 
+  hRatio->GetYaxis()->SetLabelSize(15);
+  hRatio->GetXaxis()->SetTitleSize(20);
+  hRatio->GetXaxis()->SetTitleFont(43);
+  hRatio->GetXaxis()->SetTitleOffset(5);
+  hRatio->GetXaxis()->SetLabelFont(43);
+  hRatio->GetXaxis()->SetLabelSize(20);
+  gRatio->Draw("pe0");
+
+  delete[] xVal;
+  delete[] yVal;
+  delete[] xError;
+  delete[] yError;
+}
