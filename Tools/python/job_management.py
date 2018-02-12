@@ -189,11 +189,15 @@ class _BaseSubmission(object):
             except KeyError:
                 continue # sometimes one extra dummy job is created and not tracked, oh well
             if job_status[status] == 'running':
-                remote_host = job['RemoteHost']
-                if '@T3' in remote_host:
-                    status = job_status_rev['T3']
-                else:
-                    status = job_status_rev['T2']
+                try:
+                    remote_host = job['RemoteHost']
+                    if '@T3' in remote_host:
+                        status = job_status_rev['T3']
+                    else:
+                        status = job_status_rev['T2']
+                except KeyError:
+                    status = 1 # call it idle, job is probably moving between states
+                    pass 
             if job_status[status] in jobs:
                 jobs[job_status[status]] += samples
             else:
