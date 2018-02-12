@@ -15,7 +15,7 @@ from ROOT import TFile, TTree
 from PandaCore.Tools.root_interface import read_tree
 import numpy as np
 
-fIn = TFile(fpath)
+fIn = TFile.Open(fpath)
 events = fIn.Get(args.treename)
 
 class lumi(object):
