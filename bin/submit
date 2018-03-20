@@ -13,10 +13,10 @@ parser.add_argument('--arglist',type=str,default=None)
 parser.add_argument('--args',type=str,nargs='+',default=None)
 parser.add_argument('--cache',type=str,default=None)
 parser.add_argument('--dryrun',action='store_true')
-parser.add_argument('--silent',action='store_true')
+parser.add_argument('--loud',action='store_true')
 args = parser.parse_args()
 
-jm.SILENT = not(args.silent)
+jm.SILENT = not(args.loud)
 
 if not args.cache:
     args.cache = '/data/t3serv014/{0}/submit/{1}/'.format(getenv('USER'),
