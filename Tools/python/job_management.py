@@ -72,10 +72,10 @@ def setup_schedd(config='T3'):
             "Cmd" : "WORKDIR/exec.sh",
             "WhenToTransferOutput" : "ON_EXIT",
             "ShouldTransferFiles" : "YES",
-            "Requirements" : 
-                classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
-            "AcctGroup" : acct_grp_t3,
-            "AccountingGroup" : '%s.USER'%(acct_grp_t3),
+            #"Requirements" : 
+            #    classad.ExprTree('UidDomain == "mit.edu" && Arch == "X86_64" && OpSysAndVer == "SL6"'),
+            #"AcctGroup" : acct_grp_t3,
+           # "AccountingGroup" : '%s.USER'%(acct_grp_t3),
             "X509UserProxy" : "/tmp/x509up_uUID",
             "OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
             "In" : "/dev/null",
