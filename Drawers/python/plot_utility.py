@@ -11,10 +11,12 @@ from pprint import pprint
 
 Load('HistogramDrawer')
 
-tree_name = 'events'
+#tree_name = 'events'
 
 class Process():
-    def __init__(self, name, pt, custom_color=root.nProcesses):
+    def __init__(self, name, pt='', tree_name=None ,custom_color=root.nProcesses):
+        if tree_name is None:
+            tree_name='events'
         self.name = name
         self.process_type = pt
         if (custom_color==root.nProcesses):
