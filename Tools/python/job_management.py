@@ -94,7 +94,7 @@ def setup_schedd(config='T3'):
             "ShouldTransferFiles" : "YES",
             "X509UserProxy" : "/tmp/x509up_uUID",
             #"OnExitHold" : classad.ExprTree("( ExitBySignal == true ) || ( ExitCode != 0 )"),
-            "RequestMemory" : 2100,
+            "RequestMemory" : 2500,
             "In" : "/dev/null",
             "TransferInput" : "WORKDIR/cmssw.tgz,WORKDIR/skim.py,WORKDIR/x509up",
         }
