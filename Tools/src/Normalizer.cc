@@ -1,5 +1,9 @@
 #include "../interface/Normalizer.h"
-
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <cstdlib>
+using namespace std;
 void Normalizer::NormalizeTree(TTree *t, double totalEvts, double xsec) 
 {
     float inWeight=1, outWeight=1;
@@ -8,10 +12,14 @@ void Normalizer::NormalizeTree(TTree *t, double totalEvts, double xsec)
     turnOnBranches(t,inWeightName.Data());
     TBranch *b = t->Branch(outWeightName.Data(),&outWeight,TString::Format("%s/F",outWeightName.Data()));
     if (inWeightName!="") {
-       if (isFloat)    
-         t->SetBranchAddress(inWeightName.Data(),&inWeight);
-       else
+       if (isFloat){    
+        t->SetBranchAddress(inWeightName.Data(),&inWeight);
+        std::cout << "inWeight1= "<<inWeight<<std::endl;
+        }
+       else{
         t->SetBranchAddress(inWeightName.Data(),&inWeightD);
+        std::cout << "inWeight2= "<<inWeight<<std::endl;
+        }
     } else {
         inWeight = 1;
         inWeightD = 1;
@@ -29,6 +37,11 @@ void Normalizer::NormalizeTree(TTree *t, double totalEvts, double xsec)
         b->Fill();
     }
     t->SetBranchStatus("*",1);
+    std::cout << "outWeight= "<<outWeight<<std::endl;
+    std::cout << "inWeight= "<<inWeight<<std::endl;
+    std::cout << "inWeightD= "<<inWeightD<<std::endl;
+    std::cout << "xsec= "<<xsec<<std::endl;
+    std::cout << "totalEvts= "<<totalEvts<<std::endl;
 }
 
 

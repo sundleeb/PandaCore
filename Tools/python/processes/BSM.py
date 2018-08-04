@@ -30,6 +30,17 @@ processes =    {
 	'GluGlu_HToInvisible_M800_13TeV_powheg_pythia8':('ggFHinv_m800','MC',0.4015),
 	'GluGlu_HToInvisible_M1000_13TeV_powheg_pythia8':('ggFHinv_m1000','MC',0.1845),
 
+# VBF Sample list for Bulk Graviton Added by KL
+    'VBFZqqZnunu_M1000_13TeV-madgraph':('VBFZqqZnunu_BulkG-1000','MC',1),
+    'VBFZqqZnunu_M2000_13TeV-madgraph':('VBFZqqZnunu_BulkG-2000','MC',1),
+    'VBFZqqZnunu_M2500_13TeV-madgraph':('VBFZqqZnunu_BulkG-2500','MC',1),
+    'VBFZqqZnunu_M3000_13TeV-madgraph':('VBFZqqZnunu_BulkG-3000','MC',1),
+    'VBFZqqZnunu_M3500_13TeV-madgraph':('VBFZqqZnunu_BulkG-3500','MC',1),
+    'VBFZqqZnunu_M4000_13TeV-madgraph':('VBFZqqZnunu_BulkG-4000','MC',1),
+    'VBFZqqZnunu_M4500_13TeV-madgraph':('VBFZqqZnunu_BulkG-4500','MC',1),
+
+
+
     'ZprimeToTTJet_M-500_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-500','MC',1),
     'ZprimeToTTJet_M-750_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-750','MC',1),
     'ZprimeToTTJet_M-1000_TuneCUETP8M1_13TeV-amcatnlo-pythia8':('ZpTT_med-1000','MC',1),
