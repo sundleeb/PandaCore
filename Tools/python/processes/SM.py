@@ -143,14 +143,24 @@ processes =    {
         'GluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8':('ggZZTo4tau','MC',0.0036478),
 
         # Higgs->bb
-        'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZnunuH','MC',0.08912),
+        #'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZnunuH','MC',0.08912),
+        'ZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ZnunuH','MC',0.884*0.582*0.20),
         'ZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ZllH','MC',0.04865),
+        'ZH_HToBB_ZToQQ_M125_13TeV_powheg_pythia8':('ZqqH','MC',0.607*0.582),
         'ggZH_HToBB_ZToNuNu_M125_13TeV_powheg_pythia8':('ggZnunuH','MC',0.014366),
         'ggZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8':('ggZllH','MC',0.007842),
         'WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WmH','MC',0.100),
         'WplusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8':('WpH','MC',0.159),
+        'WplusH_HToBB_WToQQ_M125_13TeV_powheg_pythia8':('WpH_qq','MC',0.84*(1-3*0.108)*0.582),
+        'WminusH_HToBB_WToQQ_M125_13TeV_powheg_pythia8':('WmH_qq','MC',0.533*(1-3*0.108)*0.582),
+        'WWTo4Q_4f_13TeV_amcatnloFXFX_madspin_pythia8':('WW_4q','MC',51.723),
+        'WJetsToQQ_HT180_13TeV-madgraphMLM-pythia8':('WJets_qq','MC',2788),
+        'ZZTo4Q_13TeV_amcatnloFXFX_madspin_pythia8':('ZZ_4q','MC',6.842),
+        'DYJetsToQQ_HT180_13TeV-madgraphMLM-pythia8':('ZJets_qq','MC',1187),
         'ttHTobb_M125_13TeV_powheg_pythia8':('ttH','MC',0.506*0.5824),
+        'ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8':('ttHtranche3','MC',0.506*0.5824),
         'GluGluHToBB_M125_13TeV_powheg_pythia8':('ggH','MC',48.48*0.5824),
         'VBFHToBB_M125_13TeV_amcatnlo_pythia8':('VBFH','MC',3.782*0.5824),
+        'VBFHToBB_M-125_13TeV_powheg_pythia8_weightfix':('VBFH_powheg','MC',3.782*0.5824),
 
 }
