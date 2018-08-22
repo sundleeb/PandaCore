@@ -35,6 +35,8 @@ enum ProcessType {
   kSignal3,
   kQCD,  /**< start of backgrounds */
   kTTbar,
+  kTTbar1l,
+  kTTbar2l,
   kWjets,
   kZjets,
   kST,
